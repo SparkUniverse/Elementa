@@ -17,11 +17,14 @@ import kotlin.contracts.contract
 import gg.essential.elementa.unstable.state.v2.ListState as ListStateV2
 import gg.essential.elementa.unstable.state.v2.State as StateV2
 
-class LayoutScope(
+class LayoutScope private constructor(
     private val component: UIComponent,
     private val parentScope: LayoutScope?,
     val stateScope: ReferenceHolder,
 ) {
+
+    constructor(component: UIComponent) : this(component, null, component)
+
     /**
      * As the name says, don't use this unless you really have to.
      */
@@ -278,7 +281,7 @@ inline fun UIComponent.layout(modifier: Modifier = Modifier, block: LayoutScope.
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
     modifier.applyToComponent(this)
-    LayoutScope(this, null, this).block()
+    LayoutScope(this).block()
 }
 
 /**
