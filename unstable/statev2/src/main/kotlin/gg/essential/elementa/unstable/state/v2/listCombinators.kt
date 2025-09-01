@@ -117,8 +117,8 @@ fun <T, U> ListState<T>.mapEach(mapper: (T) -> U): ListState<U> =
 
 // TODO: all of these are based on mapList and as such are quite inefficient, might make sense to implement some as efficient primitives instead
 
-fun <T, U> ListState<T>.mapList(mapper: (List<T>) -> List<U>): ListState<U> =
-    map(mapper).toListState()
+fun <T, U> ListState<T>.mapList(mapper: Observer.(List<T>) -> List<U>): ListState<U> =
+    State { mapper(this@mapList()) }.toListState()
 
 fun <T, U, V> ListState<T>.zipWithEachElement(otherState: State<U>, transform: (T, U) -> V) =
     zip(otherState) { list, other -> list.map { transform(it, other) } }.toListState()
