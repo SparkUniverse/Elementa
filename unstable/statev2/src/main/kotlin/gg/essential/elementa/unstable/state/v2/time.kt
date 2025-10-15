@@ -106,9 +106,9 @@ class StateScheduler(val time: State<Instant>) {
  * Returns the time of the given [scheduler] as an [ObservedInstant] which will track operations applied to it and
  * subscribe the [Observer] to be re-evaluated when the result of any of these operations changes.
  *
- * Note that the [ObservedInstant] wraps the [Observer] and as such the same life-time restrictions apply to it.
- * In particular that means that the [ObservedInstant] or any [ObservedValue] derived from it MUST NOT become the
- * value of the [State], only concrete types, e.g. as returned by [ObservedValue.getValue], may.
+ * Note that the [ObservedInstant] or any [ObservedValue] derived from it should usually not become the value of the
+ * [State] because they do not implement [equals], only concrete types, e.g. as returned by [ObservedValue.getValue],
+ * should.
  *
  * When performing more complex operations on the returned value, using [withSystemTime] may be more efficient.
  */
@@ -119,9 +119,9 @@ fun Observer.systemTime(scheduler: StateScheduler = StateScheduler.forSystemTime
  * Runs the given [block] with the time of the given [scheduler] as an [ObservedInstant] which will track operations
  * applied to it and subscribe the [Observer] to be re-evaluated when the result of any of these operations changes.
  *
- * Note that the [ObservedInstant] wraps the [Observer] and as such the same life-time restrictions apply to it.
- * In particular that means that the [ObservedInstant] or any [ObservedValue] derived from it MUST NOT become the
- * value of the [State], only concrete types, e.g. as returned by [ObservedValue.getValue], may.
+ * Note that the [ObservedInstant] or any [ObservedValue] derived from it should usually not become the value of the
+ * [State] because they do not implement [equals], only concrete types, e.g. as returned by [ObservedValue.getValue],
+ * should.
  */
 fun <T> Observer.withSystemTime(
     scheduler: StateScheduler = StateScheduler.forSystemTime,

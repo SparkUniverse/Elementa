@@ -15,10 +15,6 @@ interface ObserverImpl
 /**
  * A marker interface for an object which may observe which states are being accessed, such that it can then subscribe
  * to these states to be updated when they change.
- *
- * Note that the duration during which a given [Observer] can be used is usually limited to the call in which it was
- * received.
- * It should not be stored (neither in a field, nor implicitly in an asynchronous lambda) and then used at a later time.
  */
 interface Observer {
     val observerImpl: ObserverImpl
