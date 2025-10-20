@@ -58,7 +58,7 @@ private fun UIComponent.setupKeyboardNavigation(): UIComponent.(Char, Int) -> Un
         }
 
         when (keyCode) {
-            UKeyboard.KEY_ENTER -> simulateLeftClick()
+            UKeyboard.KEY_ENTER, UKeyboard.KEY_NUMPADENTER -> simulateLeftClick()
             UKeyboard.KEY_TAB -> passFocusToNextComponent(backwards = UKeyboard.isShiftKeyDown())
         }
     }
