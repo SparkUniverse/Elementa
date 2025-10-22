@@ -1,3 +1,4 @@
+@file:Suppress("DEPRECATION")
 package gg.essential.elementa.components.image
 
 import gg.essential.elementa.UIComponent
@@ -22,6 +23,7 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
 import javax.imageio.ImageIO
 
+@Deprecated("Not well maintained. Does not currently support 1.21.5+ at all.")
 open class MSDFComponent constructor(
     private val imageFuture: CompletableFuture<BufferedImage>
 ) : UIComponent(), CacheableImage {

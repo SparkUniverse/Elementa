@@ -2,6 +2,7 @@ package gg.essential.elementa.utils
 
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.components.Window
+import gg.essential.universal.UGraphics.CommonVertexFormats
 import gg.essential.universal.UResolution
 import gg.essential.universal.shader.BlendState
 import gg.essential.universal.shader.UShader
@@ -31,7 +32,10 @@ operator fun Color.component2() = this.green
 operator fun Color.component3() = this.blue
 operator fun Color.component4() = this.alpha
 
+@Deprecated("Stops working in 1.21.5, see UGraphics.Globals")
+@Suppress("DEPRECATION")
 internal fun UShader.Companion.readFromLegacyShader(vertName: String, fragName: String, blendState: BlendState) =
-    fromLegacyShader(readShader(vertName, "vsh"), readShader(fragName, "fsh"), blendState)
-private fun readShader(name: String, ext: String) =
+    fromLegacyShader(readElementaShaderSource(vertName, "vsh"), readElementaShaderSource(fragName, "fsh"), blendState)
+
+internal fun readElementaShaderSource(name: String, ext: String) =
     Window::class.java.getResource("/shaders/$name.$ext").readText()

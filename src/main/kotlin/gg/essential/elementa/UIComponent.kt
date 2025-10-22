@@ -1,8 +1,12 @@
 package gg.essential.elementa
 
+import gg.essential.elementa.components.NOP_UPDATE_FUNC
+import gg.essential.elementa.components.NopUpdateFuncList
 import gg.essential.elementa.components.UIBlock
 import gg.essential.elementa.components.UIContainer
+import gg.essential.elementa.components.UpdateFunc
 import gg.essential.elementa.components.Window
+import gg.essential.elementa.components.inspector.Inspector
 import gg.essential.elementa.constraints.*
 import gg.essential.elementa.constraints.animation.*
 import gg.essential.elementa.dsl.animate
@@ -22,6 +26,7 @@ import gg.essential.universal.UResolution
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.function.BiConsumer
@@ -49,12 +54,22 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             return field
         }
     open val children = CopyOnWriteArrayList<UIComponent>().observable()
-    val effects = mutableListOf<Effect>()
+    val effects: MutableList<Effect> = mutableListOf<Effect>().observable().apply {
+        addObserver { _, event ->
+            updateUpdateFuncsOnChangedEffect(event)
+            updateEffectFlagsOnChangedEffect(event)
+        }
+    }
 
     private var childrenLocked = 0
     init {
-        children.addObserver { _, _ -> requireChildrenUnlocked() }
-        children.addObserver { _, event -> setWindowCacheOnChangedChild(event) }
+        children.addObserver { _, event ->
+            requireChildrenUnlocked()
+            setWindowCacheOnChangedChild(event)
+            updateFloatingComponentsOnChangedChild(event)
+            updateUpdateFuncsOnChangedChild(event)
+            updateCombinedFlagsOnChangedChild(event)
+        }
     }
 
     open lateinit var parent: UIComponent
@@ -64,13 +79,31 @@ abstract class UIComponent : Observable(), ReferenceHolder {
 
     var constraints = UIConstraints(this)
         set(value) {
+            (field as? AnimatingConstraints)?.updateFunc?.let { removeUpdateFunc(it) }
+            if (value is AnimatingConstraints) {
+                addUpdateFunc(object : UpdateFunc {
+                    override fun invoke(dt: Float, dtMs: Int) {
+                        if (Window.of(this@UIComponent).version < ElementaVersion.v8) {
+                            removeUpdateFunc(this) // handled by `animationFrame`
+                            return
+                        }
+                        value.updateCompletion(dtMs)
+                    }
+                }.also { value.updateFunc = it })
+            }
             field = value
             setChanged()
             notifyObservers(constraints)
         }
 
-    var lastDraggedMouseX: Double? = null
-    var lastDraggedMouseY: Double? = null
+    @Deprecated("This property should have been private and probably does not do what you expect it to.")
+    var lastDraggedMouseX: Double?
+        get() = Window.ofOrNull(this)?.prevDraggedMouseX?.toDouble()
+        set(_) {}
+    @Deprecated("This property should have been private and probably does not do what you expect it to.")
+    var lastDraggedMouseY: Double?
+        get() = Window.ofOrNull(this)?.prevDraggedMouseY?.toDouble()
+        set(_) {}
 
     /* Bubbling Events */
     var mouseScrollListeners = mutableListOf<UIComponent.(UIScrollEvent) -> Unit>()
@@ -81,8 +114,11 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     /* Non-Bubbling Events */
     val mouseReleaseListeners = mutableListOf<UIComponent.() -> Unit>()
     val mouseEnterListeners = mutableListOf<UIComponent.() -> Unit>()
+        get() = field.also { ownFlags += Flags.RequiresMouseMove }
     val mouseLeaveListeners = mutableListOf<UIComponent.() -> Unit>()
+        get() = field.also { ownFlags += Flags.RequiresMouseMove }
     val mouseDragListeners = mutableListOf<UIComponent.(mouseX: Float, mouseY: Float, button: Int) -> Unit>()
+        get() = field.also { ownFlags += Flags.RequiresMouseDrag }
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
 
     private var currentlyHovered = false
@@ -110,10 +146,13 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     private var heldReferences = mutableListOf<Any>()
 
     protected var isInitialized = false
-    private var isFloating = false
+    private var isLegacyFloating = false
 
     private var didCallBeforeDraw = false
     private var warnedAboutBeforeDraw = false
+
+    internal val versionOrV0: ElementaVersion
+        get() = Window.ofOrNull(this)?.version ?: ElementaVersion.v0
 
     internal var cachedWindow: Window? = null
 
@@ -130,6 +169,73 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         cachedWindow = window
         children.forEach { it.recursivelySetWindowCache(window) }
     }
+
+    //region Internal flags tracking
+    /** Flags which apply to this component specifically. */
+    internal var ownFlags = Flags.initialFor(javaClass)
+        set(newValue) {
+            val oldValue = field
+            if (oldValue == newValue) return
+            field = newValue
+            if (oldValue in newValue) { // merely additions?
+                combinedFlags += newValue
+            } else {
+                recomputeCombinedFlags()
+            }
+        }
+    /** Flags which apply to one of the effects of tis component. */
+    internal var effectFlags = Flags(0u)
+        set(newValue) {
+            val oldValue = field
+            if (oldValue == newValue) return
+            field = newValue
+            if (oldValue in newValue) { // merely additions?
+                combinedFlags += newValue
+            } else {
+                recomputeCombinedFlags()
+            }
+        }
+    /** Combined flags of this component, its effects, and its children. */
+    internal var combinedFlags = ownFlags
+        set(newValue) {
+            val oldValue = field
+            if (oldValue == newValue) return
+            field = newValue
+            if (hasParent && parent != this) {
+                if (oldValue in newValue) { // merely additions?
+                    parent.combinedFlags += newValue
+                } else {
+                    parent.recomputeCombinedFlags()
+                }
+            }
+        }
+
+    internal fun recomputeEffectFlags() {
+        effectFlags = effects.fold(Flags(0u)) { acc, effect -> acc + effect.flags }
+    }
+
+    private fun recomputeCombinedFlags() {
+        combinedFlags = children.fold(ownFlags + effectFlags) { acc, child -> acc + child.combinedFlags }
+    }
+
+    private fun updateEffectFlagsOnChangedEffect(possibleEvent: Any) {
+        @Suppress("UNCHECKED_CAST")
+        when (val event = possibleEvent as? ObservableListEvent<Effect> ?: return) {
+            is ObservableAddEvent -> effectFlags += event.element.value.flags
+            is ObservableRemoveEvent -> recomputeEffectFlags()
+            is ObservableClearEvent -> recomputeEffectFlags()
+        }
+    }
+
+    private fun updateCombinedFlagsOnChangedChild(possibleEvent: Any) {
+        @Suppress("UNCHECKED_CAST")
+        when (val event = possibleEvent as? ObservableListEvent<UIComponent> ?: return) {
+            is ObservableAddEvent -> combinedFlags += event.element.value.combinedFlags
+            is ObservableRemoveEvent -> recomputeCombinedFlags()
+            is ObservableClearEvent -> recomputeCombinedFlags()
+        }
+    }
+    //endregion
 
     protected fun requireChildrenUnlocked() {
         requireState(childrenLocked == 0, "Cannot modify children while iterating over them.")
@@ -479,7 +585,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         val parentWindow = Window.of(this)
 
         this.forEachChild { child ->
-            if (child.isFloating) return@forEachChild
+            if (child.isLegacyFloating || child.isFloating) return@forEachChild
 
             // If the child is outside the current viewport, don't waste time drawing
             if (!this.alwaysDrawChildren() && !parentWindow.isAreaVisible(
@@ -552,6 +658,16 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     fun beforeChildrenDrawCompat(matrixStack: UMatrixStack) = UMatrixStack.Compat.runLegacyMethod(matrixStack) { beforeChildrenDraw() }
 
     open fun mouseMove(window: Window) {
+        if (Flags.RequiresMouseMove in ownFlags) {
+            updateCurrentlyHoveredState(window)
+        }
+
+        if (Flags.RequiresMouseMove in combinedFlags) {
+            this.forEachChild { it.mouseMove(window) }
+        }
+    }
+
+    private fun updateCurrentlyHoveredState(window: Window) {
         val hovered = isHovered() && window.hoveredFloatingComponent.let {
             it == null || it == this || isComponentInParentChain(it)
         }
@@ -565,8 +681,6 @@ abstract class UIComponent : Observable(), ReferenceHolder {
                 this.listener()
             currentlyHovered = false
         }
-
-        this.forEachChild { it.mouseMove(window) }
     }
 
     /**
@@ -577,8 +691,6 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     open fun mouseClick(mouseX: Double, mouseY: Double, button: Int) {
         val clicked = hitTest(mouseX.toFloat(), mouseY.toFloat())
 
-        lastDraggedMouseX = mouseX
-        lastDraggedMouseY = mouseY
         lastClickCount = if (System.currentTimeMillis() - lastClickTime < 500) lastClickCount + 1 else 1
         lastClickTime = System.currentTimeMillis()
 
@@ -614,9 +726,6 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     open fun mouseRelease() {
         for (listener in mouseReleaseListeners)
             this.listener()
-
-        lastDraggedMouseX = null
-        lastDraggedMouseY = null
 
         this.forEachChild { it.mouseRelease() }
     }
@@ -696,17 +805,17 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     }
 
     private inline fun doDragMouse(mouseX: Float, mouseY: Float, button: Int, superCall: UIComponent.() -> Unit) {
-        if (lastDraggedMouseX == mouseX.toDouble() && lastDraggedMouseY == mouseY.toDouble())
+        if (Flags.RequiresMouseDrag !in combinedFlags) {
             return
+        }
 
-        lastDraggedMouseX = mouseX.toDouble()
-        lastDraggedMouseY = mouseY.toDouble()
+        if (Flags.RequiresMouseDrag in ownFlags) {
+            val relativeX = mouseX - getLeft()
+            val relativeY = mouseY - getTop()
 
-        val relativeX = mouseX - getLeft()
-        val relativeY = mouseY - getTop()
-
-        for (listener in mouseDragListeners)
-            this.listener(relativeX, relativeY, button)
+            for (listener in mouseDragListeners)
+                this.listener(relativeX, relativeY, button)
+        }
 
         this.forEachChild { it.superCall() }
     }
@@ -716,7 +825,38 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             this.listener(typedChar, keyCode)
     }
 
+    @Deprecated("See [ElementaVersion.V8].")
     open fun animationFrame() {
+        if (versionOrV0 >= ElementaVersion.v8) {
+            doSparseAnimationFrame()
+        } else {
+            doLegacyAnimationFrame()
+        }
+    }
+
+    private fun doSparseAnimationFrame() {
+        if (Flags.RequiresAnimationFrame in effectFlags) {
+            for (effect in effects) {
+                if (Flags.RequiresAnimationFrame in effect.flags) {
+                    @Suppress("DEPRECATION")
+                    effect.animationFrame()
+                }
+            }
+        }
+        for (child in children) {
+            if (Flags.RequiresAnimationFrame in child.combinedFlags) {
+                if (Flags.RequiresAnimationFrame in child.ownFlags) {
+                    @Suppress("DEPRECATION")
+                    child.animationFrame()
+                } else {
+                    child.doSparseAnimationFrame()
+                }
+            }
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun doLegacyAnimationFrame() {
         constraints.animationFrame()
 
         effects.forEach(Effect::animationFrame)
@@ -731,14 +871,19 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         }
 
         // Process timers
-        val timerIterator = activeTimers.iterator()
-        timerIterator.forEachRemaining { (id, timer) ->
-            if (id in stoppedTimers)
-                return@forEachRemaining
-
+        updateTimers { timer ->
             val time = System.currentTimeMillis()
+            if (timer.lastTime == -1L) timer.lastTime = time
             timer.timeLeft -= (time - timer.lastTime)
             timer.lastTime = time
+        }
+    }
+
+    private inline fun updateTimers(advance: (Timer) -> Unit) {
+        for ((id, timer) in activeTimers) {
+            if (id in stoppedTimers) continue
+
+            advance(timer)
 
             if (!timer.hasDelayed && timer.timeLeft <= 0L) {
                 timer.hasDelayed = true
@@ -980,8 +1125,65 @@ abstract class UIComponent : Observable(), ReferenceHolder {
      * Floating API
      */
 
+    @set:JvmName("setIsFloating") // `setFloating` is taken by the old API
+    var isFloating: Boolean = false
+        set(value) {
+            if (value == field) return
+            field = value
+            recomputeFloatingComponents()
+        }
+
+    internal var floatingComponents: List<UIComponent>? = null // only allocated if used
+
+    private fun recomputeFloatingComponents() {
+        val result = mutableListOf<UIComponent>()
+        if (isFloating) {
+            result.add(this)
+        }
+        for (child in children) {
+            child.floatingComponents?.let { result.addAll(it) }
+        }
+        if ((floatingComponents ?: emptyList()) == result) {
+            return // unchanged
+        }
+        floatingComponents = result.takeUnless { it.isEmpty() }
+
+        if (this is Window) {
+            if (hoveredFloatingComponent !in result) {
+                hoveredFloatingComponent = null
+            }
+        } else if (hasParent) {
+            parent.recomputeFloatingComponents()
+        }
+    }
+
+    private fun updateFloatingComponentsOnChangedChild(possibleEvent: Any) {
+        @Suppress("UNCHECKED_CAST")
+        when (val event = possibleEvent as? ObservableListEvent<UIComponent> ?: return) {
+            is ObservableAddEvent -> {
+                val (_, child) = event.element
+                if (child.floatingComponents != null) {
+                    recomputeFloatingComponents()
+                }
+            }
+            is ObservableRemoveEvent -> {
+                val (_, child) = event.element
+                if (child.floatingComponents != null) {
+                    recomputeFloatingComponents()
+                }
+            }
+            is ObservableClearEvent -> {
+                if (floatingComponents != null) {
+                    recomputeFloatingComponents()
+                }
+            }
+        }
+    }
+
+    @Deprecated("The legacy floating API does not behave well when a component is removed from the tree.", ReplaceWith("isFloating = floating"))
+    @Suppress("DEPRECATION")
     fun setFloating(floating: Boolean) {
-        isFloating = floating
+        isLegacyFloating = floating
 
         if (floating) {
             Window.of(this).addFloatingComponent(this)
@@ -989,6 +1191,277 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             Window.of(this).removeFloatingComponent(this)
         }
     }
+
+    //region Public UpdateFunc API
+    fun addUpdateFunc(func: UpdateFunc) {
+        val updateFuncs = updateFuncs ?: mutableListOf<UpdateFunc>().also { updateFuncs = it }
+        val index = updateFuncs.size
+        updateFuncs.add(func)
+
+        val indexInWindow = allocUpdateFuncs(index, 1)
+        if (indexInWindow != -1) {
+            cachedWindow!!.allUpdateFuncs[indexInWindow] = func
+            assertUpdateFuncInvariants()
+        }
+    }
+
+    fun removeUpdateFunc(func: UpdateFunc) {
+        val updateFuncs = updateFuncs ?: return
+        val index = updateFuncs.indexOf(func)
+        if (index == -1) return
+        updateFuncs.removeAt(index)
+
+        freeUpdateFuncs(index, 1)
+    }
+    //endregion
+
+    //region Internal UpdateFunc tracking
+    private var updateFuncParent: UIComponent? = null
+    private var updateFuncs: MutableList<UpdateFunc>? = null // only allocated if used
+    private var effectUpdateFuncs = 0 // count of effect funcs
+    private var totalUpdateFuncs = 0 // count of own funcs + effect funcs + children total funcs
+
+    private fun localUpdateFuncIndexForEffect(effectIndex: Int, indexInEffect: Int): Int {
+        var localIndex = updateFuncs?.size ?: 0
+        for ((otherEffectIndex, otherEffect) in effects.withIndex()) {
+            if (otherEffectIndex >= effectIndex) {
+                break
+            } else {
+                if (otherEffect.updateFuncParent != this) continue // can happen if added to two components at the same time
+                localIndex += otherEffect.updateFuncs?.size ?: 0
+            }
+        }
+        localIndex += indexInEffect
+        return localIndex
+    }
+
+    private fun localUpdateFuncIndexForChild(childIndex: Int, indexInChild: Int): Int {
+        var localIndex = (updateFuncs?.size ?: 0) + effectUpdateFuncs
+        for ((otherChildIndex, otherChild) in children.withIndex()) {
+            if (otherChildIndex >= childIndex) {
+                break
+            } else {
+                if (otherChild.updateFuncParent != this) continue // can happen if added to two components at the same time
+                localIndex += otherChild.totalUpdateFuncs
+            }
+        }
+        localIndex += indexInChild
+        return localIndex
+    }
+
+    internal fun addUpdateFunc(effect: Effect, indexInEffect: Int, func: UpdateFunc) {
+        effectUpdateFuncs++
+        val indexInWindow = allocUpdateFuncs(localUpdateFuncIndexForEffect(effects.indexOf(effect), indexInEffect), 1)
+        if (indexInWindow != -1) {
+            cachedWindow!!.allUpdateFuncs[indexInWindow] = func
+            assertUpdateFuncInvariants()
+        }
+    }
+
+    internal fun removeUpdateFunc(effect: Effect, indexInEffect: Int) {
+        effectUpdateFuncs--
+        freeUpdateFuncs(localUpdateFuncIndexForEffect(effects.indexOf(effect), indexInEffect), 1)
+    }
+
+    private fun allocUpdateFuncs(childIndex: Int, indexInChild: Int, count: Int): Int {
+        return allocUpdateFuncs(localUpdateFuncIndexForChild(childIndex, indexInChild), count)
+    }
+
+    private fun freeUpdateFuncs(childIndex: Int, indexInChild: Int, count: Int) {
+        freeUpdateFuncs(localUpdateFuncIndexForChild(childIndex, indexInChild), count)
+    }
+
+    private fun allocUpdateFuncs(localIndex: Int, count: Int): Int {
+        totalUpdateFuncs += count
+        if (this is Window) {
+            if (nextUpdateFuncIndex > localIndex) {
+                nextUpdateFuncIndex += count
+            }
+            if (count == 1) {
+                allUpdateFuncs.add(localIndex, NOP_UPDATE_FUNC)
+            } else {
+                allUpdateFuncs.addAll(localIndex, NopUpdateFuncList(count))
+            }
+            return localIndex
+        } else {
+            val parent = updateFuncParent ?: return -1
+            return parent.allocUpdateFuncs(parent.children.indexOf(this), localIndex, count)
+        }
+    }
+
+    private fun freeUpdateFuncs(localIndex: Int, count: Int) {
+        totalUpdateFuncs -= count
+        if (this is Window) {
+            if (nextUpdateFuncIndex > localIndex) {
+                nextUpdateFuncIndex -= min(count, nextUpdateFuncIndex - localIndex)
+            }
+            if (count == 1) {
+                allUpdateFuncs.removeAt(localIndex)
+            } else {
+                allUpdateFuncs.subList(localIndex, localIndex + count).clear()
+            }
+            assertUpdateFuncInvariants()
+        } else {
+            val parent = updateFuncParent ?: return
+            parent.freeUpdateFuncs(parent.children.indexOf(this), localIndex, count)
+        }
+    }
+
+    private fun updateUpdateFuncsOnChangedChild(possibleEvent: Any) {
+        @Suppress("UNCHECKED_CAST")
+        when (val event = possibleEvent as? ObservableListEvent<UIComponent> ?: return) {
+            is ObservableAddEvent -> {
+                val (childIndex, child) = event.element
+                child.updateFuncParent?.let { oldParent ->
+                    oldParent.updateUpdateFuncsOnChangedChild(ObservableRemoveEvent(
+                        IndexedValue(oldParent.children.indexOf(child), child)))
+                }
+                assert(child.updateFuncParent == null)
+                child.updateFuncParent = this
+
+                if (child.totalUpdateFuncs == 0) return
+                var indexInWindow = allocUpdateFuncs(childIndex, 0, child.totalUpdateFuncs)
+                if (indexInWindow == -1) return
+                val allUpdateFuncs = cachedWindow!!.allUpdateFuncs
+                fun register(component: UIComponent) {
+                    component.updateFuncs?.let { funcs ->
+                        for (func in funcs) {
+                            allUpdateFuncs[indexInWindow++] = func
+                        }
+                    }
+                    component.effects.forEach { effect ->
+                        if (effect.updateFuncParent != component) return@forEach // can happen if added to two components at the same time
+                        effect.updateFuncs?.let { funcs ->
+                            for (func in funcs) {
+                                allUpdateFuncs[indexInWindow++] = func
+                            }
+                        }
+                    }
+                    component.children.forEach { child ->
+                        if (child.updateFuncParent != component) return@forEach // can happen if added to two components at the same time
+                        register(child)
+                    }
+                }
+                register(child)
+                assertUpdateFuncInvariants()
+            }
+            is ObservableRemoveEvent -> {
+                val (childIndex, child) = event.element
+                if (child.updateFuncParent != this) return // double remove can happen if added to two component at once
+                child.updateFuncParent = null
+
+                if (child.totalUpdateFuncs == 0) return
+                freeUpdateFuncs(childIndex, 0, child.totalUpdateFuncs)
+            }
+            is ObservableClearEvent -> {
+                event.oldChildren.forEach { if (it.updateFuncParent == this) it.updateFuncParent = null }
+
+                val remainingFuncs = (updateFuncs?.size ?: 0) + effectUpdateFuncs
+                val removedFuncs = totalUpdateFuncs - remainingFuncs
+                freeUpdateFuncs(remainingFuncs, removedFuncs)
+            }
+        }
+    }
+
+    private fun updateUpdateFuncsOnChangedEffect(possibleEvent: Any) {
+        @Suppress("UNCHECKED_CAST")
+        when (val event = possibleEvent as? ObservableListEvent<Effect> ?: return) {
+            is ObservableAddEvent -> {
+                val (effectIndex, effect) = event.element
+                effect.updateFuncParent?.let { oldParent ->
+                    oldParent.updateUpdateFuncsOnChangedEffect(ObservableRemoveEvent(
+                        IndexedValue(oldParent.effects.indexOf(effect), effect)))
+                }
+                assert(effect.updateFuncParent == null)
+                effect.updateFuncParent = this
+
+                val funcs = effect.updateFuncs ?: return
+                if (funcs.isEmpty()) return
+                effectUpdateFuncs += funcs.size
+                var indexInWindow = allocUpdateFuncs(localUpdateFuncIndexForEffect(effectIndex, 0), funcs.size)
+                if (indexInWindow == -1) return
+                val allUpdateFuncs = cachedWindow!!.allUpdateFuncs
+                for (func in funcs) {
+                    allUpdateFuncs[indexInWindow++] = func
+                }
+                assertUpdateFuncInvariants()
+            }
+            is ObservableRemoveEvent -> {
+                val (effectIndex, effect) = event.element
+                if (effect.updateFuncParent != this) return // double remove can happen if added to two component at once
+                effect.updateFuncParent = null
+
+                val funcs = effect.updateFuncs?.size ?: 0
+                if (funcs == 0) return
+                effectUpdateFuncs -= funcs
+                freeUpdateFuncs(localUpdateFuncIndexForEffect(effectIndex, 0), funcs)
+            }
+            is ObservableClearEvent -> {
+                event.oldChildren.forEach { if (it.updateFuncParent == this) it.updateFuncParent = null }
+
+                val removedFuncs = effectUpdateFuncs
+                effectUpdateFuncs = 0
+                freeUpdateFuncs(updateFuncs?.size ?: 0, removedFuncs)
+            }
+        }
+    }
+
+    internal fun assertUpdateFuncInvariants() {
+        if (!ASSERT_UPDATE_FUNC_INVARIANTS) return
+
+        val window = cachedWindow ?: return
+        val allUpdateFuncs = window.allUpdateFuncs
+
+        var indexInWindow = 0
+
+        fun visit(component: UIComponent) {
+            val effectUpdateFuncs = component.effects.sumOf { if (it.updateFuncParent == component) it.updateFuncs?.size ?: 0 else 0 }
+            val childUpdateFuncs = component.children.sumOf { if (it.updateFuncParent == component) it.totalUpdateFuncs else 0 }
+            assert(component.effectUpdateFuncs == effectUpdateFuncs)
+            assert(component.totalUpdateFuncs == (component.updateFuncs?.size ?: 0) + effectUpdateFuncs + childUpdateFuncs)
+
+            component.updateFuncs?.let { funcs ->
+                for (func in funcs) {
+                    assert(func == allUpdateFuncs[indexInWindow++])
+                }
+            }
+            component.effects.forEach { effect ->
+                if (effect.updateFuncParent != component) return@forEach // can happen if added to two components at the same time
+                effect.updateFuncs?.let { funcs ->
+                    for (func in funcs) {
+                        assert(func == allUpdateFuncs[indexInWindow++])
+                    }
+                }
+            }
+            component.children.forEach { child ->
+                if (child.updateFuncParent != component) return@forEach // can happen if added to two components at the same time
+                visit(child)
+            }
+        }
+        visit(window)
+
+        assert(indexInWindow == allUpdateFuncs.size)
+    }
+    //endregion
+
+    //region Source code location
+    internal val source: Array<StackTraceElement>? = if (elementaDev) Throwable().stackTrace else null
+
+    internal val filteredSource: List<StackTraceElement>?
+        get() = source?.filterNot { it.lineNumber == 1 }
+
+    internal val primarySource: StackTraceElement?
+        get() {
+            val className = javaClass.name
+            return (source ?: return null)
+                .asSequence()
+                .dropWhile { it.methodName == "<init>" && it.className != className } // super class constructors
+                .dropWhile { it.methodName == "<init>" && it.className == className } // constructors
+                .filterNot { it.lineNumber == 1 } // ignore synthetic methods
+                .dropWhile { frame -> Inspector.factoryMethods.any { (c, m) -> c == frame.className && (m == null || m == frame.methodName) } }
+                .firstOrNull()
+        }
+    //endregion
 
     /**
      * Field animation API
@@ -1003,9 +1476,10 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             return
         }
 
-        val totalFrames = (time * Window.of(this@UIComponent).animationFPS).toInt()
-        val totalDelay = (delay * Window.of(this@UIComponent).animationFPS).toInt()
+        val totalFrames = (time * Window.of(this@UIComponent).animationFPSOr1000).toInt()
+        val totalDelay = (delay * Window.of(this@UIComponent).animationFPSOr1000).toInt()
 
+        scheduleFieldAnimationUpdateFunc()
         fieldAnimationQueue.removeIf { it.field == this }
         fieldAnimationQueue.addFirst(
             IntFieldAnimationComponent(
@@ -1028,9 +1502,10 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             return
         }
 
-        val totalFrames = (time * Window.of(this@UIComponent).animationFPS).toInt()
-        val totalDelay = (delay * Window.of(this@UIComponent).animationFPS).toInt()
+        val totalFrames = (time * Window.of(this@UIComponent).animationFPSOr1000).toInt()
+        val totalDelay = (delay * Window.of(this@UIComponent).animationFPSOr1000).toInt()
 
+        scheduleFieldAnimationUpdateFunc()
         fieldAnimationQueue.removeIf { it.field == this }
         fieldAnimationQueue.addFirst(
             FloatFieldAnimationComponent(
@@ -1053,9 +1528,10 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             return
         }
 
-        val totalFrames = (time * Window.of(this@UIComponent).animationFPS).toInt()
-        val totalDelay = (delay * Window.of(this@UIComponent).animationFPS).toInt()
+        val totalFrames = (time * Window.of(this@UIComponent).animationFPSOr1000).toInt()
+        val totalDelay = (delay * Window.of(this@UIComponent).animationFPSOr1000).toInt()
 
+        scheduleFieldAnimationUpdateFunc()
         fieldAnimationQueue.removeIf { it.field == this }
         fieldAnimationQueue.addFirst(
             LongFieldAnimationComponent(
@@ -1083,9 +1559,10 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             return
         }
 
-        val totalFrames = (time * Window.of(this@UIComponent).animationFPS).toInt()
-        val totalDelay = (delay * Window.of(this@UIComponent).animationFPS).toInt()
+        val totalFrames = (time * Window.of(this@UIComponent).animationFPSOr1000).toInt()
+        val totalDelay = (delay * Window.of(this@UIComponent).animationFPSOr1000).toInt()
 
+        scheduleFieldAnimationUpdateFunc()
         fieldAnimationQueue.removeIf { it.field == this }
         fieldAnimationQueue.addFirst(
             DoubleFieldAnimationComponent(
@@ -1108,9 +1585,10 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             return
         }
 
-        val totalFrames = (time * Window.of(this@UIComponent).animationFPS).toInt()
-        val totalDelay = (delay * Window.of(this@UIComponent).animationFPS).toInt()
+        val totalFrames = (time * Window.of(this@UIComponent).animationFPSOr1000).toInt()
+        val totalDelay = (delay * Window.of(this@UIComponent).animationFPSOr1000).toInt()
 
+        scheduleFieldAnimationUpdateFunc()
         fieldAnimationQueue.removeIf { it.field == this }
         fieldAnimationQueue.addFirst(
             ColorFieldAnimationComponent(
@@ -1126,6 +1604,36 @@ abstract class UIComponent : Observable(), ReferenceHolder {
 
     fun KMutableProperty0<*>.stopAnimating() {
         fieldAnimationQueue.removeIf { it.field == this }
+    }
+
+    private fun scheduleFieldAnimationUpdateFunc() {
+        if (fieldAnimationQueue.isNotEmpty()) return // should already be scheduled
+
+        addUpdateFunc(object : UpdateFunc {
+            override fun invoke(dt: Float, dtMs: Int) {
+                if (Window.of(this@UIComponent).version < ElementaVersion.v8) {
+                    // Field animations will be handled via `animationFrame`
+                    removeUpdateFunc(this)
+                    return
+                }
+
+                val queueIterator = fieldAnimationQueue.iterator()
+                queueIterator.forEachRemaining { anim ->
+                    if (!anim.animationPaused) {
+                        anim.elapsedFrames += dtMs
+                    }
+                    anim.setValue(anim.getPercentComplete())
+
+                    if (anim.isComplete()) {
+                        queueIterator.remove()
+                    }
+                }
+
+                if (fieldAnimationQueue.isEmpty()) {
+                    removeUpdateFunc(this)
+                }
+            }
+        })
     }
 
     private fun validateAnimationFields(time: Float, delay: Float): Boolean {
@@ -1156,6 +1664,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
      */
 
     fun startTimer(interval: Long, delay: Long = 0, callback: (Int) -> Unit): Int {
+        scheduleTimerUpdateFunc()
         val id = nextTimerId++
         activeTimers[id] = Timer(delay, interval, callback)
         return id
@@ -1185,7 +1694,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     private class Timer(delay: Long, val interval: Long, val callback: (Int) -> Unit) {
         var hasDelayed = false
         var timeLeft = delay
-        var lastTime = System.currentTimeMillis()
+        var lastTime: Long = -1 // used only with `animationFrame` / pre-v8
 
         init {
             if (delay == 0L) {
@@ -1195,14 +1704,79 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         }
     }
 
+    private fun scheduleTimerUpdateFunc() {
+        if (activeTimers.isNotEmpty()) return // should already be scheduled
+
+        addUpdateFunc(object : UpdateFunc {
+            override fun invoke(dt: Float, dtMs: Int) {
+                if (Window.of(this@UIComponent).version < ElementaVersion.v8) {
+                    // Timers will be handled via `animationFrame`
+                    removeUpdateFunc(this)
+                    return
+                }
+
+                updateTimers { it.timeLeft -= dtMs }
+
+                if (activeTimers.isEmpty()) {
+                    removeUpdateFunc(this)
+                }
+            }
+        })
+    }
+
     override fun holdOnto(listener: Any): () -> Unit {
         heldReferences.add(listener)
         return { heldReferences.remove(listener) }
     }
 
+    @JvmInline
+    internal value class Flags(val bits: UInt) {
+        operator fun contains(element: Flags) = this.bits and element.bits == element.bits
+        infix fun and(other: Flags) = Flags(this.bits and other.bits)
+        infix fun or(other: Flags) = Flags(this.bits or other.bits)
+        operator fun plus(other: Flags) = this or other
+        operator fun minus(other: Flags) = Flags(this.bits and other.bits.inv())
+        fun inv() = Flags(bits.inv() and All.bits)
+
+        companion object {
+            private var nextBit = 0
+            private val iota: Flags
+                get() = Flags(1u shl nextBit++)
+
+            val None = Flags(0u)
+
+            val RequiresMouseMove = iota
+            val RequiresMouseDrag = iota
+            val RequiresAnimationFrame = iota // only applies when ElementaVersion >= V8
+
+            val All = Flags(iota.bits - 1u)
+
+            private val cache = ConcurrentHashMap<Class<*>, Flags>().apply {
+                put(Effect::class.java, Flags(0u))
+                put(UIComponent::class.java, Flags(0u))
+                put(Window::class.java, Flags(0u))
+            }
+            fun initialFor(cls: Class<*>): Flags = cache.getOrPut(cls) {
+                flagsBasedOnOverrides(cls) + initialFor(cls.superclass)
+            }
+
+            private fun flagsBasedOnOverrides(cls: Class<*>): Flags = listOf(
+                if (cls.overridesMethod("mouseMove", Window::class.java)) RequiresMouseMove else None,
+                if (cls.overridesMethod("dragMouse", Int::class.java, Int::class.java, Int::class.java)) RequiresMouseDrag else None,
+                if (cls.overridesMethod("dragMouse", Float::class.java, Float::class.java, Int::class.java)) RequiresMouseDrag else None,
+                if (cls.overridesMethod("animationFrame")) RequiresAnimationFrame else None,
+            ).reduce { acc, flags -> acc + flags }
+
+            private fun Class<*>.overridesMethod(name: String, vararg args: Class<*>) =
+                try { getDeclaredMethod(name, *args); true } catch (_: NoSuchMethodException) { false }
+        }
+    }
+
     companion object {
         // Default value for componentName used as marker for lazy init.
         private val defaultComponentName = String()
+
+        private val ASSERT_UPDATE_FUNC_INVARIANTS = System.getProperty("elementa.debug.assertUpdateFuncInvariants").toBoolean()
 
         val DEBUG_OUTLINE_WIDTH = System.getProperty("elementa.debug.width")?.toDoubleOrNull() ?: 2.0
 

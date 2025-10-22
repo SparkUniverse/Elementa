@@ -1,6 +1,6 @@
 package gg.essential.elementa.utils
 
-import gg.essential.elementa.impl.Platform.Companion.platform
+import gg.essential.universal.UMinecraft
 
 internal enum class InvalidUsageBehavior {
     IGNORE,
@@ -39,5 +39,5 @@ internal fun requireState(state: Boolean, message: String) {
 /** Ensure a method can only be called from the main thread. Lack of this check does **not** imply thread-safety.  */
 internal fun requireMainThread(message: String = "This method is not thread-safe and must be called from the main thread. " +
         "Consider the thread-safety of the calling code and use Window.enqueueRenderOperation if applicable.") {
-    requireState(platform.isCallingFromMinecraftThread(), message)
+    requireState(UMinecraft.isCallingFromMinecraftThread(), message)
 }

@@ -21,12 +21,16 @@ dependencies {
     compileOnly(libs.versions.universalcraft.map { "gg.essential:universalcraft-1.8.9-forge:$it" }) {
         attributes { attribute(common, true) }
     }
+    // Depending on LWJGL3 instead of 2 so we can choose opengl bindings only
+    compileOnly("org.lwjgl:lwjgl-opengl:3.3.1")
 }
 tasks.compileKotlin.setJvmDefault("all")
 
 kotlin.jvmToolchain {
     (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(8))
 }
+
+java.withSourcesJar()
 
 publishing {
     publications {

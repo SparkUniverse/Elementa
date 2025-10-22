@@ -1,14 +1,19 @@
 package gg.essential.elementa.components
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.dsl.toConstraint
 import gg.essential.elementa.dsl.pixels
+import gg.essential.elementa.utils.readElementaShaderSource
 import gg.essential.elementa.utils.readFromLegacyShader
+import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.render.URenderPipeline
 import gg.essential.universal.shader.BlendState
 import gg.essential.universal.shader.Float2Uniform
 import gg.essential.universal.shader.FloatUniform
 import gg.essential.universal.shader.UShader
+import gg.essential.universal.vertex.UBufferBuilder
 import java.awt.Color
 
 /**
@@ -66,10 +71,35 @@ class UICircle @JvmOverloads constructor(radius: Float = 0f, color: Color = Colo
         private lateinit var shaderRadiusUniform: FloatUniform
         private lateinit var shaderCenterPositionUniform: Float2Uniform
 
+        private val PIPELINE = URenderPipeline.builderWithLegacyShader(
+            "elementa:circle",
+            UGraphics.DrawMode.QUADS,
+            UGraphics.CommonVertexFormats.POSITION_COLOR,
+            readElementaShaderSource("rect", "vsh"),
+            readElementaShaderSource("circle", "fsh"),
+        ).apply {
+            @Suppress("DEPRECATION")
+            blendState = BlendState.NORMAL
+            depthTest = URenderPipeline.DepthTest.Always // see UIBlock.PIPELINE
+        }.build()
+
+        private val PIPELINE2 = URenderPipeline.builderWithLegacyShader(
+            "elementa:circle",
+            UGraphics.DrawMode.QUADS,
+            UGraphics.CommonVertexFormats.POSITION_COLOR,
+            readElementaShaderSource("rect", "vsh"),
+            readElementaShaderSource("circle", "fsh"),
+        ).apply {
+            blendState = BlendState.ALPHA
+            depthTest = URenderPipeline.DepthTest.Always // see UIBlock.PIPELINE
+        }.build()
+
         fun initShaders() {
+            if (URenderPipeline.isRequired) return
             if (::shader.isInitialized)
                 return
 
+            @Suppress("DEPRECATION")
             shader = UShader.readFromLegacyShader("rect", "circle", BlendState.NORMAL)
             if (!shader.usable) {
                 println("Failed to load Elementa UICircle shader")
@@ -87,6 +117,30 @@ class UICircle @JvmOverloads constructor(radius: Float = 0f, color: Color = Colo
             drawCircle(UMatrixStack(), centerX, centerY, radius, color)
 
         fun drawCircle(matrixStack: UMatrixStack, centerX: Float, centerY: Float, radius: Float, color: Color) {
+            if (!URenderPipeline.isRequired && !ElementaVersion.atLeastV9Active) {
+                @Suppress("DEPRECATION")
+                return drawCircleLegacy(matrixStack, centerX, centerY, radius, color)
+            }
+
+            val bufferBuilder = UBufferBuilder.create(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_COLOR)
+            UIBlock.drawBlock(
+                bufferBuilder,
+                matrixStack,
+                color,
+                (centerX - radius).toDouble(),
+                (centerY - radius).toDouble(),
+                (centerX + radius).toDouble(),
+                (centerY + radius).toDouble()
+            )
+            bufferBuilder.build()?.drawAndClose(if (ElementaVersion.atLeastV10Active) PIPELINE2 else PIPELINE) {
+                uniform("u_Radius", radius)
+                uniform("u_CenterPos", centerX, centerY)
+            }
+        }
+
+        @Deprecated("Stops working in 1.21.5")
+        @Suppress("DEPRECATION")
+        private fun drawCircleLegacy(matrixStack: UMatrixStack, centerX: Float, centerY: Float, radius: Float, color: Color) {
             if (!::shader.isInitialized || !shader.usable)
                 return
 

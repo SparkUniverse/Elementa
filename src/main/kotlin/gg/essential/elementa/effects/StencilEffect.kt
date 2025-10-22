@@ -1,6 +1,6 @@
 package gg.essential.elementa.effects
 
-import gg.essential.elementa.impl.Platform.Companion.platform
+import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
 import org.lwjgl.opengl.GL11.*
 
@@ -9,6 +9,7 @@ import org.lwjgl.opengl.GL11.*
  *
  * In order to use, you must call [enableStencil] in mod initialization.
  */
+@Deprecated("Does not work on 1.14+")
 class StencilEffect : Effect() {
     override fun beforeDraw(matrixStack: UMatrixStack) {
         glEnable(GL_STENCIL_TEST)
@@ -32,8 +33,9 @@ class StencilEffect : Effect() {
         /**
          * Must be called in mod initialization to use [StencilEffect]
          */
-        @JvmStatic fun enableStencil() { //TODO wait for 1.15 to impl
-            platform.enableStencil()
+        @JvmStatic fun enableStencil() {
+            @Suppress("DEPRECATION")
+            UGraphics.enableStencil()
         }
     }
 }

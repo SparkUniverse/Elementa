@@ -2,6 +2,7 @@ package gg.essential.elementa.components
 
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.components.image.*
+import gg.essential.elementa.components.inspector.Inspector
 import gg.essential.elementa.utils.ResourceCache
 import gg.essential.elementa.utils.drawTexture
 import gg.essential.universal.UGraphics
@@ -126,6 +127,10 @@ open class UIImage @JvmOverloads constructor(
     companion object {
 
         val defaultResourceCache = ResourceCache(50)
+
+        init {
+            Inspector.registerComponentFactory(Companion::class.java)
+        }
 
         @JvmStatic
         fun ofFile(file: File): UIImage {

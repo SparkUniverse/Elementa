@@ -2,6 +2,7 @@ package gg.essential.elementa.constraints.animation
 
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.UIConstraints
+import gg.essential.elementa.components.UpdateFunc
 import gg.essential.elementa.components.Window
 import gg.essential.elementa.constraints.*
 
@@ -30,8 +31,8 @@ class AnimatingConstraints(
 
     @JvmOverloads
     fun setXAnimation(strategy: AnimationStrategy, time: Float, newConstraint: XConstraint, delay: Float = 0f) = apply {
-        val totalFrames = time * Window.of(component).animationFPS
-        val totalDelay = delay * Window.of(component).animationFPS
+        val totalFrames = time * Window.of(component).animationFPSOr1000
+        val totalDelay = delay * Window.of(component).animationFPSOr1000
 
         x = XAnimationComponent(
             strategy,
@@ -44,8 +45,8 @@ class AnimatingConstraints(
 
     @JvmOverloads
     fun setYAnimation(strategy: AnimationStrategy, time: Float, newConstraint: YConstraint, delay: Float = 0f) = apply {
-        val totalFrames = time * Window.of(component).animationFPS
-        val totalDelay = delay * Window.of(component).animationFPS
+        val totalFrames = time * Window.of(component).animationFPSOr1000
+        val totalDelay = delay * Window.of(component).animationFPSOr1000
 
         y = YAnimationComponent(
             strategy,
@@ -59,8 +60,8 @@ class AnimatingConstraints(
     @JvmOverloads
     fun setWidthAnimation(strategy: AnimationStrategy, time: Float, newConstraint: WidthConstraint, delay: Float = 0f) =
         apply {
-            val totalFrames = time * Window.of(component).animationFPS
-            val totalDelay = delay * Window.of(component).animationFPS
+            val totalFrames = time * Window.of(component).animationFPSOr1000
+            val totalDelay = delay * Window.of(component).animationFPSOr1000
 
             width = WidthAnimationComponent(
                 strategy,
@@ -78,8 +79,8 @@ class AnimatingConstraints(
         newConstraint: HeightConstraint,
         delay: Float = 0f
     ) = apply {
-        val totalFrames = time * Window.of(component).animationFPS
-        val totalDelay = delay * Window.of(component).animationFPS
+        val totalFrames = time * Window.of(component).animationFPSOr1000
+        val totalDelay = delay * Window.of(component).animationFPSOr1000
 
         height = HeightAnimationComponent(
             strategy,
@@ -97,8 +98,8 @@ class AnimatingConstraints(
         newConstraint: RadiusConstraint,
         delay: Float = 0f
     ) = apply {
-        val totalFrames = time * Window.of(component).animationFPS
-        val totalDelay = delay * Window.of(component).animationFPS
+        val totalFrames = time * Window.of(component).animationFPSOr1000
+        val totalDelay = delay * Window.of(component).animationFPSOr1000
 
         radius = RadiusAnimationComponent(
             strategy,
@@ -116,8 +117,8 @@ class AnimatingConstraints(
         newConstraint: HeightConstraint,
         delay: Float = 0f
     ) = apply {
-        val totalFrames = time * Window.of(component).animationFPS
-        val totalDelay = delay * Window.of(component).animationFPS
+        val totalFrames = time * Window.of(component).animationFPSOr1000
+        val totalDelay = delay * Window.of(component).animationFPSOr1000
 
         textScale = HeightAnimationComponent(
             strategy,
@@ -131,8 +132,8 @@ class AnimatingConstraints(
     @JvmOverloads
     fun setColorAnimation(strategy: AnimationStrategy, time: Float, newConstraint: ColorConstraint, delay: Float = 0f) =
         apply {
-            val totalFrames = time * Window.of(component).animationFPS
-            val totalDelay = delay * Window.of(component).animationFPS
+            val totalFrames = time * Window.of(component).animationFPSOr1000
+            val totalDelay = delay * Window.of(component).animationFPSOr1000
 
             color = ColorAnimationComponent(
                 strategy,
@@ -149,7 +150,7 @@ class AnimatingConstraints(
      * relevant for [UIComponent.animateBeforeHide] which hides the element when the animation is completed.
      */
     fun setExtraDelay(delay: Float) {
-        extraDelayFrames = (delay * Window.of(component).animationFPS).toInt()
+        extraDelayFrames = (delay * Window.of(component).animationFPSOr1000).toInt()
     }
 
     fun onComplete(method: () -> Unit) = apply {
@@ -160,9 +161,17 @@ class AnimatingConstraints(
         completeAction = method::run
     }
 
+    internal var updateFunc: UpdateFunc? = null
+
+    @Deprecated("See [ElementaVersion.V8].")
     override fun animationFrame() {
+        @Suppress("DEPRECATION")
         super.animationFrame()
 
+        updateCompletion(1)
+    }
+
+    internal fun updateCompletion(dt: Int) {
         var anyLeftAnimating = false
 
         val x = x
@@ -209,7 +218,7 @@ class AnimatingConstraints(
 
         if (extraDelayFrames > 0) {
             anyLeftAnimating = true
-            extraDelayFrames--
+            extraDelayFrames -= dt
         }
 
         if (!anyLeftAnimating) {

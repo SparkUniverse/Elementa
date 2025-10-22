@@ -1,8 +1,13 @@
 package gg.essential.elementa.utils
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.render.URenderPipeline
+import gg.essential.universal.shader.BlendState
 import gg.essential.universal.utils.ReleasedDynamicTexture
+import gg.essential.universal.vertex.UBufferBuilder
+import gg.essential.universal.vertex.UVertexConsumer
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.awt.image.BufferedImage
@@ -24,31 +29,61 @@ internal fun drawTexture(
 ) {
     matrixStack.push()
 
-    UGraphics.enableBlend()
-    UGraphics.enableAlpha()
     matrixStack.scale(1f, 1f, 50f)
     val glId = texture.dynamicGlId
-    UGraphics.bindTexture(0, glId)
     val red = color.red.toFloat() / 255f
     val green = color.green.toFloat() / 255f
     val blue = color.blue.toFloat() / 255f
     val alpha = color.alpha.toFloat() / 255f
-    val worldRenderer = UGraphics.getFromTessellator()
     UGraphics.configureTexture(glId) {
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, textureMinFilter)
         GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, textureMagFilter)
     }
 
-    worldRenderer.beginWithDefaultShader(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR)
+    fun drawTexturedQuad(vertexConsumer: UVertexConsumer) {
+        vertexConsumer.pos(matrixStack, x, y + height, 0.0).tex(0.0, 1.0).color(red, green, blue, alpha).endVertex()
+        vertexConsumer.pos(matrixStack, x + width, y + height, 0.0).tex(1.0, 1.0).color(red, green, blue, alpha).endVertex()
+        vertexConsumer.pos(matrixStack, x + width, y, 0.0).tex(1.0, 0.0).color(red, green, blue, alpha).endVertex()
+        vertexConsumer.pos(matrixStack, x, y, 0.0).tex(0.0, 0.0).color(red, green, blue, alpha).endVertex()
+    }
 
-    worldRenderer.pos(matrixStack, x, y + height, 0.0).tex(0.0, 1.0).color(red, green, blue, alpha).endVertex()
-    worldRenderer.pos(matrixStack, x + width, y + height, 0.0).tex(1.0, 1.0).color(red, green, blue, alpha).endVertex()
-    worldRenderer.pos(matrixStack, x + width, y, 0.0).tex(1.0, 0.0).color(red, green, blue, alpha).endVertex()
-    worldRenderer.pos(matrixStack, x, y, 0.0).tex(0.0, 0.0).color(red, green, blue, alpha).endVertex()
-    worldRenderer.drawDirect()
+    if (URenderPipeline.isRequired || ElementaVersion.atLeastV9Active) {
+        val bufferBuilder = UBufferBuilder.create(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR)
+        drawTexturedQuad(bufferBuilder)
+        bufferBuilder.build()?.drawAndClose(if (ElementaVersion.atLeastV10Active) TEXTURED_QUAD_PIPELINE2 else TEXTURED_QUAD_PIPELINE) {
+            texture(0, glId)
+        }
+    } else {
+        @Suppress("DEPRECATION")
+        UGraphics.enableBlend()
+        UGraphics.enableAlpha()
+        UGraphics.bindTexture(0, glId)
+        val worldRenderer = UGraphics.getFromTessellator()
+        @Suppress("DEPRECATION")
+        worldRenderer.beginWithDefaultShader(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR)
+        drawTexturedQuad(worldRenderer.asUVertexConsumer())
+        worldRenderer.drawDirect()
+    }
 
     matrixStack.pop()
 }
+
+private val TEXTURED_QUAD_PIPELINE = URenderPipeline.builderWithDefaultShader(
+    "elementa:textured_quad",
+    UGraphics.DrawMode.QUADS,
+    UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR,
+).apply {
+    @Suppress("DEPRECATION")
+    blendState = BlendState.NORMAL
+}.build()
+
+private val TEXTURED_QUAD_PIPELINE2 = URenderPipeline.builderWithDefaultShader(
+    "elementa:textured_quad",
+    UGraphics.DrawMode.QUADS,
+    UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR,
+).apply {
+    blendState = BlendState.ALPHA
+}.build()
 
 fun decodeBlurHash(blurHash: String?, width: Int, height: Int, punch: Float = 1f): BufferedImage? {
     if (blurHash == null || blurHash.length < 6) return null

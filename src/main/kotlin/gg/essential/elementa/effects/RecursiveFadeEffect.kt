@@ -72,8 +72,10 @@ class RecursiveFadeEffect constructor(
             }
         }
 
+        @Deprecated("See [ElementaVersion.V8].")
         override fun animationFrame() {
             // We still want the original constraint's colour to recalculate while we are animating
+            @Suppress("DEPRECATION")
             originalConstraint.animationFrame()
         }
 

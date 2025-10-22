@@ -1,5 +1,6 @@
 package gg.essential.elementa.components
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.UIConstraints
 import gg.essential.elementa.constraints.CenterConstraint
@@ -10,6 +11,7 @@ import gg.essential.elementa.state.State
 import gg.essential.elementa.state.pixels
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.render.URenderPipeline
 import java.awt.Color
 
 /**
@@ -96,13 +98,18 @@ constructor(
     }
 
     override fun draw(matrixStack: UMatrixStack) {
-        val text = textState.get()
-        if (text.isEmpty())
+        val textWidth = textWidthState.get()
+
+        // If you're wondering why we check if the text's width is 0 instead of if the string is empty:
+        // It's better to check the width derived from the font provider, as the string may just be full of characters
+        // that can't be rendered (as they aren't supported by current font).
+        // This check prevents issues from occurring later, e.g. when calculating the scale of the text.
+        if (textWidth == 0f)
             return
 
         beforeDrawCompat(matrixStack)
 
-        val scale = getWidth() / textWidthState.get()
+        val scale = getWidth() / textWidth
         val x = getLeft()
         val y = getTop() + (if (verticallyCenteredState.get()) fontProviderState.get().getBelowLineHeight() * scale else 0f)
         val color = getColor()
@@ -112,7 +119,10 @@ constructor(
             return super.draw(matrixStack)
         }
 
-        UGraphics.enableBlend()
+        if (!URenderPipeline.isRequired && !ElementaVersion.atLeastV9Active) {
+            @Suppress("DEPRECATION")
+            UGraphics.enableBlend()
+        }
 
         val shadow = shadowState.get()
         val shadowColor = shadowColorState.get()

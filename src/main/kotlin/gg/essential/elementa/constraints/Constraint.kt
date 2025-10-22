@@ -1,6 +1,8 @@
 package gg.essential.elementa.constraints
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
+import gg.essential.elementa.components.Window
 import gg.essential.elementa.constraints.animation.AnimationComponent
 import gg.essential.elementa.constraints.debug.constraintDebugger
 import gg.essential.elementa.constraints.resolution.ConstraintVisitor
@@ -18,6 +20,7 @@ interface SuperConstraint<T> {
     var recalculate: Boolean
     var constrainTo: UIComponent?
 
+    @Deprecated("See [ElementaVersion.V8].")
     fun animationFrame() {
         recalculate = true
     }
@@ -72,37 +75,15 @@ interface PositionConstraint : XConstraint, YConstraint
 interface XConstraint : SuperConstraint<Float> {
     fun getXPositionImpl(component: UIComponent): Float
 
-    fun getXPosition(component: UIComponent): Float {
-        val debugger = constraintDebugger
-        if (debugger != null) {
-            return debugger.evaluate(this, ConstraintType.X, component)
-        }
-
-        if (recalculate) {
-            cachedValue = getXPositionImpl(component).roundToRealPixels()
-            recalculate = false
-        }
-
-        return cachedValue
-    }
+    fun getXPosition(component: UIComponent): Float =
+        getCachedDebuggable(component, ConstraintType.X) { getXPositionImpl(it).roundToRealPixels() }
 }
 
 interface YConstraint : SuperConstraint<Float> {
     fun getYPositionImpl(component: UIComponent): Float
 
-    fun getYPosition(component: UIComponent): Float {
-        val debugger = constraintDebugger
-        if (debugger != null) {
-            return debugger.evaluate(this, ConstraintType.Y, component)
-        }
-
-        if (recalculate) {
-            cachedValue = getYPositionImpl(component).roundToRealPixels()
-            recalculate = false
-        }
-
-        return cachedValue
-    }
+    fun getYPosition(component: UIComponent): Float =
+        getCachedDebuggable(component, ConstraintType.Y) { getYPositionImpl(it).roundToRealPixels() }
 }
 
 interface SizeConstraint : WidthConstraint, HeightConstraint, RadiusConstraint
@@ -110,55 +91,22 @@ interface SizeConstraint : WidthConstraint, HeightConstraint, RadiusConstraint
 interface RadiusConstraint : SuperConstraint<Float> {
     fun getRadiusImpl(component: UIComponent): Float
 
-    fun getRadius(component: UIComponent): Float {
-        val debugger = constraintDebugger
-        if (debugger != null) {
-            return debugger.evaluate(this, ConstraintType.RADIUS, component)
-        }
-
-        if (recalculate) {
-            cachedValue = getRadiusImpl(component)
-            recalculate = false
-        }
-
-        return cachedValue
-    }
+    fun getRadius(component: UIComponent): Float =
+        getCachedDebuggable(component, ConstraintType.RADIUS) { getRadiusImpl(it).roundToRealPixels() }
 }
 
 interface WidthConstraint : SuperConstraint<Float> {
     fun getWidthImpl(component: UIComponent): Float
 
-    fun getWidth(component: UIComponent): Float {
-        val debugger = constraintDebugger
-        if (debugger != null) {
-            return debugger.evaluate(this, ConstraintType.WIDTH, component)
-        }
-
-        if (recalculate) {
-            cachedValue = getWidthImpl(component).roundToRealPixels()
-            recalculate = false
-        }
-
-        return cachedValue
-    }
+    fun getWidth(component: UIComponent): Float =
+        getCachedDebuggable(component, ConstraintType.WIDTH) { getWidthImpl(it).roundToRealPixels() }
 }
 
 interface HeightConstraint : SuperConstraint<Float> {
     fun getHeightImpl(component: UIComponent): Float
 
-    fun getHeight(component: UIComponent): Float {
-        val debugger = constraintDebugger
-        if (debugger != null) {
-            return debugger.evaluate(this, ConstraintType.HEIGHT, component)
-        }
-
-        if (recalculate) {
-            cachedValue = getHeightImpl(component).roundToRealPixels()
-            recalculate = false
-        }
-
-        return cachedValue
-    }
+    fun getHeight(component: UIComponent): Float =
+        getCachedDebuggable(component, ConstraintType.HEIGHT) { getHeightImpl(it).roundToRealPixels() }
 
     fun getTextScale(component: UIComponent): Float {
         return getHeight(component)
@@ -168,14 +116,32 @@ interface HeightConstraint : SuperConstraint<Float> {
 interface ColorConstraint : SuperConstraint<Color> {
     fun getColorImpl(component: UIComponent): Color
 
-    fun getColor(component: UIComponent): Color {
-        if (recalculate) {
-            cachedValue = getColorImpl(component)
-            recalculate = false
-        }
-
-        return cachedValue
-    }
+    fun getColor(component: UIComponent): Color =
+        getCached(component) { getColorImpl(it) }
 }
 
 interface MasterConstraint : PositionConstraint, SizeConstraint
+
+private inline fun SuperConstraint<Float>.getCachedDebuggable(component: UIComponent, type: ConstraintType, getImpl: (UIComponent) -> Float): Float {
+    val debugger = constraintDebugger
+    if (debugger != null) {
+        return debugger.evaluate(this, type, component)
+    }
+
+    return getCached(component, getImpl)
+}
+
+internal inline fun <T> SuperConstraint<T>.getCached(component: UIComponent, getImpl: (UIComponent) -> T): T {
+    if (recalculate) {
+        cachedValue = getImpl(component)
+        val window = Window.ofOrNull(component)
+        if (window != null) {
+            if (window.version >= ElementaVersion.v8) {
+                window.cachedConstraints.add(this)
+            }
+            recalculate = false
+        }
+    }
+
+    return cachedValue
+}

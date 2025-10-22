@@ -1,10 +1,13 @@
 package gg.essential.elementa.markdown
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.components.MarkdownNode
 import gg.essential.elementa.components.TreeListComponent
 import gg.essential.elementa.components.TreeNode
+import gg.essential.elementa.components.UpdateFunc
 import gg.essential.elementa.components.Window
+import gg.essential.elementa.components.addUpdateFuncOnV8ReplacingAnimationFrame
 import gg.essential.elementa.constraints.HeightConstraint
 import gg.essential.elementa.dsl.pixels
 import gg.essential.elementa.events.UIEvent
@@ -174,9 +177,16 @@ class MarkdownComponent(
         } ?: 0f
     }
 
+    init { addUpdateFuncOnV8ReplacingAnimationFrame { _, _ -> update() }}
+    @Deprecated("See [ElementaVersion.V8].")
     override fun animationFrame() {
+        @Suppress("DEPRECATION")
         super.animationFrame()
+        if (versionOrV0 >= ElementaVersion.v8) return // handled by UpdateFunc
+        update()
+    }
 
+    private fun update() {
         if (needsInitialLayout) {
             needsInitialLayout = false
             reparse()
@@ -212,7 +222,7 @@ class MarkdownComponent(
 
     override fun draw(matrixStack: UMatrixStack) {
         if (needsInitialLayout) {
-            animationFrame()
+            update()
         }
         beforeDraw(matrixStack)
 

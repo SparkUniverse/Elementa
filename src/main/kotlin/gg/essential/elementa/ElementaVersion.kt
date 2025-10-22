@@ -1,5 +1,15 @@
 package gg.essential.elementa
 
+import gg.essential.elementa.components.UIText
+import gg.essential.elementa.components.UIWrappedText
+import gg.essential.elementa.components.UpdateFunc
+import gg.essential.elementa.components.Window
+import gg.essential.elementa.constraints.SuperConstraint
+import gg.essential.elementa.constraints.animation.AnimationComponent
+import gg.essential.elementa.effects.Effect
+import gg.essential.universal.render.URenderPipeline
+import gg.essential.universal.shader.BlendState
+
 /**
  * Sometimes it is necessary or desirable to introduce breaking behavioral changes to Elementa. In order to maintain
  * full backwards compatibility in these cases, library consumers must explicitly opt-in to such changes for their
@@ -84,7 +94,102 @@ enum class ElementaVersion {
     /**
      * Change the behavior of scroll components to no longer require holding down shift when horizontal is the only possible scrolling direction.
      */
+    @Deprecated(DEPRECATION_MESSAGE)
     V5,
+
+    /**
+     * [gg.essential.elementa.components.ScrollComponent] now has a minimum size for scrollbar grips.
+     */
+    @Deprecated(DEPRECATION_MESSAGE)
+    V6,
+
+    /**
+     * [gg.essential.elementa.components.Window] now disables input events if an error has occurred during drawing.
+     */
+    @Deprecated(DEPRECATION_MESSAGE)
+    V7,
+
+    /**
+     * The [animationFrame][UIComponent.animationFrame] methods are now deprecated and will no longer be called at all
+     * for [constraints][SuperConstraint.animationFrame] or if your override is marked as [Deprecated].
+     * The relative order in which various things ([UpdateFunc]s, constraint cache invalidation, [UIComponent] timers
+     * and field animations, [UIComponent.animationFrame], and [Effect.animationFrame]) will be called has changed
+     * because constraint cache invalidation is separate now and [UpdateFunc]s are used internally for timers and field
+     * animations now.
+     *
+     * All custom constraints which currently rely on `animationFrame` must be updated to support the new
+     * `animationTime` mechanism described below before this version can be enabled!
+     *
+     * All custom components and effects which override `animationFrame` should be updated to use the [UpdateFunc] API
+     * instead, and some may also require updates to account for the change in relative order mentioned above.
+     * Note however that both the UpdateFunc mechanism and the animationTime properties are both available on any
+     * [ElementaVersion], so most (if not all) of your components can migrate to them even before opting to enable
+     * this [ElementaVersion].
+     *
+     * If your custom component or effect needs to update some animation or other miscellaneous state before each frame,
+     * use the [UpdateFunc] mechanism instead (via [UIComponent.addUpdateFunc]/[Effect.addUpdateFunc]).
+     * This way, only components which actually have something that needs updating will need to be called each frame.
+     *
+     * If your custom component or effect needs to continue to support older [ElementaVersion]s, ideally mark your
+     * `animationFrame` override as [Deprecated], which will allow Elementa to no longer call it on newer versions.
+     * If it is not annotated, Elementa will continue to call it and pay the corresponding performance penalty to do so.
+     *
+     * If your custom constraint is animated, use [Window.animationTimeNs]/[animationTimeMs][Window.animationTimeMs]
+     * to drive that animation instead.
+     *
+     * You no longer need to call [SuperConstraint.animationFrame] to cause the cached value in a constraint to be
+     * recomputed each frame. Constraints will now automatically register themselves with the [Window] they are
+     * evaluated on, so it can invalidate them automatically via [Window.invalidateCachedConstraints].
+     * This can be done manually any number of times during one frame and will be called by default at least twice per
+     * frame (once before all update funcs and once after).
+     *
+     *
+     * Additionally, given both new mechanisms are variable time, [Window.animationFPS] is now deprecated and the
+     * meaning of any existing `frames` parameter which are used for timing and cannot be renamed without breaking ABI
+     * (e.g. [AnimationComponent.elapsedFrames]) is changed to now mean "milliseconds" instead.
+     *
+     *
+     * The main reasons for this change are:
+     * - Previously it was not possible to get layout information from a component, then update it depending on that
+     *   information and still have that update be reflected in the current frame, because there was no safe way to
+     *   invalidate the cached layout information. You would either have to call `animationFrame` and accept some
+     *   animations running quicker than intended, or wait until the next frame.
+     * - A common beginner mistake was to query layout information during `animationFrame`, during that method however
+     *   usually parts of the tree still have the old values cached, so evaluating the layout could result in those old
+     *   values being used while computing the new values. Now that the two operations are separate, it is safe to query
+     *   the layout during [UpdateFunc]s because `invalidateCachedConstraints` will be called again afterwards.
+     *   And if you change the layout in response to your measurements, you can call the method yourself to immediately
+     *   make visible those changes to all remaining [UpdateFunc]s too.
+     * - Another common mistake was making changes to the component hierarchy from `animationFrame`. Given that method
+     *   is called from a trivial tree traversal, making changes to that tree could result in
+     *   ConcurrentModificationExceptions (or the custom "Cannot modify children while iterating over them." exception).
+     *   The [UpdateFunc] implementation does not suffer from this restriction.
+     * - `animationFrame` runs on a fixed update rate, which almost certainly won't match the real frame rate perfectly
+     *   and will result in multiple calls per frame (by default 244 times per second), which not only wastes cpu time
+     *   but also results in slow motion animations if there isn't enough time for all the calls.
+     *   Since we mostly use this for animations, and not physics simulations, using variable rate updates is not really
+     *   any more difficult (in some cases it's actually easier) and solves both of these.
+     * - `animationFrame` will traverse the entire tree, even if an entire branch has neither things that need regular
+     *   updates nor had its constraints evaluated (e.g. because it's off-screen).
+     *   The new constraint tracking will only invalidate constraints which were evaluated, and the [UpdateFunc]s
+     *   are tracked intelligently at registration, such that no more full tree traversals should be necessary.
+     */
+    @Deprecated(DEPRECATION_MESSAGE)
+    V8,
+
+    /**
+     * All Minecraft versions now use [URenderPipeline] instead of modifying global GL state.
+     * Additionally, [UIText] and [UIWrappedText] no longer enable (and forget to disable) blending.
+     */
+    @Deprecated(DEPRECATION_MESSAGE)
+    V9,
+
+    /**
+     * All components now use [BlendState.ALPHA] instead of [BlendState.NORMAL] and variants.
+     * This fixes the alpha channel of the render result, allowing it to be correctly composited with other textures.
+     * See [UniversalCraft#105](https://github.com/EssentialGG/UniversalCraft/pull/105) for more details.
+     */
+    V10,
 
     ;
 
@@ -126,8 +231,22 @@ Be sure to read through all the changes between your current version and your ne
         internal val v3 = V3
         @Suppress("DEPRECATION")
         internal val v4 = V4
+        @Suppress("DEPRECATION")
         internal val v5 = V5
+        @Suppress("DEPRECATION")
+        internal val v6 = V6
+        @Suppress("DEPRECATION")
+        internal val v7 = V7
+        @Suppress("DEPRECATION")
+        internal val v8 = V8
+        @Suppress("DEPRECATION")
+        internal val v9 = V9
+        internal val v10 = V10
 
+        internal val atLeastV9Active: Boolean
+            get() = active >= v9
+        internal val atLeastV10Active: Boolean
+            get() = active >= v10
 
         @PublishedApi
         internal var active: ElementaVersion = v0

@@ -11,110 +11,46 @@ instead you simply have to describe _what_ you want.
 
 ## Dependency
 
-It's recommended that you include [Essential](link eventually) instead of adding it yourself.
-
-In your repository block, add:
-
-Groovy
-```groovy
-maven {
-    url = "https://repo.essential.gg/repository/maven-public"
+```kotlin
+repository {
+    // All versions of Elementa and UniversalCraft are published to Essential's public maven repository.
+    // (if you're still using Groovy build scripts, replace `()` with `{}`)
+    maven(url = "https://repo.essential.gg/repository/maven-public")
+}
+dependencies {
+    // Add Elementa dependency. For the latest $elementaVersion, see the badge below this code snippet.
+    implementation("gg.essential:elementa:$elementaVersion")
+    
+    // Optionally, add some of the unstable Elementa features.
+    // Note that these MUST be relocated to your own package because future versions may contain breaking changes
+    // and therefore MUST NOT be simply included via Fabric's jar-in-jar mechanism.
+    implementation("gg.essential:elementa-unstable-layoutdsl:$elementaVersion")
+    
+    // Elementa itself is independent of Minecraft versions and mod loaders, instead it depends on UniversalCraft which
+    // provides bindings to specific Minecraft versions.
+    // As such, you must include the UniversalCraft version for the Minecraft version + mod loader you're targeting.
+    // For a list of all available platforms, see https://github.com/EssentialGG/UniversalCraft
+    // For your convenience, the latest $ucVersion is also included in a badge below this code snippet.
+    // (Note: if you are not using Loom, replace `modImplementation` with `implementation` or your equivalent)
+    modImplementation("gg.essential:universalcraft-1.8.9-forge:$ucVersion")
+    
+    // If you're using Fabric, you may use its jar-in-jar mechanism to bundle Elementa and UniversalCraft with your
+    // mod by additionally adding them to the `include` configuration like this (in place of the above):
+    implementation(include("gg.essential:elementa:$elementaVersion")!!)
+    modImplementation(include("gg.essential:universalcraft-1.8.9-forge:$ucVersion"))
+    // If you're using Forge, you must instead include them directly into your jar file and relocate them to your
+    // own package (this is important! otherwise you will be incompatible with other mods!)
+    // using e.g. https://gradleup.com/shadow/configuration/relocation/
+    // For an example, read the IMPORTANT section below.
 }
 ```
-Kotlin
-```kotlin
-maven(url = "https://repo.essential.gg/repository/maven-public")
-```
-
-To use the latest builds, use the following dependency:
-
-<details><summary>Forge</summary>
-
-```kotlin
-implementation("gg.essential:elementa-$mcVersion-$mcPlatform:$buildNumber")
-```
-</details>
-<details><summary>Fabric</summary>
-
-Groovy
-```groovy
-modImplementation(include("gg.essential:elementa-$mcVersion-$mcPlatform:$buildNumber"))
-```
-Kotlin
-```kotlin
-modImplementation(include("gg.essential:elementa-$mcVersion-$mcPlatform:$buildNumber")!!)
-```
-</details>
-
-### Build Reference
-<details><summary>Build Reference</summary>
-    <table>
-      <tbody>
-        <tr>
-          <th>mcVersion</th>
-          <th>mcPlatform</th>
-          <th>buildNumber</th>
-        </tr>
-        <tr>
-          <td>1.18.1</td>
-          <td>fabric</td>
-          <td>
-            <img alt="1.18.1-fabric" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/elementa-1.18.1-fabric/maven-metadata.xml">
-          </td>
-        </tr>
-        <tr>
-          <td>1.18.1</td>
-          <td>forge</td>
-          <td>
-            <img alt="1.18.1-forge" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/elementa-1.18.1-forge/maven-metadata.xml">
-          </td>
-        </tr>
-        <tr>
-          <td>1.17.1</td>
-          <td>fabric</td>
-          <td>
-            <img alt="1.17.1-fabric" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/elementa-1.17.1-fabric/maven-metadata.xml">
-          </td>
-        </tr>
-        <tr>
-          <td>1.17.1</td>
-          <td>forge</td>
-          <td>
-            <img alt="1.17.1-forge" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/elementa-1.17.1-forge/maven-metadata.xml">
-          </td>
-        </tr>
-        <tr>
-          <td>1.16.2</td>
-          <td>forge</td>
-          <td>
-            <img alt="1.16.2-forge" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/elementa-1.16.2-forge/maven-metadata.xml">
-          </td>
-        </tr>
-        <tr>
-          <td>1.12.2</td>
-          <td>forge</td>
-          <td>
-            <img alt="1.12.2-forge" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/elementa-1.12.2-forge/maven-metadata.xml">
-          </td>
-        </tr>
-        <tr>
-          <td>1.8.9</td>
-          <td>forge</td>
-          <td><img alt="1.8.9-forge" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=%20&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/elementa-1.8.9-forge/maven-metadata.xml"></td>
-        </tr>
-      </tbody>
-    </table>
-
-</details>
-
-If you were previously using v1.7.1 of Elementa and are now on the v2.0.0 builds, please refer to the
-[migration](docs/migration.md) document to know what has changed.
-
-To learn about all the new features in v2.0.0, please read the [what's new](docs/whatsnew.md) document.
+<img alt="gg.essential:elementa" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=Latest%20Elementa&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/elementa/maven-metadata.xml">
+<img alt="gg.essential:universalcraft-1.8.9-forge" src="https://img.shields.io/badge/dynamic/xml?color=A97BFF&label=Latest%20UniversalCraft&query=/metadata/versioning/versions/version[not(contains(text(),'%2B'))][last()]&url=https://repo.essential.gg/repository/maven-releases/gg/essential/universalcraft-1.8.9-forge/maven-metadata.xml">
 
 <h2><span style="font-size:3em; color:red;">IMPORTANT!</span></h2>
 
-If you are using forge, you must also relocate Elementa to avoid potential crashes with other mods. To do this, you will need to use the Shadow Gradle plugin.
+If you are using Forge, you must also relocate Elementa to avoid incompatibility with other mods.
+To do this, you may use the Shadow Gradle plugin:
 
 <details><summary>Groovy Version</summary>
 
@@ -190,6 +126,11 @@ In your dependencies block, add:
 ```groovy
 implementation "club.sk1er:Elementa:1.7.1-$mcVersion"
 ```
+
+If you were previously using v1.7.1 of Elementa and are now on the v2.0.0 builds, please refer to the
+[migration](docs/migration.md) document to know what has changed.
+
+To learn about all the new features in v2.0.0, please read the [what's new](docs/whatsnew.md) document.
 
 ## Components
 
@@ -306,7 +247,9 @@ you MUST call Window#mouseClick. This is also all handled by Elementa's WindowSc
 ## All together
 
 This is a basic excerpt of code from an Elementa GUI. To see a more fleshed out
-example, look to the [ExampleGui class](src/main/java/com/example/examplemod/ExampleGui.kt).
+example, look to the [ExampleGui class](example/src/main/kotlin/gg/essential/elementa/example/ExampleGui.kt) and other
+files in that sub-project.
+You can run those examples via `./gradlew :example:run`.
 
 ```kotlin
 val window = Window()

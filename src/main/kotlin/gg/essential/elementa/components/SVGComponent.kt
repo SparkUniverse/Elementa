@@ -2,7 +2,6 @@ package gg.essential.elementa.components
 
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.components.image.ImageProvider
-import gg.essential.elementa.impl.Platform.Companion.platform
 import gg.essential.elementa.svg.SVGParser
 import gg.essential.elementa.svg.data.SVG
 import gg.essential.universal.UGraphics
@@ -33,7 +32,7 @@ class SVGComponent(private var svg: SVG) : UIComponent(), ImageProvider {
     }
 
     override fun drawImage(matrixStack: UMatrixStack, x: Double, y: Double, width: Double, height: Double, color: Color) {
-        if (platform.mcVersion >= 11700) {
+        if (UGraphics.isCoreProfile()) {
             // TODO heavily relies on legacy gl, at least need to use per-vertex color and convert lines/points to tris
             return
         }
@@ -49,6 +48,7 @@ class SVGComponent(private var svg: SVG) : UIComponent(), ImageProvider {
 
         matrixStack.push()
 
+        @Suppress("DEPRECATION")
         UGraphics.enableBlend()
         @Suppress("DEPRECATION")
         UGraphics.disableTexture2D()

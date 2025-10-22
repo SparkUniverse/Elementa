@@ -2,10 +2,15 @@ public final class gg/essential/elementa/ElementaVersion : java/lang/Enum {
 	public static final field Companion Lgg/essential/elementa/ElementaVersion$Companion;
 	public static final field V0 Lgg/essential/elementa/ElementaVersion;
 	public static final field V1 Lgg/essential/elementa/ElementaVersion;
+	public static final field V10 Lgg/essential/elementa/ElementaVersion;
 	public static final field V2 Lgg/essential/elementa/ElementaVersion;
 	public static final field V3 Lgg/essential/elementa/ElementaVersion;
 	public static final field V4 Lgg/essential/elementa/ElementaVersion;
 	public static final field V5 Lgg/essential/elementa/ElementaVersion;
+	public static final field V6 Lgg/essential/elementa/ElementaVersion;
+	public static final field V7 Lgg/essential/elementa/ElementaVersion;
+	public static final field V8 Lgg/essential/elementa/ElementaVersion;
+	public static final field V9 Lgg/essential/elementa/ElementaVersion;
 	public final fun enableFor (Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/ElementaVersion;
 	public static fun values ()[Lgg/essential/elementa/ElementaVersion;
@@ -22,6 +27,7 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	public fun <init> ()V
 	public fun addChild (Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/UIComponent;
 	public fun addChildren ([Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/UIComponent;
+	public final fun addUpdateFunc (Lkotlin/jvm/functions/Function2;)V
 	public fun afterDraw ()V
 	public fun afterDraw (Lgg/essential/universal/UMatrixStack;)V
 	public final fun afterDrawCompat (Lgg/essential/universal/UMatrixStack;)V
@@ -98,6 +104,7 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	public fun insertChildAt (Lgg/essential/elementa/UIComponent;I)Lgg/essential/elementa/UIComponent;
 	public fun insertChildBefore (Lgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/UIComponent;
 	public fun isChildOf (Lgg/essential/elementa/UIComponent;)Z
+	public final fun isFloating ()Z
 	public fun isHovered ()Z
 	protected final fun isInitialized ()Z
 	public fun isPointInside (FF)Z
@@ -131,6 +138,7 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	public fun removeChild (Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/UIComponent;
 	public final fun removeEffect (Lgg/essential/elementa/effects/Effect;)V
 	public final fun removeEffect (Ljava/lang/Class;)V
+	public final fun removeUpdateFunc (Lkotlin/jvm/functions/Function2;)V
 	public fun replaceChild (Lgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/UIComponent;
 	protected final fun requireChildrenUnlocked ()V
 	public final fun setChildOf (Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/UIComponent;
@@ -142,6 +150,7 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	public final fun setFontProvider (Lgg/essential/elementa/font/FontProvider;)Lgg/essential/elementa/UIComponent;
 	public final fun setHeight (Lgg/essential/elementa/constraints/HeightConstraint;)Lgg/essential/elementa/UIComponent;
 	protected final fun setInitialized (Z)V
+	public final fun setIsFloating (Z)V
 	public final fun setLastDraggedMouseX (Ljava/lang/Double;)V
 	public final fun setLastDraggedMouseY (Ljava/lang/Double;)V
 	public final fun setMouseScrollListeners (Ljava/util/List;)V
@@ -167,6 +176,11 @@ public final class gg/essential/elementa/UIComponent$Companion {
 	public final fun getDEBUG_OUTLINE_WIDTH ()D
 	public final fun guiHint (DZ)D
 	public final fun guiHint (FZ)F
+}
+
+public final class gg/essential/elementa/UIComponent$sam$i$java_util_function_Predicate$0 : java/util/function/Predicate {
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final synthetic fun test (Ljava/lang/Object;)Z
 }
 
 public class gg/essential/elementa/UIConstraints : java/util/Observable {
@@ -351,7 +365,6 @@ public final class gg/essential/elementa/components/ScrollComponent : gg/essenti
 	public synthetic fun addChild (Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/UIComponent;
 	public fun addChild (Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/components/ScrollComponent;
 	public final fun addScrollAdjustEvent (ZLkotlin/jvm/functions/Function2;)V
-	public fun afterInitialization ()V
 	public fun alwaysDrawChildren ()Z
 	public fun animationFrame ()V
 	public fun childrenOfType (Ljava/lang/Class;)Ljava/util/List;
@@ -543,6 +556,7 @@ public class gg/essential/elementa/components/UIBlock : gg/essential/elementa/UI
 
 public final class gg/essential/elementa/components/UIBlock$Companion {
 	public final fun drawBlock (Lgg/essential/universal/UMatrixStack;Ljava/awt/Color;DDDD)V
+	public final fun drawBlock (Lgg/essential/universal/vertex/UVertexConsumer;Lgg/essential/universal/UMatrixStack;Ljava/awt/Color;DDDD)V
 	public final fun drawBlock (Ljava/awt/Color;DDDD)V
 	public final fun drawBlockSized (Lgg/essential/universal/UMatrixStack;Ljava/awt/Color;DDDD)V
 	public final fun drawBlockSized (Ljava/awt/Color;DDDD)V
@@ -745,8 +759,11 @@ public final class gg/essential/elementa/components/Window : gg/essential/elemen
 	public final fun drawFloatingComponents (Lgg/essential/universal/UMatrixStack;)V
 	public final fun focus (Lgg/essential/elementa/UIComponent;)V
 	public final fun getAnimationFPS ()I
+	public final fun getAnimationTimeMs ()J
+	public final fun getAnimationTimeNs ()J
 	public fun getBottom ()F
 	public final fun getFocusedComponent ()Lgg/essential/elementa/UIComponent;
+	public final fun getHasErrored ()Z
 	public fun getHeight ()F
 	public final fun getHoveredFloatingComponent ()Lgg/essential/elementa/UIComponent;
 	public fun getLeft ()F
@@ -754,6 +771,7 @@ public final class gg/essential/elementa/components/Window : gg/essential/elemen
 	public fun getTop ()F
 	public fun getWidth ()F
 	public fun hitTest (FF)Lgg/essential/elementa/UIComponent;
+	public final fun invalidateCachedConstraints ()V
 	public final fun isAreaVisible (DDDD)Z
 	public fun keyType (CI)V
 	public fun mouseClick (DDI)V
@@ -1142,11 +1160,12 @@ public final class gg/essential/elementa/components/inspector/Inspector : gg/ess
 	public fun <init> (Lgg/essential/elementa/UIComponent;Ljava/awt/Color;Ljava/awt/Color;F)V
 	public fun <init> (Lgg/essential/elementa/UIComponent;Ljava/awt/Color;Ljava/awt/Color;FLgg/essential/elementa/constraints/HeightConstraint;)V
 	public synthetic fun <init> (Lgg/essential/elementa/UIComponent;Ljava/awt/Color;Ljava/awt/Color;FLgg/essential/elementa/constraints/HeightConstraint;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun animationFrame ()V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
 }
 
 public final class gg/essential/elementa/components/inspector/Inspector$Companion {
+	public final fun registerComponentFactory (Ljava/lang/Class;Ljava/lang/String;)V
+	public static synthetic fun registerComponentFactory$default (Lgg/essential/elementa/components/inspector/Inspector$Companion;Ljava/lang/Class;Ljava/lang/String;ILjava/lang/Object;)V
 }
 
 public final class gg/essential/elementa/components/inspector/InspectorNode : gg/essential/elementa/components/TreeNode {
@@ -1858,7 +1877,6 @@ public final class gg/essential/elementa/constraints/RainbowColorConstraint : gg
 	public fun <init> ()V
 	public fun <init> (IF)V
 	public synthetic fun <init> (IFILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun animationFrame ()V
 	public final fun getAlpha ()I
 	public fun getCachedValue ()Ljava/awt/Color;
 	public synthetic fun getCachedValue ()Ljava/lang/Object;
@@ -2559,13 +2577,22 @@ public final class gg/essential/elementa/dsl/UtilitiesKt {
 	public static final fun toConstraint (Ljava/awt/Color;)Lgg/essential/elementa/constraints/ConstantColorConstraint;
 	public static final fun width (CF)F
 	public static final fun width (Ljava/lang/String;FLgg/essential/elementa/font/FontProvider;)F
+	public static final synthetic fun width (Lnet/minecraft/class_2561;FLgg/essential/elementa/font/FontProvider;)F
+	public static final synthetic fun width (Lnet/minecraft/network/chat/Component;FLgg/essential/elementa/font/FontProvider;)F
+	public static final synthetic fun width (Lnet/minecraft/util/IChatComponent;FLgg/essential/elementa/font/FontProvider;)F
+	public static final synthetic fun width (Lnet/minecraft/util/text/ITextComponent;FLgg/essential/elementa/font/FontProvider;)F
 	public static synthetic fun width$default (CFILjava/lang/Object;)F
 	public static synthetic fun width$default (Ljava/lang/String;FLgg/essential/elementa/font/FontProvider;ILjava/lang/Object;)F
+	public static synthetic fun width$default (Lnet/minecraft/class_2561;FLgg/essential/elementa/font/FontProvider;ILjava/lang/Object;)F
+	public static synthetic fun width$default (Lnet/minecraft/network/chat/Component;FLgg/essential/elementa/font/FontProvider;ILjava/lang/Object;)F
+	public static synthetic fun width$default (Lnet/minecraft/util/IChatComponent;FLgg/essential/elementa/font/FontProvider;ILjava/lang/Object;)F
+	public static synthetic fun width$default (Lnet/minecraft/util/text/ITextComponent;FLgg/essential/elementa/font/FontProvider;ILjava/lang/Object;)F
 }
 
 public abstract class gg/essential/elementa/effects/Effect {
 	protected field boundComponent Lgg/essential/elementa/UIComponent;
 	public fun <init> ()V
+	protected final fun addUpdateFunc (Lkotlin/jvm/functions/Function2;)V
 	public fun afterDraw ()V
 	public fun afterDraw (Lgg/essential/universal/UMatrixStack;)V
 	public final fun afterDrawCompat (Lgg/essential/universal/UMatrixStack;)V
@@ -2578,6 +2605,7 @@ public abstract class gg/essential/elementa/effects/Effect {
 	public final fun beforeDrawCompat (Lgg/essential/universal/UMatrixStack;)V
 	public final fun bindComponent (Lgg/essential/elementa/UIComponent;)V
 	protected final fun getBoundComponent ()Lgg/essential/elementa/UIComponent;
+	protected final fun removeUpdateFunc (Lkotlin/jvm/functions/Function2;)V
 	protected final fun setBoundComponent (Lgg/essential/elementa/UIComponent;)V
 	public fun setup ()V
 }

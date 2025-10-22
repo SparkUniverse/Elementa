@@ -21,6 +21,8 @@ class ScaleConstraint(val constraint: SuperConstraint<Float>, value: State<Float
         valueState.rebind(newState)
     }
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super.animationFrame()
         constraint.animationFrame()

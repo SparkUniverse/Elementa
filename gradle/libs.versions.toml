@@ -2,7 +2,7 @@
 kotlin = "1.5.10"
 kotlinx-coroutines = "1.5.2"
 jetbrains-annotations = "23.0.0"
-universalcraft = "211"
+universalcraft = "406"
 commonmark = "0.17.1"
 dom4j = "2.1.1"
 
@@ -11,6 +11,8 @@ kotlin-stdlib-jdk8 = { module = "org.jetbrains.kotlin:kotlin-stdlib-jdk8", versi
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect", version.ref = "kotlin" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "kotlinx-coroutines" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
+universalcraft-forge10809 = { module = "gg.essential:universalcraft-1.8.9-forge", version.ref = "universalcraft" }
+universalcraft-standalone = { module = "gg.essential:universalcraft-standalone", version.ref = "universalcraft" }
 commonmark = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
 commonmark-ext-gfm-strikethrough = { module = "org.commonmark:commonmark-ext-gfm-strikethrough", version.ref = "commonmark" }
 commonmark-ext-ins = { module = "org.commonmark:commonmark-ext-ins", version.ref = "commonmark" }

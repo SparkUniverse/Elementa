@@ -1,5 +1,6 @@
 package gg.essential.elementa.components
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.UIConstraints
 import gg.essential.elementa.constraints.CenterConstraint
@@ -13,6 +14,7 @@ import gg.essential.elementa.utils.getStringSplitToWidth
 import gg.essential.elementa.utils.splitStringToWidthTruncated
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.render.URenderPipeline
 import java.awt.Color
 
 /**
@@ -145,7 +147,10 @@ open class UIWrappedText @JvmOverloads constructor(
             return super.draw(matrixStack)
         }
 
-        UGraphics.enableBlend()
+        if (!URenderPipeline.isRequired && !ElementaVersion.atLeastV9Active) {
+            @Suppress("DEPRECATION")
+            UGraphics.enableBlend()
+        }
 
         val lines = if (trimText) {
             splitStringToWidthTruncated(

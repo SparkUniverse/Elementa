@@ -9,6 +9,8 @@ class MinConstraint(val first: SuperConstraint<Float>, val second: SuperConstrai
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super.animationFrame()
         first.animationFrame()

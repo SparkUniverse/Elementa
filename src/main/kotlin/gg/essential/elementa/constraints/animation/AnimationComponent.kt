@@ -1,6 +1,8 @@
 package gg.essential.elementa.constraints.animation
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
+import gg.essential.elementa.components.Window
 import gg.essential.elementa.constraints.*
 import gg.essential.elementa.constraints.debug.constraintDebugger
 import gg.essential.elementa.constraints.resolution.ConstraintVisitor
@@ -18,6 +20,24 @@ sealed class AnimationComponent<T>(
     var elapsedFrames = 0
     var animationPaused = false
 
+    private var lastUpdateTime: Long = -1
+
+    internal fun update(component: UIComponent) {
+        val window = Window.ofOrNull(component) ?: return
+        if (window.version < ElementaVersion.v8) return // update handled by `animationFrame`
+
+        val now = window.animationTimeMs
+        if (lastUpdateTime == -1L) lastUpdateTime = now
+        val dtMs = (now - lastUpdateTime).toInt()
+        lastUpdateTime = now
+
+        if (!animationPaused) {
+            elapsedFrames = (elapsedFrames + dtMs).coerceAtMost(totalFrames + delayFrames)
+        }
+    }
+
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super.animationFrame()
 
@@ -55,13 +75,16 @@ class XAnimationComponent(
     override var constrainTo: UIComponent? = null
 
     override fun getXPositionImpl(component: UIComponent): Float {
+        update(component)
+
         val startX = oldConstraint.getXPosition(component)
         val finalX = newConstraint.getXPosition(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
     }
 
-    // TODO: This is gross, can probably be done in parent!
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
@@ -91,11 +114,16 @@ class YAnimationComponent(
     override var constrainTo: UIComponent? = null
 
     override fun getYPositionImpl(component: UIComponent): Float {
+        update(component)
+
         val startX = oldConstraint.getYPosition(component)
         val finalX = newConstraint.getYPosition(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
     }
+
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
@@ -125,12 +153,16 @@ class RadiusAnimationComponent(
     override var constrainTo: UIComponent? = null
 
     override fun getRadiusImpl(component: UIComponent): Float {
+        update(component)
+
         val startX = oldConstraint.getRadius(component)
         val finalX = newConstraint.getRadius(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
     }
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
@@ -160,12 +192,16 @@ class WidthAnimationComponent(
     override var constrainTo: UIComponent? = null
 
     override fun getWidthImpl(component: UIComponent): Float {
+        update(component)
+
         val startX = oldConstraint.getWidth(component)
         val finalX = newConstraint.getWidth(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
     }
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
@@ -195,6 +231,8 @@ class HeightAnimationComponent(
     override var constrainTo: UIComponent? = null
 
     override fun getHeightImpl(component: UIComponent): Float {
+        update(component)
+
         val startX = oldConstraint.getHeight(component)
         val finalX = newConstraint.getHeight(component)
 
@@ -216,6 +254,8 @@ class HeightAnimationComponent(
         return cachedValue
     }
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
@@ -245,6 +285,8 @@ class ColorAnimationComponent(
     override var constrainTo: UIComponent? = null
 
     override fun getColorImpl(component: UIComponent): Color {
+        update(component)
+
         val startColor = oldConstraint.getColor(component)
         val endColor = newConstraint.getColor(component)
         val percentComplete = getPercentComplete()
@@ -257,6 +299,8 @@ class ColorAnimationComponent(
         return Color(newR.roundToInt(), newG.roundToInt(), newB.roundToInt(), newA.roundToInt())
     }
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
@@ -284,6 +328,8 @@ sealed class FieldAnimationComponent<T>(
 
     abstract val field: KMutableProperty0<*>
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super.animationFrame()
 

@@ -1,10 +1,14 @@
 package gg.essential.elementa.components
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.state.BasicState
 import gg.essential.elementa.state.MappedState
 import gg.essential.elementa.state.State
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.render.URenderPipeline
+import gg.essential.universal.shader.BlendState
+import gg.essential.universal.vertex.UBufferBuilder
 import org.lwjgl.opengl.GL11
 import java.awt.Color
 
@@ -86,6 +90,7 @@ open class GradientComponent constructor(
             "This method does not allow for gradients to be rendered at sub-pixel positions. Use the Double variant instead and do not cast to Int.",
             ReplaceWith("drawGradientBlock(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble(), startColor, endColor, direction)")
         )
+        @Suppress("DEPRECATION")
         fun drawGradientBlock(
             x1: Int,
             y1: Int,
@@ -123,8 +128,29 @@ open class GradientComponent constructor(
             endColor: Color,
             direction: GradientDirection
         ) {
-            UGraphics.enableBlend()
+            if (!URenderPipeline.isRequired && !ElementaVersion.atLeastV9Active) {
+                @Suppress("DEPRECATION")
+                return drawGradientBlockLegacy(matrixStack, x1, y1, x2, y2, startColor, endColor, direction)
+            }
+
+            val colors = direction.getGradientColors(startColor, endColor)
+            val bufferBuilder = UBufferBuilder.create(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_COLOR)
+            bufferBuilder.pos(matrixStack, x2, y1, 0.0).color(colors.topRight).endVertex()
+            bufferBuilder.pos(matrixStack, x1, y1, 0.0).color(colors.topLeft).endVertex()
+            bufferBuilder.pos(matrixStack, x1, y2, 0.0).color(colors.bottomLeft).endVertex()
+            bufferBuilder.pos(matrixStack, x2, y2, 0.0).color(colors.bottomRight).endVertex()
+            bufferBuilder.build()?.drawAndClose(if (ElementaVersion.atLeastV10Active) PIPELINE2 else PIPELINE)
+        }
+
+        @Deprecated("Stops working in 1.21.5")
+        @Suppress("DEPRECATION")
+        private fun drawGradientBlockLegacy(
+            matrixStack: UMatrixStack,
+            x1: Double, y1: Double, x2: Double, y2: Double,
+            startColor: Color, endColor: Color, direction: GradientDirection
+        ) {
             UGraphics.disableAlpha()
+            UGraphics.enableBlend()
             UGraphics.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO)
             UGraphics.shadeModel(GL11.GL_SMOOTH)
 
@@ -141,5 +167,14 @@ open class GradientComponent constructor(
             UGraphics.disableBlend()
             UGraphics.enableAlpha()
         }
+
+        private val PIPELINE = URenderPipeline.builderWithDefaultShader("elementa:gradient_block", UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_COLOR).apply {
+            @Suppress("DEPRECATION")
+            blendState = BlendState.NORMAL.copy(srcAlpha = BlendState.Param.ONE, dstAlpha = BlendState.Param.ZERO)
+        }.build()
+
+        private val PIPELINE2 = URenderPipeline.builderWithDefaultShader("elementa:gradient_block", UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_COLOR).apply {
+            blendState = BlendState.ALPHA
+        }.build()
     }
 }

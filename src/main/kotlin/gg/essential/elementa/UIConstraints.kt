@@ -111,6 +111,8 @@ open class UIConstraints(protected val component: UIComponent) : Observable() {
         color = constraint
     }
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     internal open fun animationFrame() {
         x.animationFrame()
         y.animationFrame()

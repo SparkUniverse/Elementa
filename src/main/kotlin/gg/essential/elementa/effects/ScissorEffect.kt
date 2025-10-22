@@ -2,9 +2,9 @@ package gg.essential.elementa.effects
 
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.utils.roundToRealPixels
+import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
 import gg.essential.universal.UResolution
-import org.lwjgl.opengl.GL11.*
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -47,10 +47,6 @@ class ScissorEffect @JvmOverloads constructor(
         val bounds = customBoundingBox?.getScissorBounds() ?: scissorBounds ?: boundComponent.getScissorBounds()
         val scaleFactor = UResolution.scaleFactor.toInt()
 
-        if (currentScissorState == null) {
-            glEnable(GL_SCISSOR_TEST)
-        }
-
         oldState = currentScissorState
         val state = oldState
 
@@ -76,7 +72,7 @@ class ScissorEffect @JvmOverloads constructor(
             height = min(y2, oldY2) - y
         }
 
-        glScissor(x, y, width.coerceAtLeast(0), height.coerceAtLeast(0))
+        UGraphics.enableScissor(x, y, width.coerceAtLeast(0), height.coerceAtLeast(0))
 
         currentScissorState = ScissorState(x, y, width.coerceAtLeast(0), height.coerceAtLeast(0))
     }
@@ -85,11 +81,11 @@ class ScissorEffect @JvmOverloads constructor(
         val state = oldState
 
         if (state != null) {
-            glScissor(state.x, state.y, state.width, state.height)
+            UGraphics.enableScissor(state.x, state.y, state.width, state.height)
 
             oldState = null
         } else {
-            glDisable(GL_SCISSOR_TEST)
+            UGraphics.disableScissor()
         }
 
         currentScissorState = state

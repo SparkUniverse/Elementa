@@ -38,6 +38,3 @@ options.txt
 usercache.json
 usernamecache.json
 *.txt
-
-versions/*/tmp.srg
-versions/*/api/

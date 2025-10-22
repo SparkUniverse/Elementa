@@ -17,6 +17,7 @@ data class TreeGraphStyle(
     val lineWidth: Float = 2f,
     val isHorizontal: Boolean = false,
     val lineDrawer: (UIPoint, UIPoint) -> Unit = { p0, p1 ->
+        @Suppress("DEPRECATION") // impossible to fix because TreeGraphStyle is public API
         LineUtils.drawLine(p0, p1, lineColor, lineWidth)
     }
 )

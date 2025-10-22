@@ -1,8 +1,0 @@
-net.minecraft.client.renderer.BufferBuilder net.minecraft.client.renderer.WorldRenderer
-net.minecraft.util.text.ITextComponent net.minecraft.util.ChatComponentText
-net.minecraft.util.text.TextFormatting net.minecraft.util.EnumChatFormatting
-net.minecraft.util.text.TextComponentString net.minecraft.util.ChatComponentText
-net.minecraft.util.text.ITextComponent net.minecraft.util.IChatComponent
-net.minecraft.util.math.BlockPos net.minecraft.util.BlockPos
-net.minecraft.util.math.MathHelper net.minecraft.util.MathHelper
-net.minecraft.util.math.Vec3d net.minecraft.util.Vec3

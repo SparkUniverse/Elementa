@@ -14,6 +14,8 @@ class CoerceAtMostConstraint(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super.animationFrame()
         constraint.animationFrame()
@@ -66,6 +68,8 @@ class CoerceAtLeastConstraint(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super.animationFrame()
         constraint.animationFrame()
@@ -119,6 +123,8 @@ class CoerceInConstraint(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    @Deprecated("See [ElementaVersion.V8].")
+    @Suppress("DEPRECATION")
     override fun animationFrame() {
         super.animationFrame()
         constraint.animationFrame()

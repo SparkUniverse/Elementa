@@ -1,9 +1,11 @@
 package gg.essential.elementa.components.inspector
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.components.TreeNode
 import gg.essential.elementa.components.UIContainer
 import gg.essential.elementa.components.UIText
+import gg.essential.elementa.components.Window
 import gg.essential.elementa.constraints.*
 import gg.essential.elementa.constraints.animation.AnimationComponent
 import gg.essential.elementa.dsl.childOf
@@ -75,9 +77,11 @@ class InfoBlockNode<T>(private val constraint: SuperConstraint<T>, private val n
             } childOf stringHolder
         }
 
-        override fun animationFrame() {
-            super.animationFrame()
+        init {
+            addUpdateFunc { _, _ -> update() }
+        }
 
+        private fun update() {
             if (constraint is AnimationComponent<*>) {
                 val strings = stringHolder.childrenOfType<UIText>()
                 val percentComplete = constraint.elapsedFrames.toFloat() / (constraint.totalFrames + constraint.delayFrames)

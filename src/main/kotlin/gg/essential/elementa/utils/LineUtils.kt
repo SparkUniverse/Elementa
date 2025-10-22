@@ -1,13 +1,25 @@
 package gg.essential.elementa.utils
 
+import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.components.UIPoint
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
-import org.lwjgl.opengl.GL11
+import gg.essential.universal.render.URenderPipeline
+import gg.essential.universal.shader.BlendState
+import gg.essential.universal.vertex.UBufferBuilder
+import gg.essential.universal.vertex.UVertexConsumer
 import java.awt.Color
 import kotlin.math.sqrt
 
 object LineUtils {
+    private val PIPELINE = URenderPipeline.builderWithDefaultShader("elementa:line_strip", UGraphics.DrawMode.TRIANGLE_STRIP, UGraphics.CommonVertexFormats.POSITION_COLOR).apply {
+        @Suppress("DEPRECATION")
+        blendState = BlendState.NORMAL
+    }.build()
+    private val PIPELINE2 = URenderPipeline.builderWithDefaultShader("elementa:line_strip", UGraphics.DrawMode.TRIANGLE_STRIP, UGraphics.CommonVertexFormats.POSITION_COLOR).apply {
+        blendState = BlendState.ALPHA
+    }.build()
+
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("drawLine(UMatrixStack(), x1, y1, x2, y2, color, width)"))
     @JvmStatic
     fun drawLine(x1: Number, y1: Number, x2: Number, y2: Number, color: Color, width: Float) =
@@ -20,10 +32,22 @@ object LineUtils {
 
     @JvmStatic
     fun drawLineStrip(matrixStack: UMatrixStack, points: List<Pair<Number, Number>>, color: Color, width: Float) {
-        UGraphics.enableBlend()
+        if (URenderPipeline.isRequired || ElementaVersion.atLeastV9Active) {
+            val bufferBuilder = UBufferBuilder.create(UGraphics.DrawMode.TRIANGLE_STRIP, UGraphics.CommonVertexFormats.POSITION_COLOR)
+            drawLineStrip(bufferBuilder, matrixStack, points, color, width)
+            bufferBuilder.build()?.drawAndClose(if (ElementaVersion.atLeastV10Active) PIPELINE2 else PIPELINE)
+        } else {
+            @Suppress("DEPRECATION")
+            UGraphics.enableBlend()
+            val buffer = UGraphics.getFromTessellator()
+            @Suppress("DEPRECATION")
+            buffer.beginWithDefaultShader(UGraphics.DrawMode.TRIANGLE_STRIP, UGraphics.CommonVertexFormats.POSITION_COLOR);
+            drawLineStrip(buffer.asUVertexConsumer(), matrixStack, points, color, width)
+            buffer.drawDirect()
+        }
+    }
 
-        val buffer = UGraphics.getFromTessellator()
-        buffer.beginWithDefaultShader(UGraphics.DrawMode.TRIANGLE_STRIP, UGraphics.CommonVertexFormats.POSITION_COLOR);
+    private fun drawLineStrip(buffer: UVertexConsumer, matrixStack: UMatrixStack, points: List<Pair<Number, Number>>, color: Color, width: Float) {
         points.forEachIndexed { index, curr ->
             val (x, y) = curr
             val prev = points.getOrNull(index - 1)
@@ -43,7 +67,6 @@ object LineUtils {
                 .color(color.red, color.green, color.blue, color.alpha)
                 .endVertex()
         }
-        buffer.drawDirect()
     }
 
     private fun Pair<Number, Number>.sub(other: Pair<Number, Number>): Pair<Double, Double> {
