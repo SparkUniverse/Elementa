@@ -45,7 +45,7 @@ class ScissorEffect @JvmOverloads constructor(
 
     override fun beforeDraw(matrixStack: UMatrixStack) {
         val bounds = customBoundingBox?.getScissorBounds() ?: scissorBounds ?: boundComponent.getScissorBounds()
-        val scaleFactor = UResolution.scaleFactor.toInt()
+        val scaleFactor = UResolution.scaleFactor
 
         oldState = currentScissorState
         val state = oldState
