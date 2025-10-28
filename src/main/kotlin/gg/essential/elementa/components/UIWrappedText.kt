@@ -56,7 +56,7 @@ open class UIWrappedText @JvmOverloads constructor(
     private val fontProviderState = constraints.asState { fontProvider }
     private var textWidthState = textState.zip(textScaleState.zip(fontProviderState)).map { (text, opts) ->
         val (textScale, fontProvider) = opts
-        text.width(textScale, fontProvider) / textScale
+        text.width(textScale, fontProvider)
     }
 
     private val charWidth = UGraphics.getCharWidth('x')
