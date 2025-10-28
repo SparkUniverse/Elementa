@@ -15,11 +15,11 @@ fun Float.guiHint(roundDown: Boolean) = UIComponent.guiHint(this, roundDown)
 fun Double.guiHint(roundDown: Boolean) = UIComponent.guiHint(this, roundDown)
 
 fun Float.roundToRealPixels(): Float {
-    val factor = UResolution.scaleFactor.toFloat()
+    val factor = UResolution.scaleFactor.toFloat().let { if (it % 1 != 0f) 1 / it else it }
     return round(this * factor).let { if (it == 0f && abs(this) > 0.001f) sign(this) else it } / factor
 }
 fun Double.roundToRealPixels(): Double {
-    val factor = UResolution.scaleFactor
+    val factor = UResolution.scaleFactor.let { if (it % 1 != 0.0) 1 / it else it }
     return round(this * factor).let { if (it == 0.0 && abs(this) > 0.001) sign(this) else it } / factor
 }
 
