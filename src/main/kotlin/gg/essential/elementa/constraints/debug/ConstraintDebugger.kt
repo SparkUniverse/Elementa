@@ -20,6 +20,7 @@ internal interface ConstraintDebugger {
             ConstraintType.WIDTH -> (constraint as WidthConstraint).getWidthImpl(component).roundToRealPixels()
             ConstraintType.HEIGHT -> (constraint as HeightConstraint).getHeightImpl(component).roundToRealPixels()
             ConstraintType.RADIUS -> (constraint as RadiusConstraint).getRadiusImpl(component)
+            ConstraintType.TEXT_SCALE -> (constraint as HeightConstraint).getHeightImpl(component).let { if (it == 1f) 1f else it.roundToRealPixels() }
             else -> throw UnsupportedOperationException()
         }
 }
