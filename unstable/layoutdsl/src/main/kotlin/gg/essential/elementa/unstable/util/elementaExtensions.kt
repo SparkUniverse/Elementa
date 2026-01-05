@@ -341,6 +341,121 @@ fun <T: Tag> UIComponent.findChildrenAndTags(
     return found
 }
 
+// Constants so we don't need to allocate new ones for each call
+private val DEFAULT_VISIT_FUNC: (component: UIComponent) -> Pair<UIComponent?, Boolean> = { Pair(it, true) }
+private val DEFAULT_SELECT_CHILDREN_FUNC: (component: UIComponent) -> Iterator<UIComponent> = { it.children.iterator() }
+
+/**
+ * Returns a sequence which contains every component in this sub-tree.
+ */
+fun UIComponent.walk(): ComponentTreeWalk<UIComponent> =
+    walk(DEFAULT_VISIT_FUNC)
+
+/**
+ * Returns a sequence which emits a [T] for every component in this sub-tree according to [visitor].
+ */
+fun <T> UIComponent.walk(visitor: (component: UIComponent) -> Pair<T?, Boolean>): ComponentTreeWalk<T> =
+    ComponentTreeWalk(this, visitor)
+
+/**
+ * Returns a sequence which emits a [T] for every component in this sub-tree for which [visit] returns non-`null`.
+ */
+fun <T> UIComponent.walkNotNull(visit: (UIComponent) -> T?): ComponentTreeWalk<T> =
+    walk { component -> Pair(visit(component), true) }
+
+/**
+ * Returns a sequence which emits a [T] for every component in this sub-tree for which [visit] returns non-`null`.
+ * Children of components for which [visit] already returned non-`null` will not be visited.
+ */
+fun <T> UIComponent.walkTopMostNotNull(visit: (UIComponent) -> T?): ComponentTreeWalk<T> =
+    walk { component ->
+        val value = visit(component)
+        Pair(value, value == null)
+    }
+
+data class ComponentTreeWalk<T>(
+    val root: UIComponent,
+    /**
+     * Visits the given component.
+     * Returns a pair containing the value to yield (or null) for this component, and a boolean indicating whether to
+     * visit the children of this component.
+     */
+    val visit: (component: UIComponent) -> Pair<T?, Boolean>,
+    /**
+     * Returns an iterator for visiting (potentially only a subset of) the children of the given component.
+     */
+    val selectChildren: (component: UIComponent) -> Iterator<UIComponent> = DEFAULT_SELECT_CHILDREN_FUNC, // { it.children.iterator() }
+) : Sequence<T> {
+    fun <U> withVisitor(visit: ((component: UIComponent) -> Pair<U?, Boolean>)): ComponentTreeWalk<U> =
+        ComponentTreeWalk(root, visit, selectChildren)
+
+    override fun iterator(): Iterator<T> = iterator {
+        suspend fun SequenceScope<T>.visit(component: UIComponent) {
+            val (value, visitChildren) = visit.invoke(component)
+            if (value != null) {
+                yield(value)
+            }
+            if (visitChildren) {
+                for (child in selectChildren.invoke(component)) {
+                    visit(child)
+                }
+            }
+        }
+        visit(root)
+    }
+}
+
+/**
+ * Limits this walk to components which are inside the given vertical window.
+ */
+fun <T> ComponentTreeWalk<T>.limitToRange(topBound: Float, bottomBound: Float): ComponentTreeWalk<T> {
+    val superVisit = visit
+    return withVisitor { component ->
+        if (component.getBottom() <= topBound || component.getTop() >= bottomBound) {
+            Pair(null, false)
+        } else {
+            superVisit(component)
+        }
+    }
+}
+
+/**
+ * Like [limitToRange] but has superior performance when components have a lot of children.
+ *
+ * **Important**: Assumes that children are strictly ordered top to bottom (uses binary search to find the first
+ *                in-range child, and stops at the first out-of-range child).
+ */
+fun <T> ComponentTreeWalk<T>.limitToRangeFast(topBound: Float, bottomBound: Float): ComponentTreeWalk<T> {
+    return copy(selectChildren = selectChildren@{ component ->
+        val list = component.children
+        if (list.isEmpty()) return@selectChildren list.iterator()
+
+        // Find the index of the first in-range child
+        var startIndex: Int
+        // Once we descend past the first few levels, most components will be entirely in-range, so we'll have a
+        // fast-path for those rather than having them all go into a worst-case binary search.
+        if (list[0].getBottom() > topBound) {
+            startIndex = 0
+        } else {
+            startIndex = list.binarySearch { if (it.getBottom() <= topBound) -1 else 1 }
+            assert(startIndex < 0)
+            startIndex = -startIndex - 1
+        }
+
+        Sequence { list.listIterator(startIndex) }
+            .takeWhile { it.getTop() < bottomBound }
+            .iterator()
+    })
+}
+
+fun <T> ComponentTreeWalk<T>.withComponent(): ComponentTreeWalk<Pair<UIComponent, T>> {
+    val superVisit = visit
+    return withVisitor { component ->
+        val (value, visitChildren) = superVisit(component)
+        Pair(value?.let { Pair(component, it) }, visitChildren)
+    }
+}
+
 /** Returns a [Sequence] consisting of this component and its parents (including the Window) in that order. */
 fun UIComponent.selfAndParents() =
     generateSequence(this) { if (it.parent != it) it.parent else null }
