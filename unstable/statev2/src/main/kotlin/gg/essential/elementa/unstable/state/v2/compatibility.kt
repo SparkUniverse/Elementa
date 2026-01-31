@@ -8,7 +8,7 @@ private class V2AsV1State<T>(private val v2State: State<T>, owner: ReferenceHold
   @Suppress("unused") // keep effect alive at least as long as this legacy state instance exists
   private val effect = effect(owner) { super.set(v2State()) }
 
-  override fun get(): T = v2State.get()
+  override fun get(): T = v2State.getUntracked()
 
   override fun set(value: T) {
     if (v2State is MutableState<*>) {
@@ -43,7 +43,8 @@ fun <T> V1State<T>.toV2(): MutableState<T> {
   val v1 = this
   val v2 = mutableStateOf(get())
 
-  v2.onSetValue(referenceHolder) { value ->
+  effect(referenceHolder) {
+    val value = v2()
     if (v1.get() != value) {
       v1.set(value)
     }
@@ -62,33 +63,3 @@ fun <T> V1State<T>.toV2(): MutableState<T> {
     val referenceHolder = referenceHolder
   }
 }
-
-/**
- * Returns a delegating state with internal mutability. That is, the value of the returned state generally follows the
- * value of the input state (or the state passed to [DelegatingState.rebind]), but [MutableState.set] is not forwarded
- * to the bound state. Instead the new value is stored internally and returned until the input state changes again, at
- * which point it'll be overwritten again.
- *
- * Using such a state (`input.map { it }`) with a `rebindState` method and direct getter+setter methods for the state
- * content was a common anti-pattern used in many places throughout Element.
- * To preserve backwards compatibility for this behavior, this method exists to quickly construct such a state in the v2
- * world.
- * New code should instead just use a regular delegating state and have the setter rebind it to a new immutable state.
- */
-internal fun <T> State<T>.wrapWithDelegatingMutableState(): MutableDelegatingState<T> {
-  val delegatingState = stateDelegatingTo(this)
-  val derivedState =
-      derivedState(get()) { owner, derivedState ->
-        delegatingState.onSetValue(owner) { derivedState.set(it) }
-      }
-  // Note: this in an implementation detail of `derivedState`, do not rely on it outside of Elementa
-  val mutableState = derivedState as MutableState<T>
-
-  return object : DelegatingState<T>, MutableState<T> by mutableState, MutableDelegatingState<T> {
-    override fun rebind(newState: State<T>) {
-      delegatingState.rebind(newState)
-    }
-  }
-}
-
-internal interface MutableDelegatingState<T> : DelegatingState<T>, MutableState<T>

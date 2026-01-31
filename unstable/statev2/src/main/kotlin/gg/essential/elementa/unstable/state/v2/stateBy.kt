@@ -5,6 +5,7 @@ package gg.essential.elementa.unstable.state.v2
  * block via [StateByScope.invoke]. These accesses are tracked and the block is automatically re-evaluated whenever any
  * one of them changes.
  */
+@Suppress("DEPRECATION")
 @Deprecated("Use `memo` (result is cached) or `State` lambda (result is not cached)")
 fun <T> stateBy(block: StateByScope.() -> T): State<T> {
     return memo {

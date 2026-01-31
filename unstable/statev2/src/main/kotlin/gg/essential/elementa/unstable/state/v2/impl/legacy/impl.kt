@@ -1,10 +1,7 @@
 @file:Suppress("DEPRECATION")
 package gg.essential.elementa.unstable.state.v2.impl.legacy
 
-
 import gg.essential.elementa.state.v2.ReferenceHolder
-import gg.essential.elementa.unstable.state.v2.DelegatingMutableState
-import gg.essential.elementa.unstable.state.v2.DelegatingState
 import gg.essential.elementa.unstable.state.v2.MutableState
 import gg.essential.elementa.unstable.state.v2.Observer
 import gg.essential.elementa.unstable.state.v2.ObserverImpl
@@ -61,10 +58,6 @@ internal object LegacyImpl : Impl {
         }
     }
 
-    override fun <T> stateDelegatingTo(state: State<T>): DelegatingState<T> = DelegatingStateImpl(state)
-
-    override fun <T> mutableStateDelegatingTo(state: MutableState<T>): DelegatingMutableState<T> = DelegatingMutableStateImpl(state)
-
     override fun <T> derivedState(
         initialValue: T,
         builder: (owner: ReferenceHolder, derivedState: MutableState<T>) -> Unit
@@ -100,6 +93,7 @@ private open class BasicState<T>(private var valueBacker: T) : MutableState<T> {
 
     override fun getUntracked(): T = valueBacker
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun onSetValue(owner: ReferenceHolder, listener: (T) -> Unit): () -> Unit {
         cleanupStaleListeners()
         val ownerCallback = WeakReference(owner.holdOnto(Pair(this, listener)))
@@ -159,82 +153,6 @@ private open class BasicState<T>(private var valueBacker: T) : MutableState<T> {
 
             ownerCallback.get()?.invoke()
         }
-    }
-}
-
-/** Base class for implementations of Delegating(Mutable)State classes. */
-private open class DelegatingStateBase<T, S : State<T>>(protected var delegate: S) : State<T> {
-    private val referenceQueue = ReferenceQueue<Any>()
-    private var listeners = mutableListOf<ListenerEntry<T>>()
-
-    override fun Observer.get(): T {
-        (this@get.observerImpl as? LegacyObserverImpl)?.observed?.add(this@DelegatingStateBase)
-        return getUntracked()
-    }
-
-    override fun getUntracked(): T = delegate.get()
-
-    override fun onSetValue(owner: ReferenceHolder, listener: (T) -> Unit): () -> Unit {
-        cleanupStaleListeners()
-        val ownerCallback = WeakReference(owner.holdOnto(Pair(this, listener)))
-        val removeCallback = delegate.onSetValue(ReferenceHolder.Weak, listener)
-        return ListenerEntry(this, listener, removeCallback, ownerCallback).also { listeners.add(it) }
-    }
-
-  
-    fun rebind(newState: S) {
-        val oldState = delegate
-        if (oldState == newState) {
-            return
-        }
-
-        delegate = newState
-
-        listeners =
-            listeners.mapNotNullTo(mutableListOf()) { entry ->
-                entry.removeCallback()
-                val listenerCallback = entry.get() ?: return@mapNotNullTo null
-                val removeCallback = newState.onSetValue(ReferenceHolder.Weak, listenerCallback)
-                ListenerEntry(this, listenerCallback, removeCallback, entry.ownerCallback)
-            }
-
-        val oldValue = oldState.get()
-        val newValue = newState.get()
-        if (oldValue != newValue) {
-            listeners.forEach { it.get()?.invoke(newValue) }
-        }
-    }
-
-    private fun cleanupStaleListeners() {
-        while (true) {
-            val reference = referenceQueue.poll() ?: break
-            (reference as ListenerEntry<*>).invoke()
-        }
-    }
-
-    private class ListenerEntry<T>(
-        private val state: DelegatingStateBase<T, *>,
-        listenerCallback: (T) -> Unit,
-        val removeCallback: () -> Unit,
-        val ownerCallback: WeakReference<() -> Unit>,
-    ) : WeakReference<(T) -> Unit>(listenerCallback, state.referenceQueue), () -> Unit {
-        override fun invoke() {
-            state.listeners.remove(this@ListenerEntry)
-            removeCallback()
-            ownerCallback.get()?.invoke()
-        }
-    }
-}
-
-/** Default implementation of [DelegatingState] */
-private class DelegatingStateImpl<T>(delegate: State<T>) :
-    DelegatingStateBase<T, State<T>>(delegate), DelegatingState<T>
-
-/** Default implementation of [DelegatingMutableState] */
-private class DelegatingMutableStateImpl<T>(delegate: MutableState<T>) :
-    DelegatingStateBase<T, MutableState<T>>(delegate), DelegatingMutableState<T> {
-    override fun set(mapper: (T) -> T) {
-        delegate.set(mapper)
     }
 }
 

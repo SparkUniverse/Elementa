@@ -121,19 +121,21 @@ fun <T, U> ListState<T>.mapList(mapper: Observer.(List<T>) -> List<U>): ListStat
     State { mapper(this@mapList()) }.toListState()
 
 fun <T, U, V> ListState<T>.zipWithEachElement(otherState: State<U>, transform: (T, U) -> V) =
-    zip(otherState) { list, other -> list.map { transform(it, other) } }.toListState()
+    mapList { list -> otherState().let { other -> list.map { transform(it, other) } } }
 
 fun <T, U, V> ListState<T>.zipElements(otherList: ListState<U>, transform: (T, U) -> V) =
-    zip(otherList) { a, b -> a.zip(b, transform) }.toListState()
+    mapList { it.zip(otherList(), transform) }
 
 fun <T, U> ListState<T>.mapEachNotNull(mapper: (T) -> U?) = mapList { it.mapNotNull(mapper) }
 
 fun <T> ListState<T?>.filterNotNull() = mapList { it.filterNotNull() }
 
-inline fun <reified U> ListState<*>.filterIsInstance(): ListState<U> = map { it.filterIsInstance<U>() }.toListState()
+inline fun <reified U> ListState<*>.filterIsInstance(): ListState<U> = mapList { it.filterIsInstance<U>() }
 
 fun <T, U> ListState<T>.flatMap(block: (T) -> Iterable<U>) = mapList { it.flatMap(block) }
 
-fun <T> ListState<T>.isEmpty() = map { it.isEmpty() }
+@Deprecated("This method always applies `memo` even though it is often unnecessary. Use in-line `State` or `memo` instead.")
+fun <T> ListState<T>.isEmpty() = memo { this@isEmpty().isEmpty() }
 
-fun <T> ListState<T>.isNotEmpty() = map { it.isNotEmpty() }
+@Deprecated("This method always applies `memo` even though it is often unnecessary. Use in-line `State` or `memo` instead.")
+fun <T> ListState<T>.isNotEmpty() = memo { this@isNotEmpty().isNotEmpty() }

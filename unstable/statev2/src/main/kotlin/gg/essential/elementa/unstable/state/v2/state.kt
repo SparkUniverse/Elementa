@@ -235,37 +235,11 @@ interface MutableState<T> : State<T> {
   fun set(value: T) = set { value }
 }
 
-/** A [State] delegating to a configurable target [State] */
-@Deprecated("This no longer needs to be a primitive. It is basically just a less-flexible `MutableState<State<T>>`.")
-interface DelegatingState<T> : State<T> {
-  fun rebind(newState: State<T>)
-}
-
-/** A [MutableState] delegating to a configurable target [MutableState] */
-@Deprecated("This no longer needs to be a primitive. It is basically just a less-flexible `MutableState<MutableState<T>>`.")
-@JvmDefaultWithoutCompatibility
-interface DelegatingMutableState<T> : MutableState<T> {
-  fun rebind(newState: MutableState<T>)
-}
-
 /** Creates a new [State] with the given value. */
 fun <T> stateOf(value: T): State<T> = ImmutableState(value)
 
 /** Creates a new [MutableState] with the given initial value. */
 fun <T> mutableStateOf(value: T): MutableState<T> = impl.mutableState(value)
-
-/** Creates a new [DelegatingState] with the given target [State]. */
-@Deprecated("This no longer needs to be a primitive. It is basically just a less-flexible `MutableState<State<T>>`.",
-    replaceWith = ReplaceWith("val myStateSource = mutableStateOf(state)\nval myState = myStateSource.flatten()"))
-@Suppress("DEPRECATION")
-fun <T> stateDelegatingTo(state: State<T>): DelegatingState<T> = impl.stateDelegatingTo(state)
-
-/** Creates a new [DelegatingMutableState] with the given target [MutableState]. */
-@Deprecated("This no longer needs to be a primitive. It is basically just a less-flexible `MutableState<MutableState<T>>`.",
-    replaceWith = ReplaceWith("val myStateSource = mutableStateOf(state)\nval myState = myStateSource.flatten()"))
-@Suppress("DEPRECATION")
-fun <T> mutableStateDelegatingTo(state: MutableState<T>): DelegatingMutableState<T> =
-    impl.mutableStateDelegatingTo(state)
 
 /** Creates a [State] which derives its value in a user-defined way from one or more other states */
 @Deprecated("See `State.onSetValue`. Use `stateBy` instead.")
@@ -286,8 +260,6 @@ fun <T, S : State<T>> S.withSetter(setter: S.(update: (value: T) -> T) -> Unit):
 
 /** A simple, immutable implementation of [State] */
 private class ImmutableState<T>(private val value: T) : State<T> {
-  override fun get(): T = value
-  override fun onSetValue(owner: ReferenceHolder, listener: (T) -> Unit): () -> Unit = {}
   override fun Observer.get(): T = value
   override fun getUntracked(): T = value
 }
