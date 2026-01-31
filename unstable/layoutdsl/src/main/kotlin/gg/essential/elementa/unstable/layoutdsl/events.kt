@@ -39,7 +39,7 @@ fun Modifier.hoverScope(state: StateV2<Boolean>) =
  * components surrounding it.
  */
 fun Modifier.inheritHoverScope() =
-    then { makeHoverScope(hoverScope(parentOnly = true)); { throw NotImplementedError() } }
+    then { makeHoverScope(hoverScopeV2(parentOnly = true)); { throw NotImplementedError() } }
 
 /**
  * Applies [hoverModifier] while the component is hovered, otherwise applies [noHoverModifier] (or nothing by default).

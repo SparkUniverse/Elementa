@@ -110,6 +110,7 @@ interface StateScope {
 @Deprecated("See [ElementaVersion.V8].")
 fun UIComponent.onAnimationFrame(block: () -> Unit) =
     enableEffect(object : Effect() {
+        @Suppress("OVERRIDE_DEPRECATION")
         override fun animationFrame() {
             block()
         }
@@ -159,6 +160,7 @@ private class ComponentHoveredState : Effect() {
     }
 }
 
+@Deprecated("Use StateV2 instead", ReplaceWith("hoveredStateV2()"))
 fun UIComponent.hoveredState(): State<Boolean> =
     hoveredStateV2().toV1(this)
 
@@ -479,6 +481,7 @@ fun UIComponent.isInComponentTree(): Boolean =
 fun <E> ObservableList<E>.onItemRemoved(callback: (E) -> Unit) {
     addObserver { _, arg ->
         if (arg is ObservableRemoveEvent<*>) {
+            @Suppress("UNCHECKED_CAST")
             callback(arg.element.value as E)
         }
     }
@@ -488,6 +491,7 @@ fun <E> ObservableList<E>.onItemRemoved(callback: (E) -> Unit) {
 fun <E> ObservableList<E>.onItemAdded(callback: (E) -> Unit) {
     addObserver { _, arg ->
         if (arg is ObservableAddEvent<*>) {
+            @Suppress("UNCHECKED_CAST")
             callback(arg.element.value as E)
         }
     }

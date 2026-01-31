@@ -4,7 +4,6 @@ package gg.essential.elementa.unstable.layoutdsl
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.state.State
 import gg.essential.elementa.state.v2.ReferenceHolder
-import gg.essential.elementa.unstable.common.ListState
 import gg.essential.elementa.unstable.common.not
 import gg.essential.elementa.unstable.state.v2.*
 import gg.essential.elementa.unstable.state.v2.collections.MutableTrackedList
@@ -96,18 +95,9 @@ class LayoutScope(
      * required.
      * Order relative to other components within the same [layout] call is kept automatically at all times.
      *
-     * Note that given old scopes are discarded, care must be taken to not inadvertently leak child components, e.g. via
-     * listener subscriptions or other links that cannot be cleaned up automatically.
      * If the space of possible [T] is very limited, [cache] may be set to `true` to retain old scopes after they are
      * removed and to re-use them if their corresponding [T] value is re-introduced at a later time.
      * This requires that [T] be usable as a key in a HashMap.
-     */
-    fun <T> forEach(state: ListState<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
-        forEach(state.toV2().toListState(), cache, block)
-    }
-
-    /**
-     * StateV2 support for forEach
      */
     fun <T> forEach(list: ListStateV2<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
         val forEachScope = LayoutScope(component, this@LayoutScope, stateScope)
