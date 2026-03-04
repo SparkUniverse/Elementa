@@ -103,7 +103,7 @@ class LayoutScope private constructor(
      * This requires that [T] be usable as a key in a HashMap.
      */
     fun <T> forEach(list: ListStateV2<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
-        val forEachScope = LayoutNodeVirtual(node, component, stateScope)
+        val forEachScope = LayoutNodeVirtual(node, stateScope)
         node.children.add(forEachScope)
 
         val cacheMap =
@@ -122,7 +122,7 @@ class LayoutScope private constructor(
                 // If the `forEach` is not cached, we give each child scope its own reference holder.
                 // This scope will be dropped once the child scope is removed.
                 val childStateScope = if (cache) forEachScope.stateScope else ReferenceHolderImpl()
-                val childNode = LayoutNodeVirtual(forEachScope, component, childStateScope)
+                val childNode = LayoutNodeVirtual(forEachScope, childStateScope)
                 forEachScope.children.add(index, childNode)
                 block(LayoutScope(childNode, component), element)
             }
@@ -176,7 +176,6 @@ class LayoutScope private constructor(
 
 private sealed class LayoutNode(
     val parentScope: LayoutNode?,
-    val component: UIComponent,
     val stateScope: ReferenceHolder,
 ) {
     abstract val childrenScopes: List<LayoutNode>
@@ -237,20 +236,20 @@ private sealed class LayoutNode(
     }
 }
 
-private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parent, component, stateScope) {
+private class LayoutNodeVirtual(parent: LayoutNode, stateScope: ReferenceHolder) : LayoutNode(parent, stateScope) {
     val children: MutableList<LayoutNode> = mutableListOf()
     override val childrenScopes: List<LayoutNode>
         get() = children
 
-    /** Whether this virtual ("forEach") scope is presently (virtually) mounted inside its parent [component]. */
+    /** Whether this virtual ("forEach") scope is presently (virtually) mounted inside its parent UIComponent. */
     fun isVirtualScopeMounted(): Boolean = when (parentScope!!) {
         is LayoutNodeUIComponent -> true
         is LayoutNodeVirtual -> this in parentScope.children && parentScope.isVirtualScopeMounted()
     }
 }
 
-private class LayoutNodeUIComponent(parentNode: LayoutNode?, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parentNode, component, stateScope) {
-    val children = LayoutNodeVirtual(this, component, stateScope)
+private class LayoutNodeUIComponent(parentNode: LayoutNode?, val component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parentNode, stateScope) {
+    val children = LayoutNodeVirtual(this, stateScope)
     override val childrenScopes: List<LayoutNode>
         get() = listOf(children)
 }
