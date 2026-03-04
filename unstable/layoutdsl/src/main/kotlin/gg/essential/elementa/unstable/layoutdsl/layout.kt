@@ -228,20 +228,9 @@ private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stat
         get() = children
 
     /** Whether this virtual ("forEach") scope is presently (virtually) mounted inside its parent [component]. */
-    fun isVirtualScopeMounted(): Boolean {
-        val parent = parentScope ?: return true // if we don't have a parent, we can only assume that we're mounted
-
-        // Check if this scope is currently mounted in its parent scope
-        if (this !in parent.childrenScopes) {
-            return false
-        }
-
-        // If the parent scope is a virtual scope as well, we can only be mounted if it is
-        if (parent is LayoutNodeVirtual) {
-            return parent.isVirtualScopeMounted()
-        }
-
-        return true
+    fun isVirtualScopeMounted(): Boolean = when (parentScope!!) {
+        is LayoutNodeUIComponent -> true
+        is LayoutNodeVirtual -> this in parentScope.children && parentScope.isVirtualScopeMounted()
     }
 
     /** Removes from [parentComponent] all components that where added within this scope. */
