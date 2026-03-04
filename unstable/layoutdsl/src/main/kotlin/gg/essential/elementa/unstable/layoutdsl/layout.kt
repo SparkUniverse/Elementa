@@ -21,7 +21,7 @@ class LayoutScope private constructor(
     private val node: LayoutNodeVirtual,
 ) {
 
-    constructor(component: UIComponent) : this(LayoutNodeUIComponent(null, component, component).children)
+    constructor(component: UIComponent) : this(LayoutNodeUIComponent(component, component).children)
 
     val stateScope: ReferenceHolder
         get() = node.stateScope
@@ -30,7 +30,7 @@ class LayoutScope private constructor(
      * As the name says, don't use this unless you really have to.
      */
     val containerDontUseThisUnlessYouReallyHaveTo: UIComponent
-        get() = generateSequence<LayoutNode>(node) { it.parentScope }.firstNotNullOf { it as? LayoutNodeUIComponent }.component
+        get() = generateSequence<LayoutNode>(node) { it.mountedInNode }.firstNotNullOf { it as? LayoutNodeUIComponent }.component
 
     operator fun <T : UIComponent> T.invoke(modifier: Modifier = Modifier, block: LayoutScope.() -> Unit = {}): T {
         addChild(this, modifier, block)
@@ -44,13 +44,13 @@ class LayoutScope private constructor(
 
         modifier.applyToComponent(childComponent)
 
-        val childNode = LayoutNodeUIComponent(node, childComponent, childComponent)
+        val childNode = LayoutNodeUIComponent(childComponent, childComponent)
         node.children.add(childNode)
 
         block(LayoutScope(childNode.children))
 
         node.mountedInComponent?.let { component ->
-            childNode.mount(component)
+            childNode.mount(node, component)
         }
     }
 
@@ -102,10 +102,10 @@ class LayoutScope private constructor(
      * This requires that [T] be usable as a key in a HashMap.
      */
     fun <T> forEach(list: ListStateV2<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
-        val forEachScope = LayoutNodeVirtual(node, stateScope)
+        val forEachScope = LayoutNodeVirtual(stateScope)
         node.children.add(forEachScope)
         node.mountedInComponent?.let { component ->
-            forEachScope.mount(component)
+            forEachScope.mount(node, component)
         }
 
         val cacheMap =
@@ -118,16 +118,16 @@ class LayoutScope private constructor(
             if (cachedScope != null) {
                 forEachScope.children.add(index, cachedScope)
                 forEachScope.mountedInComponent?.let { component ->
-                    cachedScope.mount(component)
+                    cachedScope.mount(forEachScope, component)
                 }
             } else {
                 // If the `forEach` is not cached, we give each child scope its own reference holder.
                 // This scope will be dropped once the child scope is removed.
                 val childStateScope = if (cache) forEachScope.stateScope else ReferenceHolderImpl()
-                val childNode = LayoutNodeVirtual(forEachScope, childStateScope)
+                val childNode = LayoutNodeVirtual(childStateScope)
                 forEachScope.children.add(index, childNode)
                 forEachScope.mountedInComponent?.let { component ->
-                    childNode.mount(component)
+                    childNode.mount(forEachScope, component)
                 }
                 block(LayoutScope(childNode), element)
             }
@@ -137,7 +137,7 @@ class LayoutScope private constructor(
             val removedScope = forEachScope.children.removeAt(index)
             check(removedScope is LayoutNodeVirtual)
             forEachScope.mountedInComponent?.let { component ->
-                removedScope.unmount(component)
+                removedScope.unmount(forEachScope, component)
             }
             getCacheEntry(element)?.add(removedScope)
         }
@@ -146,7 +146,7 @@ class LayoutScope private constructor(
             forEachScope.children.forEachIndexed { index, layoutScope ->
                 check(layoutScope is LayoutNodeVirtual)
                 forEachScope.mountedInComponent?.let { component ->
-                    layoutScope.unmount(component)
+                    layoutScope.unmount(forEachScope, component)
                 }
                 getCacheEntry(elements[index])?.add(layoutScope)
             }
@@ -180,33 +180,38 @@ class LayoutScope private constructor(
 }
 
 private sealed class LayoutNode(
-    val parentScope: LayoutNode?,
     val stateScope: ReferenceHolder,
 ) {
+    var mountedInNode: LayoutNode? = null
+        private set
     var mountedInComponent: UIComponent? = null
         private set
 
     /** Mounts this node into the given [parentComponent]. */
-    fun mount(parentComponent: UIComponent) {
+    fun mount(parentNode: LayoutNode, parentComponent: UIComponent) {
+        check(mountedInNode == null)
         check(mountedInComponent == null)
 
+        mountedInNode = parentNode
         mountedInComponent = parentComponent
 
         when (this) {
             is LayoutNodeUIComponent -> parentComponent.insertChildAt(component, findInsertionIndex(parentComponent))
-            is LayoutNodeVirtual -> children.forEach { it.mount(parentComponent) }
+            is LayoutNodeVirtual -> children.forEach { it.mount(this, parentComponent) }
         }
     }
 
     /** Unmounts this node from the given [parentComponent]. */
-    fun unmount(parentComponent: UIComponent) {
+    fun unmount(parentNode: LayoutNode, parentComponent: UIComponent) {
+        check(mountedInNode == parentNode)
         check(mountedInComponent == parentComponent)
 
+        mountedInNode = null
         mountedInComponent = null
 
         when (this) {
             is LayoutNodeUIComponent -> parentComponent.removeChild(component)
-            is LayoutNodeVirtual -> children.forEach { it.unmount(parentComponent) }
+            is LayoutNodeVirtual -> children.forEach { it.unmount(this, parentComponent) }
         }
     }
 
@@ -217,10 +222,10 @@ private sealed class LayoutNode(
         if (this is LayoutNodeUIComponent && this.component == parentComponent) {
             return 0
         }
-        return when (parentScope!!) {
+        return when (val mountedInNode = this@LayoutNode.mountedInNode!!) {
             is LayoutNodeUIComponent -> 0
             is LayoutNodeVirtual -> {
-                val siblings = parentScope.children
+                val siblings = mountedInNode.children
 
                 // Check all preceding siblings
                 for (index in (0 until siblings.indexOf(this)).reversed()) {
@@ -229,7 +234,7 @@ private sealed class LayoutNode(
                 }
 
                 // If we can't find anything there, check the siblings one level up, recursively
-                return parentScope.findInsertionIndex(parentComponent)
+                return mountedInNode.findInsertionIndex(parentComponent)
             }
         }
     }
@@ -250,14 +255,14 @@ private sealed class LayoutNode(
     }
 }
 
-private class LayoutNodeVirtual(parent: LayoutNode, stateScope: ReferenceHolder) : LayoutNode(parent, stateScope) {
+private class LayoutNodeVirtual(stateScope: ReferenceHolder) : LayoutNode(stateScope) {
     val children: MutableList<LayoutNode> = mutableListOf()
 }
 
-private class LayoutNodeUIComponent(parentNode: LayoutNode?, val component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parentNode, stateScope) {
-    val children = LayoutNodeVirtual(this, stateScope)
+private class LayoutNodeUIComponent(val component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(stateScope) {
+    val children = LayoutNodeVirtual(stateScope)
     init {
-        children.mount(component)
+        children.mount(this, component)
     }
 }
 
