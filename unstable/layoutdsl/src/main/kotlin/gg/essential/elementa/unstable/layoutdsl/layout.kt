@@ -51,8 +51,7 @@ class LayoutScope private constructor(
         block(LayoutScope(childNode.children, childComponent))
 
         if (node.isVirtualScopeMounted()) {
-            val index = childNode.findInsertionIndex(component)
-            component.insertChildAt(childComponent, index)
+            childNode.mount(component)
         }
     }
 
@@ -117,7 +116,7 @@ class LayoutScope private constructor(
             if (cachedScope != null) {
                 forEachScope.children.add(index, cachedScope)
                 if (forEachScope.isVirtualScopeMounted()) {
-                    cachedScope.remount(component)
+                    cachedScope.mount(component)
                 }
             } else {
                 // If the `forEach` is not cached, we give each child scope its own reference holder.
@@ -182,6 +181,22 @@ private sealed class LayoutNode(
 ) {
     abstract val childrenScopes: List<LayoutNode>
 
+    /** Mounts this node into the given [parentComponent]. */
+    fun mount(parentComponent: UIComponent) {
+        when (this) {
+            is LayoutNodeUIComponent -> parentComponent.insertChildAt(component, findInsertionIndex(parentComponent))
+            is LayoutNodeVirtual -> children.forEach { it.mount(parentComponent) }
+        }
+    }
+
+    /** Unmounts this node from the given [parentComponent]. */
+    fun unmount(parentComponent: UIComponent) {
+        when (this) {
+            is LayoutNodeUIComponent -> parentComponent.removeChild(component)
+            is LayoutNodeVirtual -> children.forEach { it.unmount(parentComponent) }
+        }
+    }
+
     /**
      * Finds the index in [parentComponent]`s children at which components of this node should be inserted.
      */
@@ -231,31 +246,6 @@ private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stat
     fun isVirtualScopeMounted(): Boolean = when (parentScope!!) {
         is LayoutNodeUIComponent -> true
         is LayoutNodeVirtual -> this in parentScope.children && parentScope.isVirtualScopeMounted()
-    }
-
-    /** Removes from [parentComponent] all components that where added within this scope. */
-    fun unmount(parentComponent: UIComponent) {
-        for (childScope in children) {
-            if (childScope is LayoutNodeVirtual) {
-                childScope.unmount(parentComponent)
-            } else {
-                childScope as LayoutNodeUIComponent // FIXME shouldn't need this
-                parentComponent.removeChild(childScope.component)
-            }
-        }
-    }
-
-    /** Inverse of [unmount]. Re-adds to [parentComponent] all components that where added within this scope. */
-    fun remount(parentComponent: UIComponent) {
-        for (childScope in children) {
-            if (childScope is LayoutNodeVirtual) {
-                childScope.remount(parentComponent)
-            } else {
-                childScope as LayoutNodeUIComponent // FIXME shouldn't need this
-                val index = childScope.findInsertionIndex(parentComponent)
-                parentComponent.insertChildAt(childScope.component, index)
-            }
-        }
     }
 }
 
