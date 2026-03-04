@@ -184,8 +184,6 @@ private sealed class LayoutNode(
     val parentScope: LayoutNode?,
     val stateScope: ReferenceHolder,
 ) {
-    abstract val childrenScopes: List<LayoutNode>
-
     var mountedInComponent: UIComponent? = null
         private set
 
@@ -255,8 +253,6 @@ private sealed class LayoutNode(
 
 private class LayoutNodeVirtual(parent: LayoutNode, stateScope: ReferenceHolder) : LayoutNode(parent, stateScope) {
     val children: MutableList<LayoutNode> = mutableListOf()
-    override val childrenScopes: List<LayoutNode>
-        get() = children
 }
 
 private class LayoutNodeUIComponent(parentNode: LayoutNode?, val component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parentNode, stateScope) {
@@ -264,8 +260,6 @@ private class LayoutNodeUIComponent(parentNode: LayoutNode?, val component: UICo
     init {
         children.mount(component)
     }
-    override val childrenScopes: List<LayoutNode>
-        get() = listOf(children)
 }
 
 /**
