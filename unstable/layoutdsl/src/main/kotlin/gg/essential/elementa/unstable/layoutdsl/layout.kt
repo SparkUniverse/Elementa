@@ -51,7 +51,7 @@ class LayoutScope private constructor(
         block(LayoutScope(childNode.children, childComponent))
 
         if (node.isVirtualScopeMounted()) {
-            val index = childNode.findNextIndexIn(component) ?: 0
+            val index = childNode.findInsertionIndex(component)
             component.insertChildAt(childComponent, index)
         }
     }
@@ -183,10 +183,34 @@ private sealed class LayoutNode(
     abstract val childrenScopes: List<LayoutNode>
 
     /**
+     * Finds the index in [parentComponent]`s children at which components of this node should be inserted.
+     */
+    fun findInsertionIndex(parentComponent: UIComponent): Int {
+        if (this is LayoutNodeUIComponent && this.component == parentComponent) {
+            return 0
+        }
+        return when (parentScope!!) {
+            is LayoutNodeUIComponent -> 0
+            is LayoutNodeVirtual -> {
+                val siblings = parentScope.children
+
+                // Check all preceding siblings
+                for (index in (0 until siblings.indexOf(this)).reversed()) {
+                    siblings[index].findLastMountedComponentIndex(parentComponent)
+                        ?.let { return it + 1 }
+                }
+
+                // If we can't find anything there, check the siblings one level up, recursively
+                return parentScope.findInsertionIndex(parentComponent)
+            }
+        }
+    }
+
+    /**
      * Finds the last component in this sub-tree which is currently mounted in [parentComponent], and returns the index
      * of that component within the `children` of the given [parentComponent].
      */
-    fun findLastMountedComponentIndex(parentComponent: UIComponent): Int? = when (this) {
+    private fun findLastMountedComponentIndex(parentComponent: UIComponent): Int? = when (this) {
         is LayoutNodeUIComponent -> parentComponent.children.indexOf(component).takeIf { it != -1 }
         is LayoutNodeVirtual -> {
             for (index in children.indices.reversed()) {
@@ -239,7 +263,7 @@ private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stat
                 childScope.remount(parentComponent)
             } else {
                 childScope as LayoutNodeUIComponent // FIXME shouldn't need this
-                val index = childScope.findNextIndexIn(parentComponent) ?: 0
+                val index = childScope.findInsertionIndex(parentComponent)
                 parentComponent.insertChildAt(childScope.component, index)
             }
         }
@@ -250,36 +274,6 @@ private class LayoutNodeUIComponent(parentNode: LayoutNode?, component: UICompon
     val children = LayoutNodeVirtual(this, component, stateScope)
     override val childrenScopes: List<LayoutNode>
         get() = listOf(children)
-
-    /**
-     * Finds the index in [parent]'s children at which a component should be inserted to end up right after [component].
-     * Works even when [component] is not currently present in [parent] by recursively searching the layout tree.
-     * If [parent] has no children in the layout tree, `null` is returned.
-     */
-    fun findNextIndexIn(parent: UIComponent): Int? {
-        /** Searches by recursively traversing upwards the tree if no index can be found in this subtree. */
-        fun LayoutNode.search(beforeScope: LayoutNode): Int? {
-            val beforeIndex = childrenScopes.indexOf(beforeScope)
-
-            // Check all preceding siblings
-            for (index in (0 until beforeIndex).reversed()) {
-                childrenScopes[index].findLastMountedComponentIndex(parent)
-                    ?.let { return it }
-            }
-
-            // If we can't find anything there, check the siblings one level up, recursively
-            val parentScope = parentScope ?: return null
-            // Though once we've found a scope that targets [parent], then we can stop ascending if we find a scope
-            // that doesn't target [parent] (i.e. one for parent's parent) because we only want to search all scopes
-            // targeting [parent].
-            if (component == parent && parentScope.component != parent) {
-                return null
-            }
-            return parentScope.search(this)
-        }
-
-        return parentScope?.search(this)?.let { it + 1 }
-    }
 }
 
 /**
