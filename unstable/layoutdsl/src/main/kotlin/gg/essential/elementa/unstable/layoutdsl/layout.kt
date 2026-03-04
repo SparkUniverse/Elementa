@@ -197,8 +197,7 @@ class LayoutScope(
     /** Removes from [component] all components that where added within this scope. */
     private fun unmount() {
         for (childScope in childrenScopes) {
-            if (childScope.component == this.component) {
-                // This is a forEach scope, recurse down into its children
+            if (childScope.isVirtual()) {
                 childScope.unmount()
             } else {
                 component.removeChild(childScope.component)
@@ -209,8 +208,7 @@ class LayoutScope(
     /** Inverse of [unmount]. Re-adds to [component] all components that where added within this scope. */
     private fun remount() {
         for (childScope in childrenScopes) {
-            if (childScope.component == this.component) {
-                // This is a forEach scope, recurse down into its children
+            if (childScope.isVirtual()) {
                 childScope.remount()
             } else {
                 val index = childScope.findNextIndexIn(component) ?: 0
