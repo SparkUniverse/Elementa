@@ -50,7 +50,7 @@ class LayoutScope private constructor(
 
         block(LayoutScope(childNode.children, childComponent))
 
-        if (node.isVirtualScopeMounted()) {
+        node.mountedInComponent?.let { component ->
             childNode.mount(component)
         }
     }
@@ -105,6 +105,9 @@ class LayoutScope private constructor(
     fun <T> forEach(list: ListStateV2<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
         val forEachScope = LayoutNodeVirtual(node, stateScope)
         node.children.add(forEachScope)
+        node.mountedInComponent?.let { component ->
+            forEachScope.mount(component)
+        }
 
         val cacheMap =
             if (cache) mutableMapOf<T, MutableList<LayoutNodeVirtual>>()
@@ -115,7 +118,7 @@ class LayoutScope private constructor(
             val cachedScope = getCacheEntry(element)?.removeLastOrNull()
             if (cachedScope != null) {
                 forEachScope.children.add(index, cachedScope)
-                if (forEachScope.isVirtualScopeMounted()) {
+                forEachScope.mountedInComponent?.let { component ->
                     cachedScope.mount(component)
                 }
             } else {
@@ -124,6 +127,9 @@ class LayoutScope private constructor(
                 val childStateScope = if (cache) forEachScope.stateScope else ReferenceHolderImpl()
                 val childNode = LayoutNodeVirtual(forEachScope, childStateScope)
                 forEachScope.children.add(index, childNode)
+                forEachScope.mountedInComponent?.let { component ->
+                    childNode.mount(component)
+                }
                 block(LayoutScope(childNode, component), element)
             }
         }
@@ -131,7 +137,7 @@ class LayoutScope private constructor(
         fun remove(index: Int, element: T) {
             val removedScope = forEachScope.children.removeAt(index)
             check(removedScope is LayoutNodeVirtual)
-            if (forEachScope.isVirtualScopeMounted()) {
+            forEachScope.mountedInComponent?.let { component ->
                 removedScope.unmount(component)
             }
             getCacheEntry(element)?.add(removedScope)
@@ -140,7 +146,7 @@ class LayoutScope private constructor(
         fun clear(elements: List<T>) {
             forEachScope.children.forEachIndexed { index, layoutScope ->
                 check(layoutScope is LayoutNodeVirtual)
-                if (forEachScope.isVirtualScopeMounted()) {
+                forEachScope.mountedInComponent?.let { component ->
                     layoutScope.unmount(component)
                 }
                 getCacheEntry(elements[index])?.add(layoutScope)
@@ -180,8 +186,15 @@ private sealed class LayoutNode(
 ) {
     abstract val childrenScopes: List<LayoutNode>
 
+    var mountedInComponent: UIComponent? = null
+        private set
+
     /** Mounts this node into the given [parentComponent]. */
     fun mount(parentComponent: UIComponent) {
+        check(mountedInComponent == null)
+
+        mountedInComponent = parentComponent
+
         when (this) {
             is LayoutNodeUIComponent -> parentComponent.insertChildAt(component, findInsertionIndex(parentComponent))
             is LayoutNodeVirtual -> children.forEach { it.mount(parentComponent) }
@@ -190,6 +203,10 @@ private sealed class LayoutNode(
 
     /** Unmounts this node from the given [parentComponent]. */
     fun unmount(parentComponent: UIComponent) {
+        check(mountedInComponent == parentComponent)
+
+        mountedInComponent = null
+
         when (this) {
             is LayoutNodeUIComponent -> parentComponent.removeChild(component)
             is LayoutNodeVirtual -> children.forEach { it.unmount(parentComponent) }
@@ -240,16 +257,13 @@ private class LayoutNodeVirtual(parent: LayoutNode, stateScope: ReferenceHolder)
     val children: MutableList<LayoutNode> = mutableListOf()
     override val childrenScopes: List<LayoutNode>
         get() = children
-
-    /** Whether this virtual ("forEach") scope is presently (virtually) mounted inside its parent UIComponent. */
-    fun isVirtualScopeMounted(): Boolean = when (parentScope!!) {
-        is LayoutNodeUIComponent -> true
-        is LayoutNodeVirtual -> this in parentScope.children && parentScope.isVirtualScopeMounted()
-    }
 }
 
 private class LayoutNodeUIComponent(parentNode: LayoutNode?, val component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parentNode, stateScope) {
     val children = LayoutNodeVirtual(this, stateScope)
+    init {
+        children.mount(component)
+    }
     override val childrenScopes: List<LayoutNode>
         get() = listOf(children)
 }
