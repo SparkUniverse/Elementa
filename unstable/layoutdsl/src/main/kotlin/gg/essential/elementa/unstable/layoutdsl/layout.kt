@@ -18,11 +18,11 @@ import gg.essential.elementa.unstable.state.v2.ListState as ListStateV2
 import gg.essential.elementa.unstable.state.v2.State as StateV2
 
 class LayoutScope private constructor(
-    private val node: LayoutNode,
+    private val node: LayoutNodeVirtual,
     private val component: UIComponent,
 ) {
 
-    constructor(component: UIComponent) : this(LayoutNodeUIComponent(null, component, component), component)
+    constructor(component: UIComponent) : this(LayoutNodeUIComponent(null, component, component).children, component)
 
     val stateScope: ReferenceHolder
         get() = node.stateScope
@@ -48,7 +48,7 @@ class LayoutScope private constructor(
         val childNode = LayoutNodeUIComponent(node, childComponent, childComponent)
         node.childrenScopes.add(childNode)
 
-        block(LayoutScope(childNode, childComponent))
+        block(LayoutScope(childNode.children, childComponent))
 
         if (node.isMounted()) {
             val index = childNode.findNextIndexIn(component) ?: 0
@@ -180,12 +180,13 @@ private sealed class LayoutNode(
     val component: UIComponent,
     val stateScope: ReferenceHolder,
 ) {
-    val childrenScopes: MutableList<LayoutNode> = mutableListOf()
+    abstract val childrenScopes: List<LayoutNode>
 
     fun isMounted() = if (this is LayoutNodeVirtual) isVirtualScopeMounted() else true
 }
 
 private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parent, component, stateScope) {
+    override val childrenScopes: MutableList<LayoutNode> = mutableListOf()
 
     /** Whether this virtual ("forEach") scope is presently (virtually) mounted inside its parent [component]. */
     fun isVirtualScopeMounted(): Boolean {
@@ -231,6 +232,10 @@ private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stat
 }
 
 private class LayoutNodeUIComponent(parentNode: LayoutNode?, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parentNode, component, stateScope) {
+    val children = LayoutNodeVirtual(this, component, stateScope)
+    override val childrenScopes: List<LayoutNode>
+        get() = listOf(children)
+
     /**
      * Finds the index in [parent]'s children at which a component should be inserted to end up right after [component].
      * Works even when [component] is not currently present in [parent] by recursively searching the layout tree.
