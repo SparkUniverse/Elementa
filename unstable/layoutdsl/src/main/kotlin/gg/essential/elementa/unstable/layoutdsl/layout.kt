@@ -46,7 +46,7 @@ class LayoutScope private constructor(
         modifier.applyToComponent(childComponent)
 
         val childNode = LayoutNodeUIComponent(node, childComponent, childComponent)
-        node.childrenScopes.add(childNode)
+        node.children.add(childNode)
 
         block(LayoutScope(childNode.children, childComponent))
 
@@ -105,7 +105,7 @@ class LayoutScope private constructor(
      */
     fun <T> forEach(list: ListStateV2<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
         val forEachScope = LayoutNodeVirtual(node, component, stateScope)
-        node.childrenScopes.add(forEachScope)
+        node.children.add(forEachScope)
 
         val cacheMap =
             if (cache) mutableMapOf<T, MutableList<LayoutNodeVirtual>>()
@@ -115,7 +115,7 @@ class LayoutScope private constructor(
         fun add(index: Int, element: T) {
             val cachedScope = getCacheEntry(element)?.removeLastOrNull()
             if (cachedScope != null) {
-                forEachScope.childrenScopes.add(index, cachedScope)
+                forEachScope.children.add(index, cachedScope)
                 if (forEachScope.isVirtualScopeMounted()) {
                     cachedScope.remount(component)
                 }
@@ -124,13 +124,13 @@ class LayoutScope private constructor(
                 // This scope will be dropped once the child scope is removed.
                 val childStateScope = if (cache) forEachScope.stateScope else ReferenceHolderImpl()
                 val childNode = LayoutNodeVirtual(forEachScope, component, childStateScope)
-                forEachScope.childrenScopes.add(index, childNode)
+                forEachScope.children.add(index, childNode)
                 block(LayoutScope(childNode, component), element)
             }
         }
 
         fun remove(index: Int, element: T) {
-            val removedScope = forEachScope.childrenScopes.removeAt(index)
+            val removedScope = forEachScope.children.removeAt(index)
             check(removedScope is LayoutNodeVirtual)
             if (forEachScope.isVirtualScopeMounted()) {
                 removedScope.unmount(component)
@@ -139,14 +139,14 @@ class LayoutScope private constructor(
         }
 
         fun clear(elements: List<T>) {
-            forEachScope.childrenScopes.forEachIndexed { index, layoutScope ->
+            forEachScope.children.forEachIndexed { index, layoutScope ->
                 check(layoutScope is LayoutNodeVirtual)
                 if (forEachScope.isVirtualScopeMounted()) {
                     layoutScope.unmount(component)
                 }
                 getCacheEntry(elements[index])?.add(layoutScope)
             }
-            forEachScope.childrenScopes.clear()
+            forEachScope.children.clear()
         }
 
         fun update(change: TrackedList.Change<T>) {
@@ -184,7 +184,9 @@ private sealed class LayoutNode(
 }
 
 private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parent, component, stateScope) {
-    override val childrenScopes: MutableList<LayoutNode> = mutableListOf()
+    val children: MutableList<LayoutNode> = mutableListOf()
+    override val childrenScopes: List<LayoutNode>
+        get() = children
 
     /** Whether this virtual ("forEach") scope is presently (virtually) mounted inside its parent [component]. */
     fun isVirtualScopeMounted(): Boolean {
@@ -205,7 +207,7 @@ private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stat
 
     /** Removes from [parentComponent] all components that where added within this scope. */
     fun unmount(parentComponent: UIComponent) {
-        for (childScope in childrenScopes) {
+        for (childScope in children) {
             if (childScope is LayoutNodeVirtual) {
                 childScope.unmount(parentComponent)
             } else {
@@ -217,7 +219,7 @@ private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stat
 
     /** Inverse of [unmount]. Re-adds to [parentComponent] all components that where added within this scope. */
     fun remount(parentComponent: UIComponent) {
-        for (childScope in childrenScopes) {
+        for (childScope in children) {
             if (childScope is LayoutNodeVirtual) {
                 childScope.remount(parentComponent)
             } else {
