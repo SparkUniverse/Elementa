@@ -114,7 +114,7 @@ class LayoutScope(
             if (cachedScope != null) {
                 forEachScope.childrenScopes.add(index, cachedScope)
                 if (forEachScope.isVirtualScopeMounted()) {
-                    cachedScope.remount()
+                    cachedScope.remount(component)
                 }
             } else {
                 // If the `forEach` is not cached, we give each child scope its own reference holder.
@@ -130,7 +130,7 @@ class LayoutScope(
         fun remove(index: Int, element: T) {
             val removedScope = forEachScope.childrenScopes.removeAt(index)
             if (forEachScope.isVirtualScopeMounted()) {
-                removedScope.unmount()
+                removedScope.unmount(component)
             }
             getCacheEntry(element)?.add(removedScope)
         }
@@ -138,7 +138,7 @@ class LayoutScope(
         fun clear(elements: List<T>) {
             forEachScope.childrenScopes.forEachIndexed { index, layoutScope ->
                 if (forEachScope.isVirtualScopeMounted()) {
-                    layoutScope.unmount()
+                    layoutScope.unmount(component)
                 }
                 getCacheEntry(elements[index])?.add(layoutScope)
             }
@@ -194,25 +194,25 @@ class LayoutScope(
 
     private fun isMounted() = if (isVirtual()) isVirtualScopeMounted() else true
 
-    /** Removes from [component] all components that where added within this scope. */
-    private fun unmount() {
+    /** Removes from [parentComponent] all components that where added within this scope. */
+    private fun unmount(parentComponent: UIComponent) {
         for (childScope in childrenScopes) {
             if (childScope.isVirtual()) {
-                childScope.unmount()
+                childScope.unmount(parentComponent)
             } else {
-                component.removeChild(childScope.component)
+                parentComponent.removeChild(childScope.component)
             }
         }
     }
 
-    /** Inverse of [unmount]. Re-adds to [component] all components that where added within this scope. */
-    private fun remount() {
+    /** Inverse of [unmount]. Re-adds to [parentComponent] all components that where added within this scope. */
+    private fun remount(parentComponent: UIComponent) {
         for (childScope in childrenScopes) {
             if (childScope.isVirtual()) {
-                childScope.remount()
+                childScope.remount(parentComponent)
             } else {
-                val index = childScope.findNextIndexIn(component) ?: 0
-                component.insertChildAt(childScope.component, index)
+                val index = childScope.findNextIndexIn(parentComponent) ?: 0
+                parentComponent.insertChildAt(childScope.component, index)
             }
         }
     }
