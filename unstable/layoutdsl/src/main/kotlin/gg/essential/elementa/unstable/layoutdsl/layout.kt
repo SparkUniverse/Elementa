@@ -19,10 +19,9 @@ import gg.essential.elementa.unstable.state.v2.State as StateV2
 
 class LayoutScope private constructor(
     private val node: LayoutNodeVirtual,
-    private val component: UIComponent,
 ) {
 
-    constructor(component: UIComponent) : this(LayoutNodeUIComponent(null, component, component).children, component)
+    constructor(component: UIComponent) : this(LayoutNodeUIComponent(null, component, component).children)
 
     val stateScope: ReferenceHolder
         get() = node.stateScope
@@ -31,7 +30,7 @@ class LayoutScope private constructor(
      * As the name says, don't use this unless you really have to.
      */
     val containerDontUseThisUnlessYouReallyHaveTo: UIComponent
-        get() = component
+        get() = generateSequence<LayoutNode>(node) { it.parentScope }.firstNotNullOf { it as? LayoutNodeUIComponent }.component
 
     operator fun <T : UIComponent> T.invoke(modifier: Modifier = Modifier, block: LayoutScope.() -> Unit = {}): T {
         addChild(this, modifier, block)
@@ -48,7 +47,7 @@ class LayoutScope private constructor(
         val childNode = LayoutNodeUIComponent(node, childComponent, childComponent)
         node.children.add(childNode)
 
-        block(LayoutScope(childNode.children, childComponent))
+        block(LayoutScope(childNode.children))
 
         node.mountedInComponent?.let { component ->
             childNode.mount(component)
@@ -130,7 +129,7 @@ class LayoutScope private constructor(
                 forEachScope.mountedInComponent?.let { component ->
                     childNode.mount(component)
                 }
-                block(LayoutScope(childNode, component), element)
+                block(LayoutScope(childNode), element)
             }
         }
 
