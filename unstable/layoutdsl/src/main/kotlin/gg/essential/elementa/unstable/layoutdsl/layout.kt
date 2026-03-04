@@ -50,7 +50,7 @@ class LayoutScope private constructor(
 
         block(LayoutScope(childNode.children, childComponent))
 
-        if (node.isMounted()) {
+        if (node.isVirtualScopeMounted()) {
             val index = childNode.findNextIndexIn(component) ?: 0
             component.insertChildAt(childComponent, index)
         }
@@ -181,8 +181,6 @@ private sealed class LayoutNode(
     val stateScope: ReferenceHolder,
 ) {
     abstract val childrenScopes: List<LayoutNode>
-
-    fun isMounted() = if (this is LayoutNodeVirtual) isVirtualScopeMounted() else true
 }
 
 private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parent, component, stateScope) {
