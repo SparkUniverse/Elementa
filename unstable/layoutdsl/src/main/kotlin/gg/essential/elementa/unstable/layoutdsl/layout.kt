@@ -238,11 +238,11 @@ private class LayoutNodeUIComponent(parentNode: LayoutNode?, component: UICompon
      */
     fun findNextIndexIn(parent: UIComponent): Int? {
         /** Searches this subtree for an index. */
-        fun LayoutNode.searchSubTree(range: IntProgression = childrenScopes.indices.reversed()): Int? {
+        fun LayoutNode.searchSubTree(): Int? {
             if (component == parent) {
                 // This is a node in the subtree belonging to [parent] (e.g. the main scope, or a forEach scope),
                 // so we recursively search the children
-                for (index in range) {
+                for (index in childrenScopes.indices.reversed()) {
                     childrenScopes[index].searchSubTree()
                         ?.let { return it }
                 }
@@ -258,8 +258,10 @@ private class LayoutNodeUIComponent(parentNode: LayoutNode?, component: UICompon
             val beforeIndex = childrenScopes.indexOf(beforeScope)
 
             // Check all preceding siblings
-            searchSubTree((0 until beforeIndex).reversed())
-                ?.let { return it }
+            for (index in (0 until beforeIndex).reversed()) {
+                childrenScopes[index].searchSubTree()
+                    ?.let { return it }
+            }
 
             // If we can't find anything there, check the siblings one level up, recursively
             val parentScope = parentScope ?: return null
