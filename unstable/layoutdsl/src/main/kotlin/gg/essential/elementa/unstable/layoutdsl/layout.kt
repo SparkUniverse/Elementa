@@ -18,20 +18,20 @@ import gg.essential.elementa.unstable.state.v2.ListState as ListStateV2
 import gg.essential.elementa.unstable.state.v2.State as StateV2
 
 class LayoutScope private constructor(
+    private val node: LayoutNode,
     private val component: UIComponent,
-    private val parentScope: LayoutScope?,
-    val stateScope: ReferenceHolder,
 ) {
 
-    constructor(component: UIComponent) : this(component, null, component)
+    constructor(component: UIComponent) : this(LayoutNodeUIComponent(null, component, component), component)
+
+    val stateScope: ReferenceHolder
+        get() = node.stateScope
 
     /**
      * As the name says, don't use this unless you really have to.
      */
     val containerDontUseThisUnlessYouReallyHaveTo: UIComponent
         get() = component
-
-    private val childrenScopes = mutableListOf<LayoutScope>()
 
     operator fun <T : UIComponent> T.invoke(modifier: Modifier = Modifier, block: LayoutScope.() -> Unit = {}): T {
         addChild(this, modifier, block)
@@ -45,13 +45,13 @@ class LayoutScope private constructor(
 
         modifier.applyToComponent(childComponent)
 
-        val childScope = LayoutScope(childComponent, this, childComponent)
-        childrenScopes.add(childScope)
+        val childNode = LayoutNodeUIComponent(node, childComponent, childComponent)
+        node.childrenScopes.add(childNode)
 
-        childScope.block()
+        block(LayoutScope(childNode, childComponent))
 
-        if (isMounted()) {
-            val index = childScope.findNextIndexIn(component) ?: 0
+        if (node.isMounted()) {
+            val index = childNode.findNextIndexIn(component) ?: 0
             component.insertChildAt(childComponent, index)
         }
     }
@@ -104,11 +104,11 @@ class LayoutScope private constructor(
      * This requires that [T] be usable as a key in a HashMap.
      */
     fun <T> forEach(list: ListStateV2<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
-        val forEachScope = LayoutScope(component, this@LayoutScope, stateScope)
-        childrenScopes.add(forEachScope)
+        val forEachScope = LayoutNodeVirtual(node, component, stateScope)
+        node.childrenScopes.add(forEachScope)
 
         val cacheMap =
-            if (cache) mutableMapOf<T, MutableList<LayoutScope>>()
+            if (cache) mutableMapOf<T, MutableList<LayoutNodeVirtual>>()
             else null
         fun getCacheEntry(key: T) = cacheMap?.getOrPut(key) { mutableListOf() }
 
@@ -123,15 +123,15 @@ class LayoutScope private constructor(
                 // If the `forEach` is not cached, we give each child scope its own reference holder.
                 // This scope will be dropped once the child scope is removed.
                 val childStateScope = if (cache) forEachScope.stateScope else ReferenceHolderImpl()
-                val newScope = LayoutScope(component, forEachScope, childStateScope)
-
-                forEachScope.childrenScopes.add(index, newScope)
-                newScope.block(element)
+                val childNode = LayoutNodeVirtual(forEachScope, component, childStateScope)
+                forEachScope.childrenScopes.add(index, childNode)
+                block(LayoutScope(childNode, component), element)
             }
         }
 
         fun remove(index: Int, element: T) {
             val removedScope = forEachScope.childrenScopes.removeAt(index)
+            check(removedScope is LayoutNodeVirtual)
             if (forEachScope.isVirtualScopeMounted()) {
                 removedScope.unmount(component)
             }
@@ -140,6 +140,7 @@ class LayoutScope private constructor(
 
         fun clear(elements: List<T>) {
             forEachScope.childrenScopes.forEachIndexed { index, layoutScope ->
+                check(layoutScope is LayoutNodeVirtual)
                 if (forEachScope.isVirtualScopeMounted()) {
                     layoutScope.unmount(component)
                 }
@@ -172,14 +173,22 @@ class LayoutScope private constructor(
             trackedList = newList
         }
     }
+}
 
-    /** Whether this scope is a virtual "forEach" scope. These share their target component with their parent scope. */
-    private fun isVirtual(): Boolean {
-        return parentScope?.component == component
-    }
+private sealed class LayoutNode(
+    val parentScope: LayoutNode?,
+    val component: UIComponent,
+    val stateScope: ReferenceHolder,
+) {
+    val childrenScopes: MutableList<LayoutNode> = mutableListOf()
+
+    fun isMounted() = if (this is LayoutNodeVirtual) isVirtualScopeMounted() else true
+}
+
+private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parent, component, stateScope) {
 
     /** Whether this virtual ("forEach") scope is presently (virtually) mounted inside its parent [component]. */
-    private fun isVirtualScopeMounted(): Boolean {
+    fun isVirtualScopeMounted(): Boolean {
         val parent = parentScope ?: return true // if we don't have a parent, we can only assume that we're mounted
 
         // Check if this scope is currently mounted in its parent scope
@@ -188,46 +197,48 @@ class LayoutScope private constructor(
         }
 
         // If the parent scope is a virtual scope as well, we can only be mounted if it is
-        if (parent.isVirtual()) {
+        if (parent is LayoutNodeVirtual) {
             return parent.isVirtualScopeMounted()
         }
 
         return true
     }
 
-    private fun isMounted() = if (isVirtual()) isVirtualScopeMounted() else true
-
     /** Removes from [parentComponent] all components that where added within this scope. */
-    private fun unmount(parentComponent: UIComponent) {
+    fun unmount(parentComponent: UIComponent) {
         for (childScope in childrenScopes) {
-            if (childScope.isVirtual()) {
+            if (childScope is LayoutNodeVirtual) {
                 childScope.unmount(parentComponent)
             } else {
+                childScope as LayoutNodeUIComponent // FIXME shouldn't need this
                 parentComponent.removeChild(childScope.component)
             }
         }
     }
 
     /** Inverse of [unmount]. Re-adds to [parentComponent] all components that where added within this scope. */
-    private fun remount(parentComponent: UIComponent) {
+    fun remount(parentComponent: UIComponent) {
         for (childScope in childrenScopes) {
-            if (childScope.isVirtual()) {
+            if (childScope is LayoutNodeVirtual) {
                 childScope.remount(parentComponent)
             } else {
+                childScope as LayoutNodeUIComponent // FIXME shouldn't need this
                 val index = childScope.findNextIndexIn(parentComponent) ?: 0
                 parentComponent.insertChildAt(childScope.component, index)
             }
         }
     }
+}
 
+private class LayoutNodeUIComponent(parentNode: LayoutNode?, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parentNode, component, stateScope) {
     /**
      * Finds the index in [parent]'s children at which a component should be inserted to end up right after [component].
      * Works even when [component] is not currently present in [parent] by recursively searching the layout tree.
      * If [parent] has no children in the layout tree, `null` is returned.
      */
-    private fun findNextIndexIn(parent: UIComponent): Int? {
+    fun findNextIndexIn(parent: UIComponent): Int? {
         /** Searches this subtree for an index. */
-        fun LayoutScope.searchSubTree(range: IntProgression = childrenScopes.indices.reversed()): Int? {
+        fun LayoutNode.searchSubTree(range: IntProgression = childrenScopes.indices.reversed()): Int? {
             if (component == parent) {
                 // This is a node in the subtree belonging to [parent] (e.g. the main scope, or a forEach scope),
                 // so we recursively search the children
@@ -243,7 +254,7 @@ class LayoutScope private constructor(
         }
 
         /** Searches by recursively traversing upwards the tree if no index can be found in this subtree. */
-        fun LayoutScope.search(beforeScope: LayoutScope): Int? {
+        fun LayoutNode.search(beforeScope: LayoutNode): Int? {
             val beforeIndex = childrenScopes.indexOf(beforeScope)
 
             // Check all preceding siblings
