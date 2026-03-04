@@ -181,6 +181,21 @@ private sealed class LayoutNode(
     val stateScope: ReferenceHolder,
 ) {
     abstract val childrenScopes: List<LayoutNode>
+
+    /**
+     * Finds the last component in this sub-tree which is currently mounted in [parentComponent], and returns the index
+     * of that component within the `children` of the given [parentComponent].
+     */
+    fun findLastMountedComponentIndex(parentComponent: UIComponent): Int? = when (this) {
+        is LayoutNodeUIComponent -> parentComponent.children.indexOf(component).takeIf { it != -1 }
+        is LayoutNodeVirtual -> {
+            for (index in children.indices.reversed()) {
+                children[index].findLastMountedComponentIndex(parentComponent)
+                    ?.let { return it }
+            }
+            null
+        }
+    }
 }
 
 private class LayoutNodeVirtual(parent: LayoutNode, component: UIComponent, stateScope: ReferenceHolder) : LayoutNode(parent, component, stateScope) {
@@ -242,29 +257,13 @@ private class LayoutNodeUIComponent(parentNode: LayoutNode?, component: UICompon
      * If [parent] has no children in the layout tree, `null` is returned.
      */
     fun findNextIndexIn(parent: UIComponent): Int? {
-        /** Searches this subtree for an index. */
-        fun LayoutNode.searchSubTree(): Int? {
-            if (component == parent) {
-                // This is a node in the subtree belonging to [parent] (e.g. the main scope, or a forEach scope),
-                // so we recursively search the children
-                for (index in childrenScopes.indices.reversed()) {
-                    childrenScopes[index].searchSubTree()
-                        ?.let { return it }
-                }
-                return null
-            } else {
-                // Check if this child is currently present within its parent
-                return parent.children.indexOf(component).takeIf { it != -1 }
-            }
-        }
-
         /** Searches by recursively traversing upwards the tree if no index can be found in this subtree. */
         fun LayoutNode.search(beforeScope: LayoutNode): Int? {
             val beforeIndex = childrenScopes.indexOf(beforeScope)
 
             // Check all preceding siblings
             for (index in (0 until beforeIndex).reversed()) {
-                childrenScopes[index].searchSubTree()
+                childrenScopes[index].findLastMountedComponentIndex(parent)
                     ?.let { return it }
             }
 
