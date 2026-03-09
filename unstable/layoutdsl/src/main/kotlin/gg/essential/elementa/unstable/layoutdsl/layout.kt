@@ -40,7 +40,6 @@ class LayoutScope(
             callsInPlace(block, InvocationKind.EXACTLY_ONCE)
         }
 
-        component.getChildModifier().applyToComponent(childComponent)
         modifier.applyToComponent(childComponent)
 
         val childScope = LayoutScope(childComponent, this, childComponent)
@@ -293,7 +292,7 @@ fun UIComponent.layoutAsBox(modifier: Modifier = Modifier, block: LayoutScope.()
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-    addChildModifier(Modifier.alignBoth(Alignment.Center))
+    setDefaultChildAlignment()
     layout(modifier, block)
     return this
 }
@@ -309,7 +308,7 @@ fun UIComponent.layoutAsRow(modifier: Modifier, horizontalArrangement: Arrangeme
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-    addChildModifier(Modifier.alignVertical(verticalAlignment))
+    setDefaultChildAlignment(y = verticalAlignment)
     layout(modifier, block)
     horizontalArrangement.initialize(this, Axis.HORIZONTAL)
     return this
@@ -326,7 +325,7 @@ fun UIComponent.layoutAsColumn(modifier: Modifier, verticalArrangement: Arrangem
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-    addChildModifier(Modifier.alignHorizontal(horizontalAlignment))
+    setDefaultChildAlignment(x = horizontalAlignment)
     layout(modifier, block)
     verticalArrangement.initialize(this, Axis.VERTICAL)
     return this

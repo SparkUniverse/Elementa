@@ -33,8 +33,8 @@ fun LayoutScope.box(modifier: Modifier = Modifier, block: LayoutScope.() -> Unit
         automaticComponentName("box")
         setWidth(ChildBasedSizeConstraint())
         setHeight(ChildBasedSizeConstraint())
+        setDefaultChildAlignment()
     }
-    container.addChildModifier(Modifier.alignHorizontal(Alignment.Center).alignVertical(Alignment.Center))
     addChild(container, modifier = modifier, block = block)
     return container
 }
@@ -54,9 +54,8 @@ fun LayoutScope.row(modifier: Modifier, horizontalArrangement: Arrangement = Arr
         automaticComponentName("row")
         setWidth(ChildBasedSizeConstraint())
         setHeight(ChildBasedMaxSizeConstraint())
+        setDefaultChildAlignment(y = verticalAlignment)
     }
-
-    rowContainer.addChildModifier(Modifier.alignVertical(verticalAlignment))
 
     addChild(rowContainer, modifier = modifier, block = block)
     horizontalArrangement.initialize(rowContainer, Axis.HORIZONTAL)
@@ -76,9 +75,8 @@ fun LayoutScope.column(modifier: Modifier, verticalArrangement: Arrangement = Ar
         automaticComponentName("column")
         setWidth(ChildBasedMaxSizeConstraint())
         setHeight(ChildBasedSizeConstraint())
+        setDefaultChildAlignment(x = horizontalAlignment)
     }
-
-    columnContainer.addChildModifier(Modifier.alignHorizontal(horizontalAlignment))
 
     addChild(columnContainer, modifier = modifier, block = block)
     verticalArrangement.initialize(columnContainer, Axis.VERTICAL)
@@ -152,7 +150,7 @@ fun LayoutScope.scrollable(
         componentName = "scrollableContent"
         setWidth(AlternateConstraint(ChildBasedSizeConstraint(), 100.percent boundTo outer).coerceAtLeast(AlternateConstraint(100.percent boundTo outer, 0.pixels)))
         setHeight(AlternateConstraint(ChildBasedSizeConstraint(), 100.percent boundTo outer).coerceAtLeast(AlternateConstraint(100.percent boundTo outer, 0.pixels)))
-        addChildModifier(Modifier.alignBoth(Alignment.Center))
+        setDefaultChildAlignment()
     }
 
     outer(modifier = modifier)
