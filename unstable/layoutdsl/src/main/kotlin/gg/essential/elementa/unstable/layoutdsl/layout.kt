@@ -48,8 +48,10 @@ class LayoutScope(
 
         childScope.block()
 
-        val index = childScope.findNextIndexIn(component) ?: 0
-        component.insertChildAt(childComponent, index)
+        if (isMounted()) {
+            val index = childScope.findNextIndexIn(component) ?: 0
+            component.insertChildAt(childComponent, index)
+        }
     }
 
     operator fun LayoutDslComponent.invoke(modifier: Modifier = Modifier) = layout(modifier)
@@ -123,9 +125,6 @@ class LayoutScope(
 
                 forEachScope.childrenScopes.add(index, newScope)
                 newScope.block(element)
-                if (!forEachScope.isVirtualScopeMounted()) {
-                    newScope.unmount()
-                }
             }
         }
 
@@ -193,6 +192,8 @@ class LayoutScope(
 
         return true
     }
+
+    private fun isMounted() = if (isVirtual()) isVirtualScopeMounted() else true
 
     /** Removes from [component] all components that where added within this scope. */
     private fun unmount() {
