@@ -131,13 +131,17 @@ class LayoutScope(
 
         fun remove(index: Int, element: T) {
             val removedScope = forEachScope.childrenScopes.removeAt(index)
-            removedScope.unmount()
+            if (forEachScope.isVirtualScopeMounted()) {
+                removedScope.unmount()
+            }
             getCacheEntry(element)?.add(removedScope)
         }
 
         fun clear(elements: List<T>) {
             forEachScope.childrenScopes.forEachIndexed { index, layoutScope ->
-                layoutScope.unmount()
+                if (forEachScope.isVirtualScopeMounted()) {
+                    layoutScope.unmount()
+                }
                 getCacheEntry(elements[index])?.add(layoutScope)
             }
             forEachScope.childrenScopes.clear()
