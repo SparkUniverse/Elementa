@@ -209,7 +209,6 @@ interface ReferenceHolder {
  */
 
 /** A [State] with a value that can be changed via [set] */
-@JvmDefaultWithoutCompatibility
 interface MutableState<T> : State<T> {
   /**
    * Update the value of this State object.
@@ -245,7 +244,6 @@ interface DelegatingState<T> : State<T> {
 }
 
 /** A [MutableState] delegating to a configurable target [MutableState] */
-@JvmDefaultWithoutCompatibility
 interface DelegatingMutableState<T> : MutableState<T> {
   fun rebind(newState: MutableState<T>)
 }
