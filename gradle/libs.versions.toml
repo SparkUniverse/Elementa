@@ -1,5 +1,5 @@
 [versions]
-kotlin = "1.5.10"
+kotlin = "1.6.21"
 kotlinx-coroutines = "1.5.2"
 jetbrains-annotations = "23.0.0"
 universalcraft = "406"

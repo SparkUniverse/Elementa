@@ -3,6 +3,7 @@ package gg.essential.elementa.components.image
 import gg.essential.universal.UMatrixStack
 import java.awt.Color
 
+@JvmDefaultWithCompatibility
 interface ImageProvider {
     /**
      * Render the image provided by this component with the provided attributes.

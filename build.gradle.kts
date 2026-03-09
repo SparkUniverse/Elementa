@@ -19,7 +19,7 @@ kotlin.jvmToolchain {
 }
 
 tasks.withType<KotlinCompile> {
-    setJvmDefault("all-compatibility")
+    setJvmDefault("all")
     kotlinOptions {
         languageVersion = "1.6"
         apiVersion = "1.6"
