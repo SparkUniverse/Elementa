@@ -4,6 +4,7 @@ import gg.essential.elementa.constraints.SuperConstraint
 import gg.essential.universal.UMatrixStack
 import java.awt.Color
 
+@JvmDefaultWithCompatibility
 interface FontProvider : SuperConstraint<FontProvider> {
     fun getStringWidth(string: String, pointSize: Float): Float
 
