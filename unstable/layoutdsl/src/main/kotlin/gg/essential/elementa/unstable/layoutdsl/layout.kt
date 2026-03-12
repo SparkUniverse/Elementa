@@ -4,7 +4,6 @@ package gg.essential.elementa.unstable.layoutdsl
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.state.State
 import gg.essential.elementa.state.v2.ReferenceHolder
-import gg.essential.elementa.unstable.common.ListState
 import gg.essential.elementa.unstable.common.not
 import gg.essential.elementa.unstable.state.v2.*
 import gg.essential.elementa.unstable.state.v2.collections.MutableTrackedList
@@ -32,18 +31,26 @@ class LayoutScope(
     private val childrenScopes = mutableListOf<LayoutScope>()
 
     operator fun <T : UIComponent> T.invoke(modifier: Modifier = Modifier, block: LayoutScope.() -> Unit = {}): T {
-        this@LayoutScope.component.getChildModifier().applyToComponent(this)
-        modifier.applyToComponent(this)
+        addChild(this, modifier, block)
+        return this
+    }
 
-        val childScope = LayoutScope(this, this@LayoutScope, this)
+    fun <T : UIComponent> addChild(childComponent: T, modifier: Modifier = Modifier, block: LayoutScope.() -> Unit = {}) {
+        contract {
+            callsInPlace(block, InvocationKind.EXACTLY_ONCE)
+        }
+
+        modifier.applyToComponent(childComponent)
+
+        val childScope = LayoutScope(childComponent, this, childComponent)
         childrenScopes.add(childScope)
 
         childScope.block()
 
-        val index = childScope.findNextIndexIn(component) ?: 0
-        component.insertChildAt(this, index)
-
-        return this
+        if (isMounted()) {
+            val index = childScope.findNextIndexIn(component) ?: 0
+            component.insertChildAt(childComponent, index)
+        }
     }
 
     operator fun LayoutDslComponent.invoke(modifier: Modifier = Modifier) = layout(modifier)
@@ -89,18 +96,9 @@ class LayoutScope(
      * required.
      * Order relative to other components within the same [layout] call is kept automatically at all times.
      *
-     * Note that given old scopes are discarded, care must be taken to not inadvertently leak child components, e.g. via
-     * listener subscriptions or other links that cannot be cleaned up automatically.
      * If the space of possible [T] is very limited, [cache] may be set to `true` to retain old scopes after they are
      * removed and to re-use them if their corresponding [T] value is re-introduced at a later time.
      * This requires that [T] be usable as a key in a HashMap.
-     */
-    fun <T> forEach(state: ListState<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
-        forEach(state.toV2().toListState(), cache, block)
-    }
-
-    /**
-     * StateV2 support for forEach
      */
     fun <T> forEach(list: ListStateV2<T>, cache: Boolean = false, block: LayoutScope.(T) -> Unit) {
         val forEachScope = LayoutScope(component, this@LayoutScope, stateScope)
@@ -126,21 +124,22 @@ class LayoutScope(
 
                 forEachScope.childrenScopes.add(index, newScope)
                 newScope.block(element)
-                if (!forEachScope.isVirtualScopeMounted()) {
-                    newScope.unmount()
-                }
             }
         }
 
         fun remove(index: Int, element: T) {
             val removedScope = forEachScope.childrenScopes.removeAt(index)
-            removedScope.unmount()
+            if (forEachScope.isVirtualScopeMounted()) {
+                removedScope.unmount()
+            }
             getCacheEntry(element)?.add(removedScope)
         }
 
         fun clear(elements: List<T>) {
             forEachScope.childrenScopes.forEachIndexed { index, layoutScope ->
-                layoutScope.unmount()
+                if (forEachScope.isVirtualScopeMounted()) {
+                    layoutScope.unmount()
+                }
                 getCacheEntry(elements[index])?.add(layoutScope)
             }
             forEachScope.childrenScopes.clear()
@@ -192,6 +191,8 @@ class LayoutScope(
 
         return true
     }
+
+    private fun isMounted() = if (isVirtual()) isVirtualScopeMounted() else true
 
     /** Removes from [component] all components that where added within this scope. */
     private fun unmount() {
@@ -291,7 +292,7 @@ fun UIComponent.layoutAsBox(modifier: Modifier = Modifier, block: LayoutScope.()
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-    addChildModifier(Modifier.alignBoth(Alignment.Center))
+    setDefaultChildAlignment()
     layout(modifier, block)
     return this
 }
@@ -307,7 +308,7 @@ fun UIComponent.layoutAsRow(modifier: Modifier, horizontalArrangement: Arrangeme
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-    addChildModifier(Modifier.alignVertical(verticalAlignment))
+    setDefaultChildAlignment(y = verticalAlignment)
     layout(modifier, block)
     horizontalArrangement.initialize(this, Axis.HORIZONTAL)
     return this
@@ -324,7 +325,7 @@ fun UIComponent.layoutAsColumn(modifier: Modifier, verticalArrangement: Arrangem
     contract {
         callsInPlace(block, InvocationKind.EXACTLY_ONCE)
     }
-    addChildModifier(Modifier.alignHorizontal(horizontalAlignment))
+    setDefaultChildAlignment(x = horizontalAlignment)
     layout(modifier, block)
     verticalArrangement.initialize(this, Axis.VERTICAL)
     return this

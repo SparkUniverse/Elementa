@@ -25,10 +25,10 @@ class GradientEffect(
     private val bottomRight: State<Color>,
 ) : Effect() {
     override fun beforeChildrenDraw(matrixStack: UMatrixStack) {
-        val topLeft = this.topLeft.get()
-        val topRight = this.topRight.get()
-        val bottomLeft = this.bottomLeft.get()
-        val bottomRight = this.bottomRight.get()
+        val topLeft = this.topLeft.getUntracked()
+        val topRight = this.topRight.getUntracked()
+        val bottomLeft = this.bottomLeft.getUntracked()
+        val bottomRight = this.bottomRight.getUntracked()
 
         val dither = topLeft != topRight || topLeft != bottomLeft || bottomLeft != bottomRight
 

@@ -8,6 +8,7 @@ import gg.essential.elementa.unstable.state.v2.State
 import gg.essential.elementa.unstable.state.v2.impl.Impl
 import java.lang.ref.ReferenceQueue
 import java.lang.ref.WeakReference
+import kotlin.collections.asSequence
 
 /**
  * Semi-lazy node graph implementation.
@@ -114,9 +115,13 @@ private class Node<T>(
     override val observerImpl: ObserverImpl
         get() = this
 
-    private val observed = mutableSetOf<Node<*>>()
-    private val dependencies = mutableListOf<Node<*>>()
-    private val dependents: MutableList<WeakReference<Node<*>>> = mutableListOf()
+    private val allDependencies = mutableListOf<Edge>()
+    private val allDependents = mutableListOf<Edge>()
+
+    private val dependencies: Sequence<Node<*>>
+        get() = allDependencies.asSequence().filterNot { it.suspended }.map { it.dependency }
+    private val dependents: Sequence<Node<*>>
+        get() = allDependents.asSequence().filterNot { it.suspended }.mapNotNull { it.dependent }
 
     override fun Observer.get(): T {
         return getTracked(this@get)
@@ -124,10 +129,38 @@ private class Node<T>(
 
     fun getTracked(observer: Observer): T {
         val impl = observer.observerImpl
-        if (impl is Node<*>) {
-            impl.observed.add(this)
+        if (impl !is Node<*>) return getUntracked()
+        if (impl.state == NodeState.Dead) return getUntracked()
+
+        // Note: Need to get value before registering the dependent, otherwise if this node is dirty, getUntracked will
+        // re-evaluate it which marks all dependents as dirty, but this new dependent hasn't seen the old value, so it'd
+        // be wrong to mark it as dirty.
+        val value = getUntracked()
+
+        val dependency = this
+        val dependent = impl
+
+        // See if there's already an existing edge
+        // Any existing edge will be in both lists, so we can pick the smaller one to iterate.
+        val listA = dependency.allDependents
+        val listB = dependent.allDependencies
+        for (edge in if (listA.size < listB.size) listA else listB) {
+            if (edge.dependency == dependency && edge.dependent == dependent) {
+                edge.suspended = false // may need to re-enable the edge if it's currently suspended
+                return value
+            }
         }
-        return getUntracked()
+
+        // Create a new edge
+        val edge = Edge(dependency, dependent)
+        dependency.allDependents.add(edge)
+        dependent.allDependencies.add(edge)
+
+        // To prevent unbounded growth, we'll clean up any stale edges whenever we add a new one
+        // (this is really fast in when there isn't anything to do thanks to the ReferenceQueue)
+        cleanupStaleReferences()
+
+        return value
     }
 
     override fun getUntracked(): T {
@@ -148,7 +181,7 @@ private class Node<T>(
         value = newValue
 
         val update = Update.get()
-        for (dep in dependents.iter()) {
+        for (dep in dependents) {
             dep.markDirty(update)
         }
         update.flush()
@@ -170,7 +203,7 @@ private class Node<T>(
     private fun markDirty(update: Update) {
         mark(update, NodeState.Dirty)
 
-        for (dep in dependents.iter()) {
+        for (dep in dependents) {
             dep.markToBeChecked(update)
         }
     }
@@ -180,7 +213,7 @@ private class Node<T>(
 
         mark(update, NodeState.ToBeChecked)
 
-        for (dep in dependents.iter()) {
+        for (dep in dependents) {
             dep.markToBeChecked(update)
         }
     }
@@ -199,45 +232,48 @@ private class Node<T>(
             }
         }
 
-        if (state == NodeState.Dirty) {
+        val wasDirty = state == NodeState.Dirty
+        state = NodeState.Clean
+
+        if (wasDirty) {
+            for (edge in allDependencies) {
+                edge.suspended = true
+            }
+
+            // Beware: This invocation may throw an exception if user code is faulty! We should handle that correctly.
             val newValue = func(this)
 
             if (state == NodeState.Dead) {
                 return
             }
 
-            for (i in dependencies.indices.reversed()) {
-                val dep = dependencies[i]
-                if (dep !in observed) {
-                    dependencies.removeAt(i)
-                    dep.removeDependent(this)
+            allDependencies.removeIf { edge ->
+                if (edge.suspended) {
+                    edge.dependency.allDependents.remove(edge)
+                    true
+                } else {
+                    false
                 }
             }
-            for (dep in observed) {
-                if (dep !in dependencies) {
-                    dependencies.add(dep)
-                    dep.addDependent(this)
-                }
-            }
-            observed.clear()
 
             if (value != newValue) {
                 value = newValue
 
-                for (dep in dependents.iter()) {
+                for (dep in dependents) {
                     dep.mark(update, NodeState.Dirty)
                 }
             }
         }
-
-        state = NodeState.Clean
     }
 
     fun cleanup() {
-        for (dep in dependencies) {
-            dep.removeDependent(this)
+        assert(kind == NodeKind.Effect)
+        assert(allDependents.isEmpty())
+
+        for (edge in allDependencies) {
+            edge.dependency.allDependents.remove(edge)
         }
-        dependencies.clear()
+        allDependencies.clear()
 
         state = NodeState.Dead
     }
@@ -245,18 +281,6 @@ private class Node<T>(
     private var referenceQueueField: ReferenceQueue<Node<*>>? = null
     private val referenceQueue: ReferenceQueue<Node<*>>
         get() = referenceQueueField ?: ReferenceQueue<Node<*>>().also { referenceQueueField = it }
-
-    private fun addDependent(node: Node<*>) {
-        cleanupStaleReferences()
-        dependents.add(WeakReference(node, referenceQueue))
-    }
-
-    private fun removeDependent(node: Node<*>) {
-        val index = dependents.indexOfFirst { it.get() == node }
-        if (index >= 0) {
-            dependents.removeAt(index)
-        }
-    }
 
     private fun cleanupStaleReferences() {
         val queue = referenceQueueField ?: return
@@ -268,11 +292,33 @@ private class Node<T>(
         @Suppress("ControlFlowWithEmptyBody")
         while (queue.poll() != null);
 
-        dependents.removeIf { it.get() == null }
+        allDependents.removeIf { it.dependent == null }
     }
 
-    private fun MutableList<WeakReference<Node<*>>>.iter(): Iterator<Node<*>> {
-        return asSequence().mapNotNull { it.get() }.iterator()
+    /**
+     * This class represents an edge in the dependency graph between one node ([dependent]) which depends on the value
+     * of another node ([dependency]).
+     * Both nodes keep a reference to the same [Edge] instance in their [Node.allDependencies] and [Node.allDependents]
+     * lists respectively.
+     *
+     * The [dependent] node of an edge is stored in a [WeakReference], such that it can be garbage collected if nothing
+     * else is keeping it alive any more. Once garbage collected, the edge becomes "stale" and will eventually be
+     * cleaned up from the list of the [dependency] node by [Node.cleanupStaleReferences].
+     *
+     * An [Edge] may also become temporarily [suspended]. In this state, the nodes should act as if the edge did not
+     * exist.
+     * This is an optimization for when the [dependent] is re-evaluated, which would naively require invalidating
+     * all its dependencies (and removing all its edges from all lists) and then likely re-adding most of them as they
+     * are re-observed. With the [suspended] flag, we can simply mark all edges as suspended and don't need to modify
+     * the lists unless edges are actually removed.
+     */
+    class Edge(
+        val dependency: Node<*>,
+        dependent: Node<*>,
+        var suspended: Boolean = false,
+    ) : WeakReference<Node<*>>(dependent, dependency.referenceQueue) {
+        val dependent: Node<*>?
+            get() = get()
     }
 }
 
@@ -289,17 +335,31 @@ private class Update {
             return
         }
 
+        var exception: Throwable? = null
+
         processing = true
         try {
             var i = 0
             while (true) {
                 val node = queue.getOrNull(i) ?: break
-                node.update(this)
+                try {
+                    node.update(this)
+                } catch (e: Throwable) {
+                    if (exception == null) {
+                        exception = e
+                    } else {
+                        exception.addSuppressed(e)
+                    }
+                }
                 i++
             }
             queue.clear()
         } finally {
             processing = false
+        }
+
+        if (exception != null) {
+            throw exception
         }
     }
 

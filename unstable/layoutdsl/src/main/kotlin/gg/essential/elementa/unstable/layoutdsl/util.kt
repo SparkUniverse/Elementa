@@ -3,10 +3,19 @@ package gg.essential.elementa.unstable.layoutdsl
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.components.UIBlock
 import gg.essential.elementa.components.inspector.Inspector
+import gg.essential.elementa.constraints.ConstraintType
+import gg.essential.elementa.constraints.PixelConstraint
+import gg.essential.elementa.constraints.SuperConstraint
+import gg.essential.elementa.constraints.XConstraint
+import gg.essential.elementa.constraints.YConstraint
+import gg.essential.elementa.constraints.resolution.ConstraintVisitor
 import gg.essential.elementa.dsl.boundTo
 import gg.essential.elementa.dsl.percent
 import gg.essential.elementa.dsl.pixels
-import gg.essential.elementa.effects.Effect
+import gg.essential.elementa.utils.ObservableAddEvent
+import gg.essential.elementa.utils.ObservableClearEvent
+import gg.essential.elementa.utils.ObservableListEvent
+import gg.essential.elementa.utils.ObservableRemoveEvent
 import gg.essential.elementa.utils.elementaDev
 import gg.essential.elementa.unstable.common.Spacer
 import java.awt.Color
@@ -56,16 +65,38 @@ fun UIComponent.automaticComponentName(default: String) {
         ?: default
 }
 
-fun UIComponent.getChildModifier() =
-    effects
-        .filterIsInstance<ChildModifierMarker>()
-        .map { it.childModifier }
-        .reduceOrNull { acc, it -> acc then it }
-        ?: Modifier
+private class DefaultAlignmentConstraint(private val alignment: Alignment) : XConstraint, YConstraint {
+    override fun getXPositionImpl(component: UIComponent): Float =
+        component.parent.getLeft() + alignment.align(component.parent.getWidth(), component.getWidth())
 
-fun UIComponent.addChildModifier(modifier: Modifier) {
-    enableEffect(ChildModifierMarker(modifier))
+    override fun getYPositionImpl(component: UIComponent): Float =
+        component.parent.getTop() + alignment.align(component.parent.getHeight(), component.getHeight())
+
+    override var cachedValue: Float = 0f
+    override var recalculate: Boolean = true
+    override var constrainTo: UIComponent?
+        get() = null
+        set(_) = throw UnsupportedOperationException()
+
+    override fun visitImpl(visitor: ConstraintVisitor, type: ConstraintType) {}
 }
 
-// Serves as a marker only. FIXME: integrate directly into the component class when we transition this DSL to Elementa?
-private class ChildModifierMarker(val childModifier: Modifier) : Effect()
+fun UIComponent.setDefaultChildAlignment(x: Alignment = Alignment.Center, y: Alignment = Alignment.Center) {
+    fun SuperConstraint<Float>.isDefault(): Boolean =
+        this is DefaultAlignmentConstraint || this is PixelConstraint && value == 0f && !alignOpposite && !alignOutside
+
+    fun conformChild(child: UIComponent) {
+        if (child.constraints.x.isDefault()) child.setX(DefaultAlignmentConstraint(x))
+        if (child.constraints.y.isDefault()) child.setY(DefaultAlignmentConstraint(y))
+    }
+
+    children.forEach(::conformChild)
+    children.addObserver { _, arg ->
+        @Suppress("UNCHECKED_CAST")
+        when (val event = arg as? ObservableListEvent<UIComponent> ?: return@addObserver) {
+            is ObservableAddEvent -> conformChild(event.element.value)
+            is ObservableRemoveEvent -> {}
+            is ObservableClearEvent -> {}
+        }
+    }
+}

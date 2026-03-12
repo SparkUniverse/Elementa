@@ -17,7 +17,7 @@ suspend fun <T> State<T?>.awaitNotNull(): T = await { it != null }!!
 /** Waits until this [State] has a value for which [accept] returns `true` and returns that value. */
 suspend fun <T> State<T>.await(accept: (T) -> Boolean): T {
     // Fast-path
-    get().let { if (accept(it)) return it }
+    getUntracked().let { if (accept(it)) return it }
 
     // Slow path
     return suspendCancellableCoroutine { continuation ->

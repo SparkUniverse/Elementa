@@ -7,6 +7,7 @@ import gg.essential.elementa.unstable.state.v2.effect
 import gg.essential.elementa.unstable.state.v2.toV2
 import gg.essential.elementa.unstable.state.v2.State as StateV2
 
+@Suppress("DEPRECATION")
 @Deprecated("Using StateV1 is discouraged, use StateV2 instead")
 fun Modifier.then(state: State<Modifier>): Modifier {
     return this then {
@@ -42,10 +43,10 @@ fun Modifier.then(state: StateV2<Modifier>): Modifier {
     }
 }
 
-@Suppress("DeprecatedCallableAddReplaceWith")
+@Suppress("DEPRECATION")
 @Deprecated("Using StateV1 is discouraged, use StateV2 instead")
 fun Modifier.whenTrue(state: State<Boolean>, activeModifier: Modifier, inactiveModifier: Modifier = Modifier): Modifier =
     then(state.toV2().map { if (it) activeModifier else inactiveModifier })
 
 fun Modifier.whenTrue(state: StateV2<Boolean>, activeModifier: Modifier, inactiveModifier: Modifier = Modifier): Modifier =
-    then(state.map { if (it) activeModifier else inactiveModifier })
+    then(StateV2 { if (state()) activeModifier else inactiveModifier })

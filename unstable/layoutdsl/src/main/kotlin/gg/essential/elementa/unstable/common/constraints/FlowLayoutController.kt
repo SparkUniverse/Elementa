@@ -4,7 +4,9 @@ import gg.essential.elementa.UIComponent
 import gg.essential.elementa.constraints.ConstraintType
 import gg.essential.elementa.constraints.PaddingConstraint
 import gg.essential.elementa.constraints.PositionConstraint
+import gg.essential.elementa.constraints.WidthConstraint
 import gg.essential.elementa.constraints.resolution.ConstraintVisitor
+import gg.essential.elementa.dsl.basicWidthConstraint
 import gg.essential.elementa.utils.ObservableAddEvent
 import gg.essential.elementa.utils.ObservableClearEvent
 import gg.essential.elementa.utils.ObservableListEvent
@@ -25,16 +27,33 @@ class FlowLayoutController(
     /** Aligns items vertically within a row */
     private val itemAlignment: Alignment,
 ) {
-    internal var recalculate = true
+    /**
+     * We use a dummy constraint "around" our layout, so Elementa correctly manages cache invalidation for us.
+     * This is required because [FlowLayoutControlledPositionConstraint] only manages invalidation for X/Y values
+     * but not for padding (because Elementa's [PaddingConstraint] doesn't do any caching by default), so if neither
+     * X nor Y values are queried, but padding values are (e.g. to compute the height of the container), then the layout
+     * would only be done once and the same stale values would always be returned thereafter even if the size of
+     * children has changed in the mean time.
+     */
+    private val wrapperConstraint = object : WidthConstraint {
+        override var recalculate = true
+        override fun getWidthImpl(component: UIComponent): Float {
+            layout()
+            return 0f
+        }
+        override var cachedValue: Float = 0f
+        override var constrainTo: UIComponent? = null
+        override fun visitImpl(visitor: ConstraintVisitor, type: ConstraintType) {}
+
+    }
 
     class Layout(var x: Float, var y: Float, var yPadding: Float)
     private val cachedLayout = mutableMapOf<UIComponent, Layout>()
 
     fun getLayout(component: UIComponent): Layout {
-        if (recalculate) {
-            layout()
-            recalculate = false
-        }
+        // Recompute layout if required
+        wrapperConstraint.getWidth(component)
+
         return cachedLayout[component]
             ?: error("Component $component's position was not laid out by $this")
     }
@@ -91,7 +110,7 @@ class FlowLayoutController(
         component.children.addObserver { _, maybeEvent ->
             @Suppress("UNCHECKED_CAST")
             val event = maybeEvent as? ObservableListEvent<UIComponent> ?: return@addObserver
-            recalculate = true
+            wrapperConstraint.recalculate = true
             when (event) {
                 is ObservableAddEvent -> applyConstraints(event.element.value)
                 is ObservableRemoveEvent -> cachedLayout.remove(event.element.value)
@@ -111,7 +130,7 @@ class FlowLayoutController(
             set(value) {
                 field = value
                 if (value) {
-                    this@FlowLayoutController.recalculate = true
+                    wrapperConstraint.recalculate = true
                 }
             }
 

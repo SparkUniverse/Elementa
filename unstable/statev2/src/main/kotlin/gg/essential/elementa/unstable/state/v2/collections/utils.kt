@@ -6,10 +6,11 @@ import gg.essential.elementa.unstable.state.v2.effect
 
 // FIXME this is assuming there are no duplicate keys (good enough for now)
 fun <T, K, V> ListState<T>.asMap(owner: ReferenceHolder, block: (T) -> Pair<K, V>): Map<K, V> {
-    var oldList = get()
+    var oldList = getUntracked()
     val map = oldList.associateTo(mutableMapOf(), block)
     val keys = map.keys.toMutableList()
-    onSetValue(owner) { newList ->
+    effect(owner) {
+        val newList = this@asMap()
         val changes = newList.getChangesSince(oldList).also { oldList = newList }
         for (change in changes) {
             when (change) {

@@ -3,6 +3,7 @@ package gg.essential.elementa.unstable.state.v2
 import gg.essential.elementa.unstable.state.v2.collections.MutableTrackedList
 import gg.essential.elementa.unstable.state.v2.collections.MutableTrackedSet
 import gg.essential.elementa.unstable.state.v2.collections.TrackedSet
+import gg.essential.elementa.unstable.state.v2.combinators.letState
 import gg.essential.elementa.unstable.state.v2.combinators.map
 import gg.essential.elementa.unstable.state.v2.combinators.zip
 
@@ -68,14 +69,14 @@ fun <T, U> SetState<T>.mapEach(mapper: (T) -> U): SetState<U> {
 
 // TODO: all of these are based on mapSet and as such are quite inefficient, might make sense to implement some as efficient primitives instead
 
-fun <T, U> SetState<T>.mapSet(mapper: (Set<T>) -> Set<U>): SetState<U> =
-    map(mapper).toSetState()
+fun <T, U> SetState<T>.mapSet(mapper: Observer.(Set<T>) -> Set<U>): SetState<U> =
+    letState { mapper(it) }.toSetState()
 
 fun <T, U, V> SetState<T>.zipWithEachElement(otherState: State<U>, transform: (T, U) -> V) =
-    zip(otherState) { set, other -> set.mapTo(mutableSetOf()) { transform(it, other) } }.toSetState()
+    mapSet { set -> otherState().let { other -> set.mapTo(mutableSetOf()) { transform(it, other) } } }
 
 fun <T, U : Any> SetState<T>.mapEachNotNull(mapper: (T) -> U?) = mapSet { it.mapNotNullTo(mutableSetOf(), mapper) }
 
 fun <T : Any> SetState<T?>.filterNotNull() = mapSet { it.filterNotNullTo(mutableSetOf()) }
 
-inline fun <reified U> SetState<*>.filterIsInstance(): SetState<U> = map { it.filterIsInstanceTo<U, MutableSet<U>>(mutableSetOf()) }.toSetState()
+inline fun <reified U> SetState<*>.filterIsInstance(): SetState<U> = mapSet { it.filterIsInstanceTo<U, MutableSet<U>>(mutableSetOf()) }

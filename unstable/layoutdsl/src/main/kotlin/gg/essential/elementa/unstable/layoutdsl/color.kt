@@ -24,6 +24,7 @@ fun Modifier.color(color: StateV2<Color>) = this then BasicColorModifier { color
 
 fun Modifier.hoverColor(color: Color, duration: Float = 0f) = hoverColor(stateOf(color), duration)
 
+@Suppress("DEPRECATION")
 @Deprecated("Using StateV1 is discouraged, use StateV2 instead")
 fun Modifier.hoverColor(color: State<Color>, duration: Float = 0f) = whenHovered(if (duration == 0f) Modifier.color(color) else Modifier.animateColor(color, duration))
 

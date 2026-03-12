@@ -27,6 +27,8 @@ class AlternateConstraint(
     private var tryingPrimary = false
     private var primaryWasRecursive = false
 
+    @Suppress("DEPRECATION")
+    @Deprecated("See [ElementaVersion.V8].")
     override fun animationFrame() {
         primary.animationFrame()
         fallback.animationFrame()

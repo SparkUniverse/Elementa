@@ -5,10 +5,8 @@ import gg.essential.elementa.components.Window
 import gg.essential.elementa.effects.Effect
 import gg.essential.elementa.unstable.state.v2.MutableState
 import gg.essential.elementa.unstable.state.v2.State
-import gg.essential.elementa.unstable.state.v2.combinators.or
 import gg.essential.elementa.unstable.state.v2.mutableStateOf
 import gg.essential.elementa.unstable.state.v2.stateOf
-import gg.essential.elementa.unstable.state.v2.toV2
 import gg.essential.elementa.unstable.layoutdsl.Modifier
 import gg.essential.elementa.unstable.layoutdsl.tag
 import gg.essential.elementa.unstable.layoutdsl.then
@@ -29,9 +27,9 @@ fun Modifier.focusable(disabled: State<Boolean> = stateOf(false)): Modifier {
 /** Creates a hover scope for this component based on whether it is hovered by the mouse OR it has the Window's focus. */
 private fun UIComponent.makeFocusOrHoverScope() {
     val focused = focusedState()
-    val hovered = hoveredState().toV2()
+    val hovered = hoveredStateV2()
 
-    makeHoverScope(focused or hovered)
+    makeHoverScope { focused() || hovered() }
 }
 
 /** Returns a state indicating whether this component has the [Window]'s focus or not. */
@@ -58,7 +56,7 @@ private fun UIComponent.setupKeyboardNavigation(): UIComponent.(Char, Int) -> Un
         }
 
         when (keyCode) {
-            UKeyboard.KEY_ENTER -> simulateLeftClick()
+            UKeyboard.KEY_ENTER, UKeyboard.KEY_NUMPADENTER -> simulateLeftClick()
             UKeyboard.KEY_TAB -> passFocusToNextComponent(backwards = UKeyboard.isShiftKeyDown())
         }
     }
