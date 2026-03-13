@@ -1,6 +1,6 @@
 import gg.essential.gradle.multiversion.StripReferencesTransform.Companion.registerStripReferencesAttribute
-import gg.essential.gradle.util.setJvmDefault
 import gg.essential.gradle.util.versionFromBuildIdAndBranch
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
     kotlin("jvm")
@@ -30,7 +30,7 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.compileKotlin.setJvmDefault("all")
+kotlin.compilerOptions.jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
 
 kotlin.jvmToolchain {
     (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(8))

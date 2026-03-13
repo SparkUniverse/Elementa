@@ -1,6 +1,6 @@
 import gg.essential.gradle.multiversion.StripReferencesTransform.Companion.registerStripReferencesAttribute
-import gg.essential.gradle.util.setJvmDefault
 import gg.essential.gradle.util.versionFromBuildIdAndBranch
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
     kotlin("jvm")
@@ -24,7 +24,7 @@ dependencies {
     // Depending on LWJGL3 instead of 2 so we can choose opengl bindings only
     compileOnly("org.lwjgl:lwjgl-opengl:3.3.1")
 }
-tasks.compileKotlin.setJvmDefault("all")
+kotlin.compilerOptions.jvmDefault.set(JvmDefaultMode.NO_COMPATIBILITY)
 
 kotlin.jvmToolchain {
     (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(8))
