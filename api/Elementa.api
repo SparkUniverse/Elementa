@@ -12,6 +12,7 @@ public final class gg/essential/elementa/ElementaVersion : java/lang/Enum {
 	public static final field V8 Lgg/essential/elementa/ElementaVersion;
 	public static final field V9 Lgg/essential/elementa/ElementaVersion;
 	public final fun enableFor (Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/ElementaVersion;
 	public static fun values ()[Lgg/essential/elementa/ElementaVersion;
 }
@@ -178,11 +179,6 @@ public final class gg/essential/elementa/UIComponent$Companion {
 	public final fun guiHint (FZ)F
 }
 
-public final class gg/essential/elementa/UIComponent$sam$i$java_util_function_Predicate$0 : java/util/function/Predicate {
-	public fun <init> (Lkotlin/jvm/functions/Function1;)V
-	public final synthetic fun test (Ljava/lang/Object;)Z
-}
-
 public class gg/essential/elementa/UIConstraints : java/util/Observable {
 	public fun <init> (Lgg/essential/elementa/UIComponent;)V
 	public final fun copy ()Lgg/essential/elementa/UIConstraints;
@@ -328,6 +324,7 @@ public final class gg/essential/elementa/components/GradientComponent$GradientDi
 	public static final field LEFT_TO_RIGHT Lgg/essential/elementa/components/GradientComponent$GradientDirection;
 	public static final field RIGHT_TO_LEFT Lgg/essential/elementa/components/GradientComponent$GradientDirection;
 	public static final field TOP_TO_BOTTOM Lgg/essential/elementa/components/GradientComponent$GradientDirection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getGradientColors (Ljava/awt/Color;Ljava/awt/Color;)Lgg/essential/elementa/components/GradientComponent$GradientColors;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/components/GradientComponent$GradientDirection;
 	public static fun values ()[Lgg/essential/elementa/components/GradientComponent$GradientDirection;
@@ -430,6 +427,7 @@ public final class gg/essential/elementa/components/ScrollComponent$Direction : 
 	public static final field PreferHorizontal Lgg/essential/elementa/components/ScrollComponent$Direction;
 	public static final field PreferVertical Lgg/essential/elementa/components/ScrollComponent$Direction;
 	public static final field Vertical Lgg/essential/elementa/components/ScrollComponent$Direction;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/components/ScrollComponent$Direction;
 	public static fun values ()[Lgg/essential/elementa/components/ScrollComponent$Direction;
 }
@@ -640,6 +638,7 @@ public final class gg/essential/elementa/components/UIImage$TextureScalingMode :
 	public static final field NEAREST Lgg/essential/elementa/components/UIImage$TextureScalingMode;
 	public static final field NEAREST_MIPMAP_LINEAR Lgg/essential/elementa/components/UIImage$TextureScalingMode;
 	public static final field NEAREST_MIPMAP_NEAREST Lgg/essential/elementa/components/UIImage$TextureScalingMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/components/UIImage$TextureScalingMode;
 	public static fun values ()[Lgg/essential/elementa/components/UIImage$TextureScalingMode;
 }
@@ -977,6 +976,7 @@ protected final class gg/essential/elementa/components/input/AbstractTextInput$A
 public final class gg/essential/elementa/components/input/AbstractTextInput$Direction : java/lang/Enum {
 	public static final field Left Lgg/essential/elementa/components/input/AbstractTextInput$Direction;
 	public static final field Right Lgg/essential/elementa/components/input/AbstractTextInput$Direction;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/components/input/AbstractTextInput$Direction;
 	public static fun values ()[Lgg/essential/elementa/components/input/AbstractTextInput$Direction;
 }
@@ -1029,6 +1029,7 @@ public final class gg/essential/elementa/components/input/AbstractTextInput$Sele
 	public static final field Line Lgg/essential/elementa/components/input/AbstractTextInput$SelectionMode;
 	public static final field None Lgg/essential/elementa/components/input/AbstractTextInput$SelectionMode;
 	public static final field Word Lgg/essential/elementa/components/input/AbstractTextInput$SelectionMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/components/input/AbstractTextInput$SelectionMode;
 	public static fun values ()[Lgg/essential/elementa/components/input/AbstractTextInput$SelectionMode;
 }
@@ -1231,6 +1232,7 @@ public final class gg/essential/elementa/components/plot/LineStyle {
 public final class gg/essential/elementa/components/plot/LineType : java/lang/Enum {
 	public static final field Linear Lgg/essential/elementa/components/plot/LineType;
 	public final fun draw (Ljava/util/List;Ljava/awt/Color;F)V
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/components/plot/LineType;
 	public static fun values ()[Lgg/essential/elementa/components/plot/LineType;
 }
@@ -1304,6 +1306,7 @@ public final class gg/essential/elementa/components/plot/PointStyle {
 public final class gg/essential/elementa/components/plot/PointType : java/lang/Enum {
 	public static final field None Lgg/essential/elementa/components/plot/PointType;
 	public final fun draw (Ljava/util/List;Lgg/essential/elementa/components/plot/PlotStyle;)V
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/components/plot/PointType;
 	public static fun values ()[Lgg/essential/elementa/components/plot/PointType;
 }
@@ -1555,6 +1558,7 @@ public final class gg/essential/elementa/constraints/ConstraintType : java/lang/
 	public static final field WIDTH Lgg/essential/elementa/constraints/ConstraintType;
 	public static final field X Lgg/essential/elementa/constraints/ConstraintType;
 	public static final field Y Lgg/essential/elementa/constraints/ConstraintType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getPrettyName ()Ljava/lang/String;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/constraints/ConstraintType;
 	public static fun values ()[Lgg/essential/elementa/constraints/ConstraintType;
@@ -1966,6 +1970,7 @@ public final class gg/essential/elementa/constraints/RoundingConstraint$Mode : j
 	public static final field Ceil Lgg/essential/elementa/constraints/RoundingConstraint$Mode;
 	public static final field Floor Lgg/essential/elementa/constraints/RoundingConstraint$Mode;
 	public static final field Round Lgg/essential/elementa/constraints/RoundingConstraint$Mode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/constraints/RoundingConstraint$Mode;
 	public static fun values ()[Lgg/essential/elementa/constraints/RoundingConstraint$Mode;
 }
@@ -2251,6 +2256,7 @@ public abstract class gg/essential/elementa/constraints/animation/Animations : j
 	public static final field OUT_QUINT Lgg/essential/elementa/constraints/animation/Animations;
 	public static final field OUT_SIN Lgg/essential/elementa/constraints/animation/Animations;
 	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/constraints/animation/Animations;
 	public static fun values ()[Lgg/essential/elementa/constraints/animation/Animations;
 }
@@ -2644,6 +2650,7 @@ public final class gg/essential/elementa/effects/OutlineEffect$Side : java/lang/
 	public static final field Left Lgg/essential/elementa/effects/OutlineEffect$Side;
 	public static final field Right Lgg/essential/elementa/effects/OutlineEffect$Side;
 	public static final field Top Lgg/essential/elementa/effects/OutlineEffect$Side;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/effects/OutlineEffect$Side;
 	public static fun values ()[Lgg/essential/elementa/effects/OutlineEffect$Side;
 }
@@ -3539,6 +3546,7 @@ public final class gg/essential/elementa/markdown/drawables/DrawableList$Directi
 	public static final field Left Lgg/essential/elementa/markdown/drawables/DrawableList$Direction;
 	public static final field Right Lgg/essential/elementa/markdown/drawables/DrawableList$Direction;
 	public static final field Up Lgg/essential/elementa/markdown/drawables/DrawableList$Direction;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lgg/essential/elementa/markdown/drawables/DrawableList$Direction;
 	public static fun values ()[Lgg/essential/elementa/markdown/drawables/DrawableList$Direction;
 }

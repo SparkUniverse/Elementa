@@ -1,10 +1,11 @@
 import gg.essential.gradle.multiversion.StripReferencesTransform.Companion.registerStripReferencesAttribute
 import gg.essential.gradle.util.*
 import gg.essential.gradle.util.RelocationTransform.Companion.registerRelocationAttribute
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-    kotlin("jvm") version "1.9.23"
+    kotlin("jvm") version "2.3.0"
     id("org.jetbrains.kotlinx.binary-compatibility-validator") version "0.8.0"
     id("org.jetbrains.dokka") version "1.9.20"
     id("gg.essential.defaults")
@@ -18,11 +19,11 @@ kotlin.jvmToolchain {
     (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(8))
 }
 
-tasks.withType<KotlinCompile> {
-    setJvmDefault("all")
-    kotlinOptions {
-        languageVersion = "1.6"
-        apiVersion = "1.6"
+kotlin {
+    compilerOptions {
+        languageVersion = KotlinVersion.KOTLIN_1_9
+        apiVersion = KotlinVersion.KOTLIN_1_9
+        jvmDefault = JvmDefaultMode.NO_COMPATIBILITY
     }
 }
 
