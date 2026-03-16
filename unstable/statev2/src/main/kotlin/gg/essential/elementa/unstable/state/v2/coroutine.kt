@@ -131,7 +131,7 @@ fun <I, R> State<I>.asyncMap(scope: CoroutineScope, previousWhileWorking: Boolea
         }
 
         // Otherwise we need to go compute the result for the new input, unless we're already doing that of course
-        if (jobInput != input) {
+        if (jobInput != input || job == null) {
             jobInput = input
             job?.cancel()
             job = scope.launch(start = CoroutineStart.UNDISPATCHED) {
