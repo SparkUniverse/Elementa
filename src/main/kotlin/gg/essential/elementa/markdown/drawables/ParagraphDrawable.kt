@@ -80,13 +80,9 @@ class ParagraphDrawable(
         val currentLine = mutableListOf<Drawable>()
         var maxLineHeight = Float.MIN_VALUE
 
-        var prevY = y
-
         fun gotoNextLine() {
-            prevY = currY
-
             currX = x
-            currY += maxLineHeight * scaleModifier + config.paragraphConfig.spaceBetweenLines
+            currY += maxLineHeight + config.paragraphConfig.spaceBetweenLines
 
             if (maxLineHeight > 9f) {
                 for (drawable in currentLine)
@@ -112,9 +108,9 @@ class ParagraphDrawable(
             drawable.layout(currX, currY, newWidth).also {
                 if (it.height > maxLineHeight)
                     maxLineHeight = it.height
+                widthRemaining -= it.width
+                currX += it.width
             }
-            widthRemaining -= newWidth
-            currX += newWidth
             trimNextText = false
             currentLine.add(drawable)
             newDrawables.add(drawable)
@@ -156,7 +152,7 @@ class ParagraphDrawable(
             }
 
             if (text is ImageDrawable) {
-                gotoNextLine()
+                if (currentLine.isNotEmpty()) gotoNextLine()
                 layout(text, width)
                 gotoNextLine()
                 continue
@@ -238,8 +234,10 @@ class ParagraphDrawable(
 
         // We can have extra drawables in the current line that didn't get handled
         // by the last iteration of the loop
-        if (currentLine.isNotEmpty())
-            lines.add(currentLine.toList())
+        if (currentLine.isNotEmpty()) gotoNextLine()
+
+        // There isn't a next line, so this space shouldn't be there
+        if (lines.isNotEmpty()) currY -= config.paragraphConfig.spaceBetweenLines
 
         if (centered) {
             // Offset each text component by half of the space at the end of each line
@@ -265,8 +263,7 @@ class ParagraphDrawable(
 
         drawables.setDrawables(newDrawables)
 
-        val height = (if (currentLine.isNotEmpty()) currY else prevY) - y + 9f * scaleModifier +
-                if (insertSpaceAfter) config.paragraphConfig.spaceAfter else 0f
+        val height = currY - y + if (insertSpaceAfter) config.paragraphConfig.spaceAfter else 0f
 
         return Layout(
             x,
@@ -386,7 +383,8 @@ class ParagraphDrawable(
 
         // Step 5: Get the string offset position in the current text
 
-        fun textWidth(offset: Int) = currentDrawable.formattedText.substring(0, offset).width(currentDrawable.scaleModifier)
+        fun textWidth(offset: Int) =
+            currentDrawable.formattedText.substring(0, offset).width(currentDrawable.scaleModifier)
 
         var offset = currentDrawable.style.numFormattingChars
         var cachedWidth = 0f
