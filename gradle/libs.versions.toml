@@ -2,7 +2,7 @@
 kotlin = "1.9.25"
 kotlinx-coroutines = "1.5.2"
 jetbrains-annotations = "23.0.0"
-universalcraft = "431"
+universalcraft = "466"
 commonmark = "0.17.1"
 dom4j = "2.1.1"
 

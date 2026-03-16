@@ -189,7 +189,21 @@ enum class ElementaVersion {
      * This fixes the alpha channel of the render result, allowing it to be correctly composited with other textures.
      * See [UniversalCraft#105](https://github.com/EssentialGG/UniversalCraft/pull/105) for more details.
      */
+    @Deprecated(DEPRECATION_MESSAGE)
     V10,
+
+    /**
+     * Improvements for vertical scrolling and support for horizontal scrolling.
+     *
+     * Adds new mouseScroll() function to UIComponent that also supports horizontal scrolling.
+     * The old function is no longer called by WindowScreen.
+     * Vertical deltas passed to the new function are now passed along unchanged.
+     * Previous they were coerced between -1.0 and 1.0 in WindowScreen.
+     * UIScrollEvent now includes also the horizontal delta.
+     *
+     * See [UniversalCraft#128](https://github.com/SparkUniverse/UniversalCraft/pull/128) for the underlying changes.
+     */
+    V11,
 
     ;
 
@@ -241,12 +255,16 @@ Be sure to read through all the changes between your current version and your ne
         internal val v8 = V8
         @Suppress("DEPRECATION")
         internal val v9 = V9
+        @Suppress("DEPRECATION")
         internal val v10 = V10
+        internal val v11 = V11
 
         internal val atLeastV9Active: Boolean
             get() = active >= v9
         internal val atLeastV10Active: Boolean
             get() = active >= v10
+        internal val atLeastV11Active: Boolean
+            get() = active >= v11
 
         @PublishedApi
         internal var active: ElementaVersion = v0

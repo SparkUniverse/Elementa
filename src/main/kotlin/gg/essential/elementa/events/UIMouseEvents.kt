@@ -15,7 +15,22 @@ data class UIClickEvent(
 }
 
 data class UIScrollEvent(
-    val delta: Double,
+    val deltaVertical: Double,
     val target: UIComponent,
-    val currentTarget: UIComponent
-) : UIEvent()
+    val currentTarget: UIComponent,
+    val deltaHorizontal: Double,
+) : UIEvent() {
+    // Added to ensure backwards binary compatibility
+    constructor(delta: Double, target: UIComponent, currentTarget: UIComponent) : this(delta, target, currentTarget, 0.0)
+
+    // Added to ensure backwards binary compatibility
+    fun copy(
+        deltaVertical: Double = this.deltaVertical,
+        target: UIComponent = this.target,
+        currentTarget: UIComponent = this.currentTarget,
+    ) = copy(deltaVertical = deltaVertical, target = target, currentTarget = currentTarget, deltaHorizontal = deltaHorizontal)
+
+    // Added to ensure backwards binary compatibility
+    val delta: Double
+        get() = deltaVertical
+}

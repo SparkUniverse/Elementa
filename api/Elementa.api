@@ -3,6 +3,7 @@ public final class gg/essential/elementa/ElementaVersion : java/lang/Enum {
 	public static final field V0 Lgg/essential/elementa/ElementaVersion;
 	public static final field V1 Lgg/essential/elementa/ElementaVersion;
 	public static final field V10 Lgg/essential/elementa/ElementaVersion;
+	public static final field V11 Lgg/essential/elementa/ElementaVersion;
 	public static final field V2 Lgg/essential/elementa/ElementaVersion;
 	public static final field V3 Lgg/essential/elementa/ElementaVersion;
 	public static final field V4 Lgg/essential/elementa/ElementaVersion;
@@ -118,6 +119,7 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	public fun mouseMove (Lgg/essential/elementa/components/Window;)V
 	public fun mouseRelease ()V
 	public fun mouseScroll (D)V
+	public fun mouseScroll (DD)V
 	public final fun onFocus (Lkotlin/jvm/functions/Function1;)Lgg/essential/elementa/UIComponent;
 	public final fun onFocusLost (Lkotlin/jvm/functions/Function1;)Lgg/essential/elementa/UIComponent;
 	public final fun onKeyType (Lkotlin/jvm/functions/Function3;)Lgg/essential/elementa/UIComponent;
@@ -272,7 +274,7 @@ public abstract class gg/essential/elementa/WindowScreen : gg/essential/universa
 	public fun onKeyPressed (ICLgg/essential/universal/UKeyboard$Modifiers;)V
 	public fun onMouseClicked (DDI)V
 	public fun onMouseReleased (DDI)V
-	public fun onMouseScrolled (D)V
+	public fun onMouseScrolled (DDDD)V
 	public fun onScreenClose ()V
 	public final fun stopAnimating (Lkotlin/reflect/KMutableProperty0;)V
 }
@@ -776,6 +778,7 @@ public final class gg/essential/elementa/components/Window : gg/essential/elemen
 	public fun mouseClick (DDI)V
 	public fun mouseRelease ()V
 	public fun mouseScroll (D)V
+	public fun mouseScroll (DD)V
 	public final fun removeFloatingComponent (Lgg/essential/elementa/UIComponent;)V
 	public final fun setHoveredFloatingComponent (Lgg/essential/elementa/UIComponent;)V
 	public final fun unfocus ()V
@@ -2748,14 +2751,20 @@ public abstract class gg/essential/elementa/events/UIEvent {
 
 public final class gg/essential/elementa/events/UIScrollEvent : gg/essential/elementa/events/UIEvent {
 	public fun <init> (DLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;)V
+	public fun <init> (DLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;D)V
 	public final fun component1 ()D
 	public final fun component2 ()Lgg/essential/elementa/UIComponent;
 	public final fun component3 ()Lgg/essential/elementa/UIComponent;
+	public final fun component4 ()D
 	public final fun copy (DLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/events/UIScrollEvent;
+	public final fun copy (DLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;D)Lgg/essential/elementa/events/UIScrollEvent;
+	public static synthetic fun copy$default (Lgg/essential/elementa/events/UIScrollEvent;DLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;DILjava/lang/Object;)Lgg/essential/elementa/events/UIScrollEvent;
 	public static synthetic fun copy$default (Lgg/essential/elementa/events/UIScrollEvent;DLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;ILjava/lang/Object;)Lgg/essential/elementa/events/UIScrollEvent;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCurrentTarget ()Lgg/essential/elementa/UIComponent;
 	public final fun getDelta ()D
+	public final fun getDeltaHorizontal ()D
+	public final fun getDeltaVertical ()D
 	public final fun getTarget ()Lgg/essential/elementa/UIComponent;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

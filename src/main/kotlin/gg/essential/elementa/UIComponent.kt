@@ -730,11 +730,8 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         this.forEachChild { it.mouseRelease() }
     }
 
-    /**
-     * Runs the set [onMouseScroll] method for the component and it's children.
-     * Use this in the proper mouse scroll event to cascade all component's mouse scroll events.
-     * Most common use is on the [Window] object.
-     */
+    @Suppress("DEPRECATION")
+    @Deprecated("Not called by WindowScreen in elementa v11 and above", ReplaceWith("mouseScroll(deltaHorizontal, deltaVertical)"))
     open fun mouseScroll(delta: Double) {
         if (delta == 0.0) return
 
@@ -747,6 +744,25 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         }
 
         fireScrollEvent(UIScrollEvent(delta, this, this))
+    }
+
+    /**
+     * Runs the set [onMouseScroll] method for the component and it's children.
+     * Use this in the proper mouse scroll event to cascade all component's mouse scroll events.
+     * Most common use is on the [Window] object.
+     */
+    open fun mouseScroll(deltaHorizontal: Double, deltaVertical: Double) {
+        if (deltaHorizontal == 0.0 && deltaVertical == 0.0) return
+
+        for (i in children.lastIndex downTo 0) {
+            val child = children[i]
+
+            if (child.isHovered()) {
+                return child.mouseScroll(deltaHorizontal, deltaVertical)
+            }
+        }
+
+        fireScrollEvent(UIScrollEvent(deltaVertical, this, this, deltaHorizontal))
     }
 
     open fun onWindowResize() {

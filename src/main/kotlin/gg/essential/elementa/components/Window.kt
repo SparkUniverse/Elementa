@@ -224,6 +224,8 @@ class Window @JvmOverloads constructor(
         }
     }
 
+    @Suppress("DEPRECATION")
+    @Deprecated("Not called in elementa v11 and above", ReplaceWith("mouseScroll(0.0, delta)"))
     override fun mouseScroll(delta: Double) {
         if (hasErrored && version >= ElementaVersion.v7) {
             return
@@ -240,6 +242,24 @@ class Window @JvmOverloads constructor(
         }
 
         super.mouseScroll(delta)
+    }
+
+    override fun mouseScroll(deltaHorizontal: Double, deltaVertical: Double) {
+        if (hasErrored && version >= ElementaVersion.v7) {
+            return
+        }
+
+        requireMainThread()
+
+        val (mouseX, mouseY) = getMousePosition()
+        for (floatingComponent in allFloatingComponentsInReverseOrder()) {
+            if (floatingComponent.isPointInside(mouseX, mouseY)) {
+                floatingComponent.mouseScroll(deltaHorizontal, deltaVertical)
+                return
+            }
+        }
+
+        super.mouseScroll(deltaHorizontal, deltaVertical)
     }
 
     override fun mouseClick(mouseX: Double, mouseY: Double, button: Int) {

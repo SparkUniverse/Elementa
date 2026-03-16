@@ -86,11 +86,15 @@ abstract class WindowScreen @JvmOverloads constructor(
         window.mouseRelease()
     }
 
-    override fun onMouseScrolled(delta: Double) {
-        super.onMouseScrolled(delta)
+    override fun onMouseScrolled(mouseX: Double, mouseY: Double, deltaHorizontal: Double, deltaVertical: Double) {
+        super.onMouseScrolled(mouseX, mouseY, deltaHorizontal, deltaVertical)
 
-        // We also need to pass along scrolling
-        window.mouseScroll(delta.coerceIn(-1.0, 1.0))
+        if (version >= ElementaVersion.v11) {
+            window.mouseScroll(deltaHorizontal, deltaVertical)
+        } else {
+            @Suppress("DEPRECATION")
+            window.mouseScroll(deltaVertical.coerceIn(-1.0, 1.0))
+        }
     }
 
     override fun onKeyPressed(keyCode: Int, typedChar: Char, modifiers: UKeyboard.Modifiers?) {
