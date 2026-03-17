@@ -142,33 +142,16 @@ class ScrollComponent constructor(
 
 
     private val mouseScrollLambda: UIComponent.(UIScrollEvent) -> Unit = {
-        if (Window.of(this).version >= ElementaVersion.v11) {
-            // For easier understanding we reframe the provided scroll in terms of primary and secondary directions
-            // We used to only get vertical scrolls, so that remains as the primary direction
-            val scrollPrimary = it.scrollY.toFloat()
-            val scrollSecondary = it.scrollX.toFloat()
-
-            // We map the primary and secondary scroll values based on the scroll direction
-            // `Vertical` and `Horizontal` directions disable the other direction, so we use 0f
-            val (providedX, providedY) = when (scrollDirection) {
-                Direction.Vertical -> 0f to scrollPrimary
-                Direction.Horizontal -> scrollPrimary to 0f
-                Direction.PreferVertical -> scrollSecondary to scrollPrimary
-                Direction.PreferHorizontal -> scrollPrimary to scrollSecondary
-            }
-
-            // We swap directions if shift is pressed
-            val (actualX, actualY) = if (UKeyboard.isShiftKeyDown()) providedY to providedX else providedX to providedY
-
-            // Finally, process the scroll with computed values
-            if (onScroll(actualX, actualY) || !passthroughScroll) {
-                it.stopPropagation()
-            }
-        } else if (Window.of(this).version >= ElementaVersion.v5) {
+        if (Window.of(this).version >= ElementaVersion.v5) {
             // new behavior
             val scrollDirection = if (!UKeyboard.isShiftKeyDown()) primaryScrollDirection else secondaryScrollDirection
             if (scrollDirection != null) {
                 if (onScroll(it.delta.toFloat(), isHorizontal = scrollDirection == Direction.Horizontal) || !passthroughScroll) {
+                    it.stopPropagation()
+                }
+            }
+            if(horizontalScrollEnabled) {
+                if (onScroll(it.scrollX.toFloat(), isHorizontal = true) || !passthroughScroll) {
                     it.stopPropagation()
                 }
             }
@@ -228,7 +211,8 @@ class ScrollComponent constructor(
 
         if (needsUpdate) {
             needsUpdate = false
-            val (horizontalRange, verticalRange) = calculateOffsetRanges()
+            val horizontalRange = calculateOffsetRange(isHorizontal = true)
+            val verticalRange = calculateOffsetRange(isHorizontal = false)
 
             // Recalculate our scroll box and move the content inside if needed.
             actualHolder.animate {
@@ -337,7 +321,8 @@ class ScrollComponent constructor(
         verticalOffset: Float = this.verticalOffset,
         smoothScroll: Boolean = true
     ) {
-        val (horizontalRange, verticalRange) = calculateOffsetRanges()
+        val horizontalRange = calculateOffsetRange(isHorizontal = true)
+        val verticalRange = calculateOffsetRange(isHorizontal = false)
         this.horizontalOffset =
             if (horizontalRange.isEmpty()) innerPadding else horizontalOffset.coerceIn(horizontalRange)
         this.verticalOffset = if (verticalRange.isEmpty()) {
@@ -444,26 +429,14 @@ class ScrollComponent constructor(
      * @return whether the offset changed
      */
     private fun onScroll(delta: Float, isHorizontal: Boolean): Boolean {
-        return if (isHorizontal) onScroll(delta, 0f) else onScroll(0f, delta)
-    }
-
-    /**
-     * @return whether either offset changed
-     */
-    private fun onScroll(scrollX: Float, scrollY: Float): Boolean {
+        if (delta == 0f) return false
         var changed = false
-        val offsetX = ::horizontalOffset
-        val offsetY = ::verticalOffset
-        val (rangeX, rangeY) = calculateOffsetRanges()
-        val newOffsetX = if (rangeX.isEmpty()) innerPadding else (offsetX.get() + scrollX * pixelsPerScroll * currentScrollAcceleration).coerceIn(rangeX)
-        if (newOffsetX != offsetX.get()) {
+        val offset = if (isHorizontal) ::horizontalOffset else ::verticalOffset
+        val range = calculateOffsetRange(isHorizontal)
+        val newOffset = if(range.isEmpty()) innerPadding else (offset.get() + delta * pixelsPerScroll * currentScrollAcceleration).coerceIn(range)
+        if (newOffset != offset.get()) {
             changed = true
-            offsetX.set(newOffsetX)
-        }
-        val newOffsetY = if (rangeY.isEmpty()) innerPadding else (offsetY.get() + scrollY * pixelsPerScroll * currentScrollAcceleration).coerceIn(rangeY)
-        if (newOffsetY != offsetY.get()) {
-            changed = true
-            offsetY.set(newOffsetY)
+            offset.set(newOffset)
         }
 
         currentScrollAcceleration =
@@ -543,16 +516,16 @@ class ScrollComponent constructor(
         }
     }
 
-    private fun calculateOffsetRanges(): Pair<ClosedFloatingPointRange<Float>, ClosedFloatingPointRange<Float>> {
-        val actualWidth = calculateActualWidth()
-        val maxNegativeWidth = this.getWidth() - actualWidth - innerPadding
-        val rangeX = if (horizontalScrollOpposite) (-innerPadding)..-maxNegativeWidth else maxNegativeWidth..(innerPadding)
-
-        val actualHeight = calculateActualHeight()
-        val maxNegativeHeight = this.getHeight() - actualHeight - innerPadding
-        val rangeY = if (verticalScrollOpposite) (-innerPadding)..-maxNegativeHeight else maxNegativeHeight..(innerPadding)
-
-        return rangeX to rangeY
+    private fun calculateOffsetRange(isHorizontal: Boolean): ClosedFloatingPointRange<Float> {
+        return if (isHorizontal) {
+            val actualWidth = calculateActualWidth()
+            val maxNegative = this.getWidth() - actualWidth - innerPadding
+            if (horizontalScrollOpposite) (-innerPadding)..-maxNegative else maxNegative..(innerPadding)
+        } else {
+            val actualHeight = calculateActualHeight()
+            val maxNegative = this.getHeight() - actualHeight - innerPadding
+            if (verticalScrollOpposite) (-innerPadding)..-maxNegative else maxNegative..(innerPadding)
+        }
     }
 
     private fun onClick(mouseX: Float, mouseY: Float, mouseButton: Int) {
