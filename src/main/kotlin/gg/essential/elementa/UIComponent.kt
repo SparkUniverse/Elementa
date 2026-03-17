@@ -751,18 +751,18 @@ abstract class UIComponent : Observable(), ReferenceHolder {
      * Use this in the proper mouse scroll event to cascade all component's mouse scroll events.
      * Most common use is on the [Window] object.
      */
-    open fun mouseScroll(deltaHorizontal: Double, deltaVertical: Double) {
-        if (deltaHorizontal == 0.0 && deltaVertical == 0.0) return
+    open fun mouseScroll(scrollX: Double, scrollY: Double) {
+        if (scrollX == 0.0 && scrollY == 0.0) return
 
         for (i in children.lastIndex downTo 0) {
             val child = children[i]
 
             if (child.isHovered()) {
-                return child.mouseScroll(deltaHorizontal, deltaVertical)
+                return child.mouseScroll(scrollX, scrollY)
             }
         }
 
-        fireScrollEvent(UIScrollEvent(deltaVertical, this, this, deltaHorizontal))
+        fireScrollEvent(UIScrollEvent(scrollX, scrollY, this, this))
     }
 
     open fun onWindowResize() {

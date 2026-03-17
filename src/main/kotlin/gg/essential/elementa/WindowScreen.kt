@@ -86,14 +86,25 @@ abstract class WindowScreen @JvmOverloads constructor(
         window.mouseRelease()
     }
 
+    @Suppress("DEPRECATION")
+    @Deprecated(
+        "Provided `delta` values have different units depending on Minecraft versions. See ElementaVersion.V11 for details.",
+        replaceWith = ReplaceWith("onMouseScrolled(mouseX, mouseY, deltaHorizontal, deltaVertical)")
+    )
+    override fun onMouseScrolled(delta: Double) {
+        super.onMouseScrolled(delta)
+
+        if (version < ElementaVersion.v11) {
+            // We also need to pass along scrolling
+            window.mouseScroll(delta.coerceIn(-1.0, 1.0))
+        }
+    }
+
     override fun onMouseScrolled(mouseX: Double, mouseY: Double, deltaHorizontal: Double, deltaVertical: Double) {
         super.onMouseScrolled(mouseX, mouseY, deltaHorizontal, deltaVertical)
 
         if (version >= ElementaVersion.v11) {
             window.mouseScroll(deltaHorizontal, deltaVertical)
-        } else {
-            @Suppress("DEPRECATION")
-            window.mouseScroll(deltaVertical.coerceIn(-1.0, 1.0))
         }
     }
 

@@ -244,7 +244,7 @@ class Window @JvmOverloads constructor(
         super.mouseScroll(delta)
     }
 
-    override fun mouseScroll(deltaHorizontal: Double, deltaVertical: Double) {
+    override fun mouseScroll(scrollX: Double, scrollY: Double) {
         if (hasErrored && version >= ElementaVersion.v7) {
             return
         }
@@ -254,12 +254,12 @@ class Window @JvmOverloads constructor(
         val (mouseX, mouseY) = getMousePosition()
         for (floatingComponent in allFloatingComponentsInReverseOrder()) {
             if (floatingComponent.isPointInside(mouseX, mouseY)) {
-                floatingComponent.mouseScroll(deltaHorizontal, deltaVertical)
+                floatingComponent.mouseScroll(scrollX, scrollY)
                 return
             }
         }
 
-        super.mouseScroll(deltaHorizontal, deltaVertical)
+        super.mouseScroll(scrollX, scrollY)
     }
 
     override fun mouseClick(mouseX: Double, mouseY: Double, button: Int) {

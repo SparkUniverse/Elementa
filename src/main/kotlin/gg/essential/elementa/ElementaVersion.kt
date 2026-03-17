@@ -196,10 +196,11 @@ enum class ElementaVersion {
      * Improvements for vertical scrolling and support for horizontal scrolling.
      *
      * Adds new mouseScroll() function to UIComponent that also supports horizontal scrolling.
-     * The old function is no longer called by WindowScreen.
-     * Vertical deltas passed to the new function are now passed along unchanged.
-     * Previous they were coerced between -1.0 and 1.0 in WindowScreen.
+     * The old function is no longer supported and will no longer be called.
+     * Previously, deltas were always coerced between -1.0 and 1.0 in WindowScreen.
+     * This was wrong, and is no longer the case for the new function.
      * UIScrollEvent now includes also the horizontal delta.
+     * ScrollComponent now also properly supports new horizontal scrolling.
      *
      * See [UniversalCraft#128](https://github.com/SparkUniverse/UniversalCraft/pull/128) for the underlying changes.
      */

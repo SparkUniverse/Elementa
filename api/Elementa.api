@@ -274,6 +274,7 @@ public abstract class gg/essential/elementa/WindowScreen : gg/essential/universa
 	public fun onKeyPressed (ICLgg/essential/universal/UKeyboard$Modifiers;)V
 	public fun onMouseClicked (DDI)V
 	public fun onMouseReleased (DDI)V
+	public fun onMouseScrolled (D)V
 	public fun onMouseScrolled (DDDD)V
 	public fun onScreenClose ()V
 	public final fun stopAnimating (Lkotlin/reflect/KMutableProperty0;)V
@@ -2750,6 +2751,7 @@ public abstract class gg/essential/elementa/events/UIEvent {
 }
 
 public final class gg/essential/elementa/events/UIScrollEvent : gg/essential/elementa/events/UIEvent {
+	public fun <init> (DDLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;)V
 	public fun <init> (DLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;)V
 	public fun <init> (DLgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;D)V
 	public final fun component1 ()D
@@ -2763,8 +2765,8 @@ public final class gg/essential/elementa/events/UIScrollEvent : gg/essential/ele
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCurrentTarget ()Lgg/essential/elementa/UIComponent;
 	public final fun getDelta ()D
-	public final fun getDeltaHorizontal ()D
-	public final fun getDeltaVertical ()D
+	public final fun getScrollX ()D
+	public final fun getScrollY ()D
 	public final fun getTarget ()Lgg/essential/elementa/UIComponent;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
