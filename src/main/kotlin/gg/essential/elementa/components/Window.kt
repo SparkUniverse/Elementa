@@ -7,6 +7,8 @@ import gg.essential.elementa.constraints.resolution.ConstraintResolutionGui
 import gg.essential.elementa.constraints.resolution.ConstraintResolver
 import gg.essential.elementa.constraints.resolution.ConstraintResolverV2
 import gg.essential.elementa.effects.ScissorEffect
+import gg.essential.elementa.events.UICharEvent
+import gg.essential.elementa.events.UIKeyEvent
 import gg.essential.elementa.font.FontRenderer
 import gg.essential.elementa.utils.elementaDev
 import gg.essential.elementa.utils.requireMainThread
@@ -329,6 +331,9 @@ class Window @JvmOverloads constructor(
         currentMouseButton = -1
     }
 
+    @Suppress("DEPRECATION")
+    @Deprecated("[See ElementaVersion.V12].",
+        replaceWith = ReplaceWith("keyType(keyEvent) or chartype(charEvent)"))
     override fun keyType(typedChar: Char, keyCode: Int) {
         if (hasErrored && version >= ElementaVersion.v7) {
             return
@@ -345,6 +350,24 @@ class Window @JvmOverloads constructor(
         } else {
             super.keyType(character, keyCode)
         }
+    }
+
+    // Called only when ElementaVersion >= V12
+    override fun keyType(keyEvent: UIKeyEvent) {
+        if (hasErrored) return
+
+        requireMainThread()
+
+        focusedComponent?.keyType(keyEvent) ?: super.keyType(keyEvent)
+    }
+
+    // Called only when ElementaVersion >= V12
+    override fun charType(charEvent: UICharEvent) {
+        if (hasErrored) return
+
+        requireMainThread()
+
+        focusedComponent?.charType(charEvent) ?: super.charType(charEvent)
     }
 
     internal var prevDraggedMouseX: Float? = null

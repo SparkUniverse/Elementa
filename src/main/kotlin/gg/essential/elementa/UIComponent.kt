@@ -13,7 +13,9 @@ import gg.essential.elementa.dsl.animate
 import gg.essential.elementa.dsl.toConstraint
 import gg.essential.elementa.effects.Effect
 import gg.essential.elementa.effects.ScissorEffect
+import gg.essential.elementa.events.UICharEvent
 import gg.essential.elementa.events.UIClickEvent
+import gg.essential.elementa.events.UIKeyEvent
 import gg.essential.elementa.events.UIScrollEvent
 import gg.essential.elementa.font.FontProvider
 import gg.essential.elementa.state.v2.ReferenceHolder
@@ -119,7 +121,11 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         get() = field.also { ownFlags += Flags.RequiresMouseMove }
     val mouseDragListeners = mutableListOf<UIComponent.(mouseX: Float, mouseY: Float, button: Int) -> Unit>()
         get() = field.also { ownFlags += Flags.RequiresMouseDrag }
+    @Deprecated("[See ElementaVersion.V12]. These listeners will still function for the time being.",
+        replaceWith = ReplaceWith("keyTypedEventListeners; /*or*/ charTypedEventListeners"))
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
+    val keyTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Unit>()
+    val charTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Unit>()
 
     private var currentlyHovered = false
     private val beforeHideAnimations = mutableListOf<AnimatingConstraints.() -> Unit>()
@@ -836,9 +842,34 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         this.forEachChild { it.superCall() }
     }
 
+    @Deprecated("[See ElementaVersion.V12]. This will still be called for backwards compatibility in the mean time.",
+        replaceWith = ReplaceWith("keyType(keyEvent) /*and*/ chartype(charEvent)"))
     open fun keyType(typedChar: Char, keyCode: Int) {
+        @Suppress("DEPRECATION")
         for (listener in keyTypedListeners)
             this.listener(typedChar, keyCode)
+    }
+
+    // Called only when ElementaVersion >= V12
+    open fun keyType(keyEvent: UIKeyEvent) {
+        for (listener in keyTypedEventListeners){
+            this.listener(keyEvent)
+            if (keyEvent.propagationStoppedImmediately) return
+        }
+
+        @Suppress("DEPRECATION") // Retaining support for the old listeners for now as it is trivial to do so
+        keyType(0.toChar(), keyEvent.keyCode)
+    }
+
+    // Called only when ElementaVersion >= V12
+    open fun charType(charEvent: UICharEvent) {
+        for (listener in charTypedEventListeners){
+            this.listener(charEvent)
+            if (charEvent.propagationStoppedImmediately) return
+        }
+
+        @Suppress("DEPRECATION") // Retaining support for the old listeners for now as it is trivial to do so
+        keyType(charEvent.char, 0)
     }
 
     @Deprecated("See [ElementaVersion.V8].")
@@ -1021,11 +1052,25 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         mouseScrollListeners.add { method.accept(it) }
     }
 
+    @Deprecated("[See ElementaVersion.V12]. These listeners will still function for the time being.",
+        replaceWith = ReplaceWith("onKeyType(method) /*or*/ onCharType(method)"))
     fun onKeyType(method: UIComponent.(typedChar: Char, keyCode: Int) -> Unit) = apply {
+        @Suppress("DEPRECATION")
         keyTypedListeners.add(method)
     }
 
+    fun onKeyType(method: UIComponent.(keyEvent: UIKeyEvent) -> Unit) = apply {
+        keyTypedEventListeners.add(method)
+    }
+
+    fun onCharType(method: UIComponent.(keyEvent: UICharEvent) -> Unit) = apply {
+        charTypedEventListeners.add(method)
+    }
+
+    @Deprecated("[See ElementaVersion.V12]. These consumers will still function for the time being.",
+        replaceWith = ReplaceWith("onKeyType(method) /*or*/ onCharType(method)"))
     fun onKeyTypeConsumer(method: BiConsumer<Char, Int>) {
+        @Suppress("DEPRECATION")
         keyTypedListeners.add { t: Char, u: Int -> method.accept(t, u) }
     }
 
