@@ -110,6 +110,7 @@ class MarkdownComponent(
                 grabWindowFocus()
             }
 
+            @Suppress("DEPRECATION")
             onKeyType { _, keyCode ->
                 if (selection != null && keyCode == UKeyboard.KEY_C && UKeyboard.isCtrlKeyDown()) {
                     UDesktop.setClipboardString(drawables.selectedText(UKeyboard.isShiftKeyDown()))

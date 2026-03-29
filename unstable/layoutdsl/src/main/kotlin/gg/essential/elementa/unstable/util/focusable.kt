@@ -19,7 +19,7 @@ fun Modifier.focusable(disabled: State<Boolean> = stateOf(false)): Modifier {
     return tag(Focusable(disabled))
         .then {
             val keyListener = setupKeyboardNavigation()
-            return@then { keyTypedListeners.remove(keyListener) }
+            return@then { @Suppress("DEPRECATION") keyTypedListeners.remove(keyListener) }
         }
         .then { makeFocusOrHoverScope(); { throw NotImplementedError() } }
 }
@@ -61,6 +61,7 @@ private fun UIComponent.setupKeyboardNavigation(): UIComponent.(Char, Int) -> Un
         }
     }
 
+    @Suppress("DEPRECATION")
     onKeyType(keyListener)
 
     return keyListener
