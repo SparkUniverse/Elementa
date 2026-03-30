@@ -72,6 +72,7 @@ tasks.processResources {
 tasks.jar {
     dependsOn(internal)
     from({ internal.map { zipTree(it) } })
+    manifest.attributes(mapOf("FMLModType" to "GAMELIBRARY"))
 }
 
 apiValidation {
