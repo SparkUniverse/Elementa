@@ -2,7 +2,7 @@
 kotlin = "1.9.25"
 kotlinx-coroutines = "1.5.2"
 jetbrains-annotations = "23.0.0"
-universalcraft = "466"
+universalcraft = "474+feature-em-1645-closing-uscreen-via-esc-on-119-puts-you-in-the-menu-rather"
 commonmark = "0.17.1"
 dom4j = "2.1.1"
 

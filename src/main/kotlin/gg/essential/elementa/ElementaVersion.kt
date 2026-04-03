@@ -7,6 +7,7 @@ import gg.essential.elementa.components.Window
 import gg.essential.elementa.constraints.SuperConstraint
 import gg.essential.elementa.constraints.animation.AnimationComponent
 import gg.essential.elementa.effects.Effect
+import gg.essential.universal.UScreen
 import gg.essential.universal.render.URenderPipeline
 import gg.essential.universal.shader.BlendState
 
@@ -204,7 +205,29 @@ enum class ElementaVersion {
      *
      * See [UniversalCraft#128](https://github.com/SparkUniverse/UniversalCraft/pull/128) for the underlying changes.
      */
+    @Deprecated(DEPRECATION_MESSAGE)
     V11,
+
+    /**
+     * Improvements for key press inputs.
+     *
+     * WindowScreen now implements [UScreen.InputHandler] which provides new functions for key and mouse inputs that
+     * follow more modern Minecraft input method conventions, most notably allowing us to mark an input as handled to
+     * prevent followup execution in Minecraft itself.
+     *
+     * As of V12 the key & character input events have been split up and moved to these new methods.
+     * All occurrences of `keyType(typedChar: Char, keyCode: Int)` in [UIComponent]s have been split into:
+     *  - keyType(keyEvent: UIKeyEvent)
+     *  - charType(charEvent: UICharEvent)
+     * As well as all related setup functions. E.G. `onKeyType { }`
+     * For now any key listeners setup via the old methods will still be called.
+     *
+     * Also see [gg.essential.elementa.events.UIKeyEvent] & [gg.essential.elementa.events.UICharEvent], note the
+     * propagation stopping feature.
+     *
+     * See [UniversalCraft#125](https://github.com/SparkUniverse/UniversalCraft/pull/125) for the underlying changes.
+     */
+    V12,
 
     ;
 
@@ -258,7 +281,9 @@ Be sure to read through all the changes between your current version and your ne
         internal val v9 = V9
         @Suppress("DEPRECATION")
         internal val v10 = V10
+        @Suppress("DEPRECATION")
         internal val v11 = V11
+        internal val v12 = V12
 
         internal val atLeastV9Active: Boolean
             get() = active >= v9
@@ -266,6 +291,8 @@ Be sure to read through all the changes between your current version and your ne
             get() = active >= v10
         internal val atLeastV11Active: Boolean
             get() = active >= v11
+        internal val atLeastV12Active: Boolean
+            get() = active >= v12
 
         @PublishedApi
         internal var active: ElementaVersion = v0

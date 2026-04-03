@@ -4,6 +4,8 @@ abstract class UIEvent {
     var propagationStopped = false
     var propagationStoppedImmediately = false
 
+    fun isStopped() = propagationStopped || propagationStoppedImmediately
+
     /**
      * Stops this event from continuing to bubble to parent components. If there are
      * multiple listeners on the current component, those "sibling" listeners will continue to fire.

@@ -81,6 +81,7 @@ abstract class AbstractTextInput(
 
         setHeight(lineHeight.pixels())
 
+        @Suppress("DEPRECATION")
         onKeyType { typedChar, keyCode ->
             if (!active) return@onKeyType
 
