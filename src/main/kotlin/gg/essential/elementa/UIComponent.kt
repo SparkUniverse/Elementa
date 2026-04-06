@@ -123,7 +123,9 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         get() = field.also { ownFlags += Flags.RequiresMouseDrag }
     @Deprecated("See [ElementaVersion.V12]. These listeners will still function for the time being.")
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
+    // Requires ElementaVersion.V12
     val keyTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Boolean>()
+    // Requires ElementaVersion.V12
     val charTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Boolean>()
 
     private var currentlyHovered = false
