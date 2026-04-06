@@ -61,7 +61,6 @@ private fun UIComponent.setupKeyboardNavigation(): UIComponent.(Char, Int) -> Un
         }
     }
 
-    @Suppress("DEPRECATION")
     onKeyType(keyListener)
 
     return keyListener
