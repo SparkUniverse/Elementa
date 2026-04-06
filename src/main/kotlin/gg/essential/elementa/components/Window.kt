@@ -353,21 +353,41 @@ class Window @JvmOverloads constructor(
     }
 
     // Called only when ElementaVersion >= V12
-    override fun keyType(keyEvent: UIKeyEvent): Boolean {
+    fun keyType(keyEvent: UIKeyEvent): Boolean {
         if (hasErrored) return false
 
         requireMainThread()
 
-        return (focusedComponent?.keyType(keyEvent) ?: false) || super.keyType(keyEvent)
+        focusedComponent?.run {
+            for (listener in keyTypedEventListeners) {
+                if (listener(keyEvent)) return true
+            }
+        }
+
+        for (listener in keyTypedEventListeners) {
+            if (listener(keyEvent)) return true
+        }
+
+        return false
     }
 
     // Called only when ElementaVersion >= V12
-    override fun charType(charEvent: UICharEvent): Boolean {
+    fun charType(charEvent: UICharEvent): Boolean {
         if (hasErrored) return false
 
         requireMainThread()
 
-        return (focusedComponent?.charType(charEvent) ?: false) || super.charType(charEvent)
+        focusedComponent?.run {
+            for (listener in charTypedEventListeners) {
+                if (listener(charEvent)) return true
+            }
+        }
+
+        for (listener in charTypedEventListeners) {
+            if (listener(charEvent)) return true
+        }
+
+        return false
     }
 
     internal var prevDraggedMouseX: Float? = null

@@ -850,22 +850,6 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             this.listener(typedChar, keyCode)
     }
 
-    // Called only when ElementaVersion >= V12
-    open fun keyType(keyEvent: UIKeyEvent): Boolean {
-        for (listener in keyTypedEventListeners) {
-            if (this.listener(keyEvent)) return true
-        }
-        return false
-    }
-
-    // Called only when ElementaVersion >= V12
-    open fun charType(charEvent: UICharEvent): Boolean {
-        for (listener in charTypedEventListeners) {
-            if (this.listener(charEvent)) return true
-        }
-        return false
-    }
-
     @Deprecated("See [ElementaVersion.V8].")
     open fun animationFrame() {
         if (versionOrV0 >= ElementaVersion.v8) {
