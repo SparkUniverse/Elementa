@@ -39,10 +39,10 @@ abstract class WindowScreen @JvmOverloads constructor(
     init {
         if (version >= ElementaVersion.v12) {
             window.onKeyType { keyEvent ->
-                defaultKeyBehavior(keyEvent)
+                super.uKeyPressed(keyEvent.keyCode, keyEvent.scanCode, keyEvent.modifiers)
             }
             window.onCharType { charEvent ->
-                defaultCharBehavior(charEvent)
+                super.uCharTyped(charEvent.codepoint)
             }
         } else {
             @Suppress("DEPRECATION")
@@ -159,16 +159,12 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     // Called only when ElementaVersion >= V12
     override fun uKeyPressed(key: Int, scanCode: Int, modifiers: UKeyboard.Modifiers): Boolean {
-        val event = UIKeyEvent(key, scanCode, modifiers)
-        window.keyType(event)
-        return event.isStopped()
+        return window.keyType(UIKeyEvent(key, scanCode, modifiers))
     }
 
     // Called only when ElementaVersion >= V12
     override fun uCharTyped(codepoint: Int): Boolean {
-        val event = UICharEvent(codepoint)
-        window.charType(event)
-        return event.isStopped()
+        return window.charType(UICharEvent(codepoint))
     }
 
     override fun initScreen(width: Int, height: Int) {
@@ -195,20 +191,6 @@ abstract class WindowScreen @JvmOverloads constructor(
     fun defaultKeyBehavior(typedChar: Char, keyCode: Int) {
         @Suppress("DEPRECATION")
         super.onKeyPressed(keyCode, typedChar, UKeyboard.getModifiers())
-    }
-
-    // Called only when ElementaVersion >= V12
-    fun defaultKeyBehavior(keyEvent: UIKeyEvent) {
-        if (keyEvent.keyCode != 0 && super.uKeyPressed(keyEvent.keyCode, keyEvent.scanCode, keyEvent.modifiers)) {
-            keyEvent.stopPropagation()
-        }
-    }
-
-    // Called only when ElementaVersion >= V12
-    fun defaultCharBehavior(charEvent: UICharEvent) {
-        if (!charEvent.char.isISOControl() && super.uCharTyped(charEvent.codepoint)) {
-            charEvent.stopPropagation()
-        }
     }
 
     /**

@@ -123,8 +123,8 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         get() = field.also { ownFlags += Flags.RequiresMouseDrag }
     @Deprecated("See [ElementaVersion.V12]. These listeners will still function for the time being.")
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
-    val keyTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Unit>()
-    val charTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Unit>()
+    val keyTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Boolean>()
+    val charTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Boolean>()
 
     private var currentlyHovered = false
     private val beforeHideAnimations = mutableListOf<AnimatingConstraints.() -> Unit>()
@@ -849,25 +849,27 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     }
 
     // Called only when ElementaVersion >= V12
-    open fun keyType(keyEvent: UIKeyEvent) {
+    open fun keyType(keyEvent: UIKeyEvent): Boolean {
         for (listener in keyTypedEventListeners){
-            this.listener(keyEvent)
-            if (keyEvent.propagationStoppedImmediately) return
+            if (this.listener(keyEvent)) return true
         }
 
         @Suppress("DEPRECATION") // Retaining support for the old listeners for now as it is trivial to do so
         keyType(0.toChar(), keyEvent.keyCode)
+
+        return false
     }
 
     // Called only when ElementaVersion >= V12
-    open fun charType(charEvent: UICharEvent) {
+    open fun charType(charEvent: UICharEvent): Boolean {
         for (listener in charTypedEventListeners){
-            this.listener(charEvent)
-            if (charEvent.propagationStoppedImmediately) return
+            if (this.listener(charEvent)) return true
         }
 
         @Suppress("DEPRECATION") // Retaining support for the old listeners for now as it is trivial to do so
         keyType(charEvent.char, 0)
+
+        return false
     }
 
     @Deprecated("See [ElementaVersion.V8].")
@@ -1056,11 +1058,11 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         keyTypedListeners.add(method)
     }
 
-    fun onKeyType(method: UIComponent.(keyEvent: UIKeyEvent) -> Unit) = apply {
+    fun onKeyType(method: UIComponent.(keyEvent: UIKeyEvent) -> Boolean) = apply {
         keyTypedEventListeners.add(method)
     }
 
-    fun onCharType(method: UIComponent.(keyEvent: UICharEvent) -> Unit) = apply {
+    fun onCharType(method: UIComponent.(keyEvent: UICharEvent) -> Boolean) = apply {
         charTypedEventListeners.add(method)
     }
 

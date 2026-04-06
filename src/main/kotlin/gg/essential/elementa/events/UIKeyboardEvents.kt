@@ -9,7 +9,7 @@ class UIKeyEvent(
     val keyCode: Int,
     val scanCode: Int,
     val modifiers: UKeyboard.Modifiers,
-) : UIEvent()
+)
 
 
 /**
@@ -17,6 +17,6 @@ class UIKeyEvent(
  */
 class UICharEvent(
     val codepoint: Int,
-) : UIEvent() {
+) {
     val char = codepoint.toChar()
 }
