@@ -22,5 +22,5 @@ class UIKeyEvent(
 class UICharEvent(
     val codepoint: Int,
 ) {
-    val char = codepoint.toChar()
+    val string = String(Character.toChars(codepoint))
 }
