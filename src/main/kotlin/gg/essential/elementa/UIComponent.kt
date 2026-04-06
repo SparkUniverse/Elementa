@@ -843,7 +843,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         this.forEachChild { it.superCall() }
     }
 
-    @Deprecated("See {ElementaVersion.V12]. This will still be called for backwards compatibility in the mean time.")
+    @Deprecated("See {ElementaVersion.V12].")
     open fun keyType(typedChar: Char, keyCode: Int) {
         @Suppress("DEPRECATION")
         for (listener in keyTypedListeners)
