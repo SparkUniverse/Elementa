@@ -216,14 +216,13 @@ enum class ElementaVersion {
      * prevent followup execution in Minecraft itself.
      *
      * As of V12 the key & character input events have been split up and moved to these new methods.
-     * All occurrences of `keyType(typedChar: Char, keyCode: Int)` in [UIComponent]s have been split into:
-     *  - keyType(keyEvent: UIKeyEvent)
-     *  - charType(charEvent: UICharEvent)
+     * `keyType(typedChar: Char, keyCode: Int)` in [Window] has been split into:
+     *  - keyPressed(keyEvent: UIKeyEvent)
+     *  - charTyped(charEvent: UICharEvent)
      * As well as all related setup functions. E.G. `onKeyType { }`
      * For now any key listeners setup via the old methods will still be called.
      *
-     * Also see [gg.essential.elementa.events.UIKeyEvent] & [gg.essential.elementa.events.UICharEvent], note the
-     * propagation stopping feature.
+     * Also see [gg.essential.elementa.events.UIKeyEvent] & [gg.essential.elementa.events.UICharEvent].
      *
      * See [UniversalCraft#125](https://github.com/SparkUniverse/UniversalCraft/pull/125) for the underlying changes.
      */
