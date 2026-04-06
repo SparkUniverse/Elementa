@@ -358,12 +358,12 @@ class Window @JvmOverloads constructor(
         requireMainThread()
 
         focusedComponent?.run {
-            for (listener in keyTypedEventListeners) {
+            for (listener in keyPressedEventListeners) {
                 if (listener(keyEvent)) return true
             }
         }
 
-        for (listener in keyTypedEventListeners) {
+        for (listener in keyPressedEventListeners) {
             if (listener(keyEvent)) return true
         }
 

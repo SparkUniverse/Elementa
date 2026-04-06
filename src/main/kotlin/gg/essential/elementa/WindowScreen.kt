@@ -38,10 +38,10 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     init {
         if (version >= ElementaVersion.v12) {
-            window.onKeyType { keyEvent ->
+            window.onKeyPressed { keyEvent ->
                 super.uKeyPressed(keyEvent.keyCode, keyEvent.scanCode, keyEvent.modifiers)
             }
-            window.onCharType { charEvent ->
+            window.onCharTyped { charEvent ->
                 super.uCharTyped(charEvent.codepoint)
             }
         } else {

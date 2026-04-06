@@ -124,7 +124,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
     @Deprecated("See [ElementaVersion.V12].")
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
     // Requires ElementaVersion.V12
-    val keyTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Boolean>()
+    val keyPressedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Boolean>()
     // Requires ElementaVersion.V12
     val charTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Boolean>()
 
@@ -1036,11 +1036,11 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         keyTypedListeners.add(method)
     }
 
-    fun onKeyType(method: UIComponent.(keyEvent: UIKeyEvent) -> Boolean) = apply {
-        keyTypedEventListeners.add(method)
+    fun onKeyPressed(method: UIComponent.(keyEvent: UIKeyEvent) -> Boolean) = apply {
+        keyPressedEventListeners.add(method)
     }
 
-    fun onCharType(method: UIComponent.(keyEvent: UICharEvent) -> Boolean) = apply {
+    fun onCharTyped(method: UIComponent.(keyEvent: UICharEvent) -> Boolean) = apply {
         charTypedEventListeners.add(method)
     }
 
