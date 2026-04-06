@@ -8,7 +8,7 @@ import gg.essential.universal.UKeyboard
  * Requires ElementaVersion.V12
  */
 class UIKeyEvent(
-    val keyCode: Int,
+    val key: Int,
     val scanCode: Int,
     val modifiers: UKeyboard.Modifiers,
 )
