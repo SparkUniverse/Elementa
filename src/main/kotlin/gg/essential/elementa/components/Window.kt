@@ -332,8 +332,7 @@ class Window @JvmOverloads constructor(
     }
 
     @Suppress("DEPRECATION")
-    @Deprecated("[See ElementaVersion.V12].",
-        replaceWith = ReplaceWith("keyType(keyEvent) or chartype(charEvent)"))
+    @Deprecated("See [ElementaVersion.V12].")
     override fun keyType(typedChar: Char, keyCode: Int) {
         if (hasErrored && version >= ElementaVersion.v7) {
             return
