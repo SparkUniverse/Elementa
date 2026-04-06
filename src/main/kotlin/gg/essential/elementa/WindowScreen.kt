@@ -99,9 +99,12 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     // Called only when ElementaVersion >= V12
     override fun uMouseClicked(x: Double, y: Double, button: Int, modifiers: UKeyboard.Modifiers): Boolean {
-        // TODO returning implementation, see uKeyPressed()
-        onMouseClicked(x, y, button)
-        return false
+        uSuperInputHandler().uMouseClicked(x, y, button, modifiers)
+
+        // We also need to pass along clicks
+        window.mouseClick(x, y, button)
+
+        return false // TODO returning implementation, see uKeyPressed()
     }
 
     @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
@@ -114,9 +117,12 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     // Called only when ElementaVersion >= V12
     override fun uMouseReleased(x: Double, y: Double, button: Int, modifiers: UKeyboard.Modifiers): Boolean {
-        // TODO returning implementation, see uKeyPressed()
-        onMouseReleased(x, y, button)
-        return false
+        uSuperInputHandler().uMouseReleased(x, y, button, modifiers)
+
+        // We also need to pass along mouse releases
+        window.mouseRelease()
+
+        return false // TODO returning implementation, see uKeyPressed()
     }
 
     @Suppress("DEPRECATION")
@@ -144,9 +150,11 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     // Called only when ElementaVersion >= V12
     override fun uMouseScrolled(x: Double, y: Double, scrollX: Double, scrollY: Double): Boolean {
-        // TODO returning implementation, see uKeyPressed()
-        onMouseScrolled(x, y, scrollX, scrollY)
-        return false
+        uSuperInputHandler().uMouseScrolled(x, y, scrollX, scrollY)
+
+        window.mouseScroll(scrollX, scrollY)
+
+        return false // TODO returning implementation, see uKeyPressed()
     }
 
     @Suppress("DEPRECATION")
