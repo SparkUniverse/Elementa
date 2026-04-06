@@ -76,7 +76,8 @@ abstract class WindowScreen @JvmOverloads constructor(
         window.draw(matrixStack)
     }
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    @Deprecated("See [ElementaVersion.V12]")
+    @Suppress("DEPRECATION")
     override fun onMouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         super.onMouseClicked(mouseX, mouseY, mouseButton)
 
