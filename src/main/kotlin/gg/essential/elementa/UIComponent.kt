@@ -121,7 +121,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         get() = field.also { ownFlags += Flags.RequiresMouseMove }
     val mouseDragListeners = mutableListOf<UIComponent.(mouseX: Float, mouseY: Float, button: Int) -> Unit>()
         get() = field.also { ownFlags += Flags.RequiresMouseDrag }
-    @Deprecated("See [ElementaVersion.V12]. These listeners will still function for the time being.")
+    @Deprecated("See [ElementaVersion.V12].")
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
     // Requires ElementaVersion.V12
     val keyTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Boolean>()
@@ -855,10 +855,6 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         for (listener in keyTypedEventListeners){
             if (this.listener(keyEvent)) return true
         }
-
-        @Suppress("DEPRECATION") // Retaining support for the old listeners for now as it is trivial to do so
-        keyType(0.toChar(), keyEvent.keyCode)
-
         return false
     }
 
@@ -867,10 +863,6 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         for (listener in charTypedEventListeners){
             if (this.listener(charEvent)) return true
         }
-
-        @Suppress("DEPRECATION") // Retaining support for the old listeners for now as it is trivial to do so
-        keyType(charEvent.char, 0)
-
         return false
     }
 
@@ -1054,7 +1046,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         mouseScrollListeners.add { method.accept(it) }
     }
 
-    @Deprecated("See [ElementaVersion.V12]. These listeners will still function for the time being.")
+    @Deprecated("See [ElementaVersion.V12].")
     fun onKeyType(method: UIComponent.(typedChar: Char, keyCode: Int) -> Unit) = apply {
         @Suppress("DEPRECATION")
         keyTypedListeners.add(method)
@@ -1068,7 +1060,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         charTypedEventListeners.add(method)
     }
 
-    @Deprecated("See [ElementaVersion.V12]. These consumers will still function for the time being.")
+    @Deprecated("See [ElementaVersion.V12].")
     fun onKeyTypeConsumer(method: BiConsumer<Char, Int>) {
         @Suppress("DEPRECATION")
         keyTypedListeners.add { t: Char, u: Int -> method.accept(t, u) }
