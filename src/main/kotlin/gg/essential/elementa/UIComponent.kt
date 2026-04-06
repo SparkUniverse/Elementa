@@ -121,8 +121,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         get() = field.also { ownFlags += Flags.RequiresMouseMove }
     val mouseDragListeners = mutableListOf<UIComponent.(mouseX: Float, mouseY: Float, button: Int) -> Unit>()
         get() = field.also { ownFlags += Flags.RequiresMouseDrag }
-    @Deprecated("[See ElementaVersion.V12]. These listeners will still function for the time being.",
-        replaceWith = ReplaceWith("keyTypedEventListeners; /*or*/ charTypedEventListeners"))
+    @Deprecated("See [ElementaVersion.V12]. These listeners will still function for the time being.")
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
     val keyTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Unit>()
     val charTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Unit>()
@@ -842,8 +841,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         this.forEachChild { it.superCall() }
     }
 
-    @Deprecated("[See ElementaVersion.V12]. This will still be called for backwards compatibility in the mean time.",
-        replaceWith = ReplaceWith("keyType(keyEvent) /*and*/ chartype(charEvent)"))
+    @Deprecated("See {ElementaVersion.V12]. This will still be called for backwards compatibility in the mean time.")
     open fun keyType(typedChar: Char, keyCode: Int) {
         @Suppress("DEPRECATION")
         for (listener in keyTypedListeners)
@@ -1052,8 +1050,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         mouseScrollListeners.add { method.accept(it) }
     }
 
-    @Deprecated("[See ElementaVersion.V12]. These listeners will still function for the time being.",
-        replaceWith = ReplaceWith("onKeyType(method) /*or*/ onCharType(method)"))
+    @Deprecated("See [ElementaVersion.V12]. These listeners will still function for the time being.")
     fun onKeyType(method: UIComponent.(typedChar: Char, keyCode: Int) -> Unit) = apply {
         @Suppress("DEPRECATION")
         keyTypedListeners.add(method)
@@ -1067,8 +1064,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         charTypedEventListeners.add(method)
     }
 
-    @Deprecated("[See ElementaVersion.V12]. These consumers will still function for the time being.",
-        replaceWith = ReplaceWith("onKeyType(method) /*or*/ onCharType(method)"))
+    @Deprecated("See [ElementaVersion.V12]. These consumers will still function for the time being.")
     fun onKeyTypeConsumer(method: BiConsumer<Char, Int>) {
         @Suppress("DEPRECATION")
         keyTypedListeners.add { t: Char, u: Int -> method.accept(t, u) }
