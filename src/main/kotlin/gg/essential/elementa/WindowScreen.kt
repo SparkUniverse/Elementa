@@ -149,9 +149,7 @@ abstract class WindowScreen @JvmOverloads constructor(
     }
 
     @Suppress("DEPRECATION")
-    @Deprecated("Method is not called when ElementaVersion >= V12. See ElementaVersion.V12 for details.",
-        replaceWith = ReplaceWith("uKeyPressed(key, scanCode, modifiers)")
-    )
+    @Deprecated("Method is not called when ElementaVersion >= V12. See ElementaVersion.V12 for details.")
     override fun onKeyPressed(keyCode: Int, typedChar: Char, modifiers: UKeyboard.Modifiers?) {
         // We also need to pass along typed keys
         window.keyType(typedChar, keyCode)
@@ -159,12 +157,12 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     // Called only when ElementaVersion >= V12
     override fun uKeyPressed(key: Int, scanCode: Int, modifiers: UKeyboard.Modifiers): Boolean {
-        return window.keyType(UIKeyEvent(key, scanCode, modifiers))
+        return window.keyPressed(UIKeyEvent(key, scanCode, modifiers))
     }
 
     // Called only when ElementaVersion >= V12
     override fun uCharTyped(codepoint: Int): Boolean {
-        return window.charType(UICharEvent(codepoint))
+        return window.charTyped(UICharEvent(codepoint))
     }
 
     override fun initScreen(width: Int, height: Int) {

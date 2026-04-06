@@ -352,7 +352,7 @@ class Window @JvmOverloads constructor(
     }
 
     // Called only when ElementaVersion >= V12
-    fun keyType(keyEvent: UIKeyEvent): Boolean {
+    fun keyPressed(keyEvent: UIKeyEvent): Boolean {
         if (hasErrored) return false
 
         requireMainThread()
@@ -371,7 +371,7 @@ class Window @JvmOverloads constructor(
     }
 
     // Called only when ElementaVersion >= V12
-    fun charType(charEvent: UICharEvent): Boolean {
+    fun charTyped(charEvent: UICharEvent): Boolean {
         if (hasErrored) return false
 
         requireMainThread()
