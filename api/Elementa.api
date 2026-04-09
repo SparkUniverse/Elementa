@@ -4,6 +4,7 @@ public final class gg/essential/elementa/ElementaVersion : java/lang/Enum {
 	public static final field V1 Lgg/essential/elementa/ElementaVersion;
 	public static final field V10 Lgg/essential/elementa/ElementaVersion;
 	public static final field V11 Lgg/essential/elementa/ElementaVersion;
+	public static final field V12 Lgg/essential/elementa/ElementaVersion;
 	public static final field V2 Lgg/essential/elementa/ElementaVersion;
 	public static final field V3 Lgg/essential/elementa/ElementaVersion;
 	public static final field V4 Lgg/essential/elementa/ElementaVersion;
@@ -89,6 +90,8 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	protected final fun getMousePosition ()Lkotlin/Pair;
 	public final fun getMouseReleaseListeners ()Ljava/util/List;
 	public final fun getMouseScrollListeners ()Ljava/util/List;
+	public final fun getOnCharTyped ()Ljava/util/List;
+	public final fun getOnKeyPressed ()Ljava/util/List;
 	public fun getParent ()Lgg/essential/elementa/UIComponent;
 	public fun getRadius ()F
 	public fun getRight ()F
@@ -243,7 +246,7 @@ public final class gg/essential/elementa/VanillaFontRenderer : gg/essential/elem
 public final class gg/essential/elementa/VanillaFontRenderer$Companion {
 }
 
-public abstract class gg/essential/elementa/WindowScreen : gg/essential/universal/UScreen {
+public abstract class gg/essential/elementa/WindowScreen : gg/essential/universal/UScreen, gg/essential/universal/UScreen$InputHandler {
 	public fun <init> ()V
 	public fun <init> (Lgg/essential/elementa/ElementaVersion;)V
 	public fun <init> (Lgg/essential/elementa/ElementaVersion;Z)V
@@ -278,6 +281,11 @@ public abstract class gg/essential/elementa/WindowScreen : gg/essential/universa
 	public fun onMouseScrolled (DDDD)V
 	public fun onScreenClose ()V
 	public final fun stopAnimating (Lkotlin/reflect/KMutableProperty0;)V
+	public fun uCharTyped (I)Z
+	public fun uKeyPressed (IILgg/essential/universal/UKeyboard$Modifiers;)Z
+	public fun uMouseClicked (DDILgg/essential/universal/UKeyboard$Modifiers;)Z
+	public fun uMouseReleased (DDILgg/essential/universal/UKeyboard$Modifiers;)Z
+	public fun uMouseScrolled (DDDD)Z
 }
 
 public class gg/essential/elementa/components/GradientComponent : gg/essential/elementa/components/UIBlock {
@@ -756,6 +764,7 @@ public final class gg/essential/elementa/components/Window : gg/essential/elemen
 	public final fun addFloatingComponent (Lgg/essential/elementa/UIComponent;)V
 	public fun afterInitialization ()V
 	public fun animationFrame ()V
+	public final fun charTyped (Lgg/essential/elementa/events/UICharEvent;)Z
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
 	public final fun drawFloatingComponents ()V
 	public final fun drawFloatingComponents (Lgg/essential/universal/UMatrixStack;)V
@@ -775,6 +784,7 @@ public final class gg/essential/elementa/components/Window : gg/essential/elemen
 	public fun hitTest (FF)Lgg/essential/elementa/UIComponent;
 	public final fun invalidateCachedConstraints ()V
 	public final fun isAreaVisible (DDDD)Z
+	public final fun keyPressed (Lgg/essential/elementa/events/UIKeyEvent;)Z
 	public fun keyType (CI)V
 	public fun mouseClick (DDI)V
 	public fun mouseRelease ()V
@@ -2717,6 +2727,12 @@ public final class gg/essential/elementa/effects/StencilEffect$Companion {
 	public final fun enableStencil ()V
 }
 
+public final class gg/essential/elementa/events/UICharEvent {
+	public fun <init> (I)V
+	public final fun getCodepoint ()I
+	public final fun getString ()Ljava/lang/String;
+}
+
 public final class gg/essential/elementa/events/UIClickEvent : gg/essential/elementa/events/UIEvent {
 	public fun <init> (FFILgg/essential/elementa/UIComponent;Lgg/essential/elementa/UIComponent;I)V
 	public final fun component1 ()F
@@ -2748,6 +2764,16 @@ public abstract class gg/essential/elementa/events/UIEvent {
 	public final fun setPropagationStoppedImmediately (Z)V
 	public final fun stopImmediatePropagation ()V
 	public final fun stopPropagation ()V
+}
+
+public final class gg/essential/elementa/events/UIKeyEvent {
+	public fun <init> (IILgg/essential/universal/UKeyboard$Modifiers;)V
+	public final fun getKey ()I
+	public final fun getModifiers ()Lgg/essential/universal/UKeyboard$Modifiers;
+	public final fun getScanCode ()I
+	public final fun isCopy ()Z
+	public final fun isCut ()Z
+	public final fun isPaste ()Z
 }
 
 public final class gg/essential/elementa/events/UIScrollEvent : gg/essential/elementa/events/UIEvent {

@@ -13,7 +13,9 @@ import gg.essential.elementa.dsl.animate
 import gg.essential.elementa.dsl.toConstraint
 import gg.essential.elementa.effects.Effect
 import gg.essential.elementa.effects.ScissorEffect
+import gg.essential.elementa.events.UICharEvent
 import gg.essential.elementa.events.UIClickEvent
+import gg.essential.elementa.events.UIKeyEvent
 import gg.essential.elementa.events.UIScrollEvent
 import gg.essential.elementa.font.FontProvider
 import gg.essential.elementa.state.v2.ReferenceHolder
@@ -119,7 +121,12 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         get() = field.also { ownFlags += Flags.RequiresMouseMove }
     val mouseDragListeners = mutableListOf<UIComponent.(mouseX: Float, mouseY: Float, button: Int) -> Unit>()
         get() = field.also { ownFlags += Flags.RequiresMouseDrag }
+    @Deprecated("See [ElementaVersion.V12]. Replaced by either the `onKeyPressed` or `onCharTyped` listener lists.")
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
+    // Requires ElementaVersion.V12
+    val onKeyPressed = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Boolean>()
+    // Requires ElementaVersion.V12
+    val onCharTyped = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Boolean>()
 
     private var currentlyHovered = false
     private val beforeHideAnimations = mutableListOf<AnimatingConstraints.() -> Unit>()
@@ -836,7 +843,9 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         this.forEachChild { it.superCall() }
     }
 
+    @Deprecated("See [ElementaVersion.V12]. Listeners are now directly called from [Window].")
     open fun keyType(typedChar: Char, keyCode: Int) {
+        @Suppress("DEPRECATION")
         for (listener in keyTypedListeners)
             this.listener(typedChar, keyCode)
     }
@@ -1021,11 +1030,15 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         mouseScrollListeners.add { method.accept(it) }
     }
 
+    @Deprecated("See [ElementaVersion.V12]. Replaced by either the `onKeyPressed` or `onCharTyped` listener lists.")
     fun onKeyType(method: UIComponent.(typedChar: Char, keyCode: Int) -> Unit) = apply {
+        @Suppress("DEPRECATION")
         keyTypedListeners.add(method)
     }
 
+    @Deprecated("See [ElementaVersion.V12]. Replaced by either the `onKeyPressed` or `onCharTyped` listener lists.")
     fun onKeyTypeConsumer(method: BiConsumer<Char, Int>) {
+        @Suppress("DEPRECATION")
         keyTypedListeners.add { t: Char, u: Int -> method.accept(t, u) }
     }
 

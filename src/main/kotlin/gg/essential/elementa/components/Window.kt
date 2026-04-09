@@ -7,6 +7,8 @@ import gg.essential.elementa.constraints.resolution.ConstraintResolutionGui
 import gg.essential.elementa.constraints.resolution.ConstraintResolver
 import gg.essential.elementa.constraints.resolution.ConstraintResolverV2
 import gg.essential.elementa.effects.ScissorEffect
+import gg.essential.elementa.events.UICharEvent
+import gg.essential.elementa.events.UIKeyEvent
 import gg.essential.elementa.font.FontRenderer
 import gg.essential.elementa.utils.elementaDev
 import gg.essential.elementa.utils.requireMainThread
@@ -329,6 +331,8 @@ class Window @JvmOverloads constructor(
         currentMouseButton = -1
     }
 
+    @Suppress("DEPRECATION")
+    @Deprecated("See [ElementaVersion.V12].")
     override fun keyType(typedChar: Char, keyCode: Int) {
         if (hasErrored && version >= ElementaVersion.v7) {
             return
@@ -345,6 +349,41 @@ class Window @JvmOverloads constructor(
         } else {
             super.keyType(character, keyCode)
         }
+    }
+
+    // Called only when ElementaVersion >= V12
+    fun keyPressed(keyEvent: UIKeyEvent): Boolean {
+        if (hasErrored) return false
+
+        requireMainThread()
+
+        for (listener in focusedComponent?.onKeyPressed ?: emptyList()) {
+            if (listener(keyEvent)) return true
+        }
+
+
+        for (listener in onKeyPressed) {
+            if (listener(keyEvent)) return true
+        }
+
+        return false
+    }
+
+    // Called only when ElementaVersion >= V12
+    fun charTyped(charEvent: UICharEvent): Boolean {
+        if (hasErrored) return false
+
+        requireMainThread()
+
+        for (listener in focusedComponent?.onCharTyped ?: emptyList()) {
+            if (listener(charEvent)) return true
+        }
+
+        for (listener in onCharTyped) {
+            if (listener(charEvent)) return true
+        }
+
+        return false
     }
 
     internal var prevDraggedMouseX: Float? = null
