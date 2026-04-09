@@ -107,7 +107,8 @@ abstract class WindowScreen @JvmOverloads constructor(
         return false // TODO returning implementation, see uKeyPressed()
     }
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    @Deprecated("See [ElementaVersion.V12]")
+    @Suppress("DEPRECATION")
     override fun onMouseReleased(mouseX: Double, mouseY: Double, state: Int) {
         super.onMouseReleased(mouseX, mouseY, state)
 
@@ -139,7 +140,8 @@ abstract class WindowScreen @JvmOverloads constructor(
         }
     }
 
-    @Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
+    @Deprecated("See [ElementaVersion.V12]")
+    @Suppress("DEPRECATION")
     override fun onMouseScrolled(mouseX: Double, mouseY: Double, deltaHorizontal: Double, deltaVertical: Double) {
         super.onMouseScrolled(mouseX, mouseY, deltaHorizontal, deltaVertical)
 
