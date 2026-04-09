@@ -134,7 +134,7 @@ abstract class AbstractTextInput(
                 operationToRedo.redo()
                 undoStack.push(operationToRedo)
                 return true
-            }else if (keyCode == UKeyboard.KEY_LEFT) {
+            } else if (keyCode == UKeyboard.KEY_LEFT) {
                 val holdingShift = UKeyboard.isShiftKeyDown()
                 val holdingCtrl = UKeyboard.isCtrlKeyDown()
 
