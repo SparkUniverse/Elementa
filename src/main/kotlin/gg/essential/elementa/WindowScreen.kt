@@ -99,7 +99,7 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     // Called only when ElementaVersion >= V12
     override fun uMouseClicked(x: Double, y: Double, button: Int, modifiers: UKeyboard.Modifiers): Boolean {
-        uSuperInputHandler().uMouseClicked(x, y, button, modifiers)
+        super.uMouseClicked(x, y, button, modifiers)
 
         // We also need to pass along clicks
         window.mouseClick(x, y, button)
@@ -118,7 +118,7 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     // Called only when ElementaVersion >= V12
     override fun uMouseReleased(x: Double, y: Double, button: Int, modifiers: UKeyboard.Modifiers): Boolean {
-        uSuperInputHandler().uMouseReleased(x, y, button, modifiers)
+        super.uMouseReleased(x, y, button, modifiers)
 
         // We also need to pass along mouse releases
         window.mouseRelease()
@@ -152,7 +152,7 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     // Called only when ElementaVersion >= V12
     override fun uMouseScrolled(x: Double, y: Double, scrollX: Double, scrollY: Double): Boolean {
-        uSuperInputHandler().uMouseScrolled(x, y, scrollX, scrollY)
+        super.uMouseScrolled(x, y, scrollX, scrollY)
 
         window.mouseScroll(scrollX, scrollY)
 
