@@ -83,6 +83,8 @@ abstract class AbstractTextInput(
 
         @Deprecated("See [ElementaVersion.V12]")
         fun handleChar(typedChar: Char): Boolean {
+            if (!active) return false
+
             if (isAllowedCharacter(typedChar)) { // Most of the ASCII characters
                 commitTextAddition(typedChar.toString())
                 return true
@@ -92,6 +94,8 @@ abstract class AbstractTextInput(
 
         // Only used when ElementaVersion >= V12
         fun handleCodePoint(codepoint: Int): Boolean {
+            if (!active) return false
+
             // Replicated from old input check
             if (codepoint != 167) {
                 commitTextAddition(String(Character.toChars(codepoint)))
