@@ -357,11 +357,10 @@ class Window @JvmOverloads constructor(
 
         requireMainThread()
 
-        focusedComponent?.run {
-            for (listener in onKeyPressed) {
-                if (listener(keyEvent)) return true
-            }
+        for (listener in focusedComponent?.onKeyPressed ?: emptyList()) {
+            if (listener(keyEvent)) return true
         }
+
 
         for (listener in onKeyPressed) {
             if (listener(keyEvent)) return true
@@ -376,10 +375,8 @@ class Window @JvmOverloads constructor(
 
         requireMainThread()
 
-        focusedComponent?.run {
-            for (listener in onCharTyped) {
-                if (listener(charEvent)) return true
-            }
+        for (listener in focusedComponent?.onCharTyped ?: emptyList()) {
+            if (listener(charEvent)) return true
         }
 
         for (listener in onCharTyped) {
