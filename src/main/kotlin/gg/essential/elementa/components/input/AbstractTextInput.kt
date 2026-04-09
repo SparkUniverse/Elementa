@@ -146,7 +146,7 @@ abstract class AbstractTextInput(
 
                 if (!holdingShift) {
                     setCursorPosition(newCursorPosition)
-                    return false
+                    return true
                 }
 
                 cursor = newCursorPosition
@@ -164,7 +164,7 @@ abstract class AbstractTextInput(
 
                 if (!holdingShift) {
                     setCursorPosition(newCursorPosition)
-                    return false
+                    return true
                 }
 
                 cursor = newCursorPosition
