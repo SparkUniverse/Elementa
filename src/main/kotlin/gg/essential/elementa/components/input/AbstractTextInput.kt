@@ -93,7 +93,7 @@ abstract class AbstractTextInput(
         // Only used when ElementaVersion >= V12
         fun handleCodePoint(codepoint: Int): Boolean {
             // Replicated from old input check
-            if (codepoint != 167 && codepoint >= ' '.code && codepoint != 127) {
+            if (codepoint != 167) {
                 commitTextAddition(String(Character.toChars(codepoint)))
                 return true
             }
