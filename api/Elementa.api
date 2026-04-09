@@ -71,7 +71,6 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	protected final fun fireScrollEvent (Lgg/essential/elementa/events/UIScrollEvent;)V
 	public final fun focus ()V
 	public fun getBottom ()F
-	public final fun getCharTypedEventListeners ()Ljava/util/List;
 	public fun getChildren ()Lgg/essential/elementa/utils/ObservableList;
 	public fun getColor ()Ljava/awt/Color;
 	public final fun getComponentName ()Ljava/lang/String;
@@ -80,7 +79,6 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	public fun getFontProvider ()Lgg/essential/elementa/font/FontProvider;
 	public fun getHasParent ()Z
 	public fun getHeight ()F
-	public final fun getKeyPressedEventListeners ()Ljava/util/List;
 	public final fun getKeyTypedListeners ()Ljava/util/List;
 	public final fun getLastDraggedMouseX ()Ljava/lang/Double;
 	public final fun getLastDraggedMouseY ()Ljava/lang/Double;
@@ -92,6 +90,8 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	protected final fun getMousePosition ()Lkotlin/Pair;
 	public final fun getMouseReleaseListeners ()Ljava/util/List;
 	public final fun getMouseScrollListeners ()Ljava/util/List;
+	public final fun getOnCharTyped ()Ljava/util/List;
+	public final fun getOnKeyPressed ()Ljava/util/List;
 	public fun getParent ()Lgg/essential/elementa/UIComponent;
 	public fun getRadius ()F
 	public fun getRight ()F
@@ -123,10 +123,8 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	public fun mouseRelease ()V
 	public fun mouseScroll (D)V
 	public fun mouseScroll (DD)V
-	public final fun onCharTyped (Lkotlin/jvm/functions/Function2;)Lgg/essential/elementa/UIComponent;
 	public final fun onFocus (Lkotlin/jvm/functions/Function1;)Lgg/essential/elementa/UIComponent;
 	public final fun onFocusLost (Lkotlin/jvm/functions/Function1;)Lgg/essential/elementa/UIComponent;
-	public final fun onKeyPressed (Lkotlin/jvm/functions/Function2;)Lgg/essential/elementa/UIComponent;
 	public final fun onKeyType (Lkotlin/jvm/functions/Function3;)Lgg/essential/elementa/UIComponent;
 	public final fun onKeyTypeConsumer (Ljava/util/function/BiConsumer;)V
 	public final fun onMouseClick (Lkotlin/jvm/functions/Function2;)Lgg/essential/elementa/UIComponent;

@@ -121,12 +121,12 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         get() = field.also { ownFlags += Flags.RequiresMouseMove }
     val mouseDragListeners = mutableListOf<UIComponent.(mouseX: Float, mouseY: Float, button: Int) -> Unit>()
         get() = field.also { ownFlags += Flags.RequiresMouseDrag }
-    @Deprecated("See [ElementaVersion.V12].")
+    @Deprecated("See [ElementaVersion.V12]. Replaced by either the `onKeyPressed` or `onCharTyped` listener lists.")
     val keyTypedListeners = mutableListOf<UIComponent.(typedChar: Char, keyCode: Int) -> Unit>()
     // Requires ElementaVersion.V12
-    val keyPressedEventListeners = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Boolean>()
+    val onKeyPressed = mutableListOf<UIComponent.(keyEvent: UIKeyEvent) -> Boolean>()
     // Requires ElementaVersion.V12
-    val charTypedEventListeners = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Boolean>()
+    val onCharTyped = mutableListOf<UIComponent.(keyEvent: UICharEvent) -> Boolean>()
 
     private var currentlyHovered = false
     private val beforeHideAnimations = mutableListOf<AnimatingConstraints.() -> Unit>()
@@ -1030,21 +1030,13 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         mouseScrollListeners.add { method.accept(it) }
     }
 
-    @Deprecated("See [ElementaVersion.V12].")
+    @Deprecated("See [ElementaVersion.V12]. Replaced by either the `onKeyPressed` or `onCharTyped` listener lists.")
     fun onKeyType(method: UIComponent.(typedChar: Char, keyCode: Int) -> Unit) = apply {
         @Suppress("DEPRECATION")
         keyTypedListeners.add(method)
     }
 
-    fun onKeyPressed(method: UIComponent.(keyEvent: UIKeyEvent) -> Boolean) = apply {
-        keyPressedEventListeners.add(method)
-    }
-
-    fun onCharTyped(method: UIComponent.(keyEvent: UICharEvent) -> Boolean) = apply {
-        charTypedEventListeners.add(method)
-    }
-
-    @Deprecated("See [ElementaVersion.V12].")
+    @Deprecated("See [ElementaVersion.V12]. Replaced by either the `onKeyPressed` or `onCharTyped` listener lists.")
     fun onKeyTypeConsumer(method: BiConsumer<Char, Int>) {
         @Suppress("DEPRECATION")
         keyTypedListeners.add { t: Char, u: Int -> method.accept(t, u) }

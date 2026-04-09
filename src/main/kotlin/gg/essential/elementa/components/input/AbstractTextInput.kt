@@ -258,8 +258,8 @@ abstract class AbstractTextInput(
         }
 
         // ElementaVersion.V12+ functions
-        onCharTyped { charEvent -> handleCodePoint(charEvent.codepoint) }
-        onKeyPressed { keyEvent -> handleKeyCode(keyEvent.key) }
+        onCharTyped.add { charEvent -> handleCodePoint(charEvent.codepoint) }
+        onKeyPressed.add { keyEvent -> handleKeyCode(keyEvent.key) }
 
         onMouseScroll {
             val heightDifference = getHeight() - visualLines.size * lineHeight
