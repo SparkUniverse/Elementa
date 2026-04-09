@@ -253,8 +253,7 @@ abstract class AbstractTextInput(
         // Pre ElementaVersion.V12 function
         @Suppress("DEPRECATION")
         onKeyType { char, key ->
-            handleKeyCode(key)
-            handleChar(char)
+            handleKeyCode(key) || handleChar(char)
         }
 
         // ElementaVersion.V12+ functions
