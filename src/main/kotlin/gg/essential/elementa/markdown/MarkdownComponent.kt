@@ -120,7 +120,7 @@ class MarkdownComponent(
 
             // ElementaVersion.V12+ function
             onKeyPressed.add { keyEvent ->
-                if (selection != null && keyEvent.key == UKeyboard.KEY_C && keyEvent.modifiers.isCtrl) {
+                if (selection != null && keyEvent.isCopy) {
                     UDesktop.setClipboardString(drawables.selectedText(keyEvent.modifiers.isShift))
                     return@add true
                 }
