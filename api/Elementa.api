@@ -2771,6 +2771,9 @@ public final class gg/essential/elementa/events/UIKeyEvent {
 	public final fun getKey ()I
 	public final fun getModifiers ()Lgg/essential/universal/UKeyboard$Modifiers;
 	public final fun getScanCode ()I
+	public final fun isCopy ()Z
+	public final fun isCut ()Z
+	public final fun isPaste ()Z
 }
 
 public final class gg/essential/elementa/events/UIScrollEvent : gg/essential/elementa/events/UIEvent {
