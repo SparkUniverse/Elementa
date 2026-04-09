@@ -219,8 +219,8 @@ enum class ElementaVersion {
      * `keyType(typedChar: Char, keyCode: Int)` in [Window] has been split into:
      *  - keyPressed(keyEvent: UIKeyEvent)
      *  - charTyped(charEvent: UICharEvent)
-     * As well as all related setup functions. E.G. `onKeyType { }`
-     * For now any key listeners setup via the old methods will still be called.
+     * With the backing list for the new listeners now requiring manual modification to set up.
+     * E.G. `UIComponent.onKeyPressed.add { }` & `UIComponent.onCharTyped.add { }` replace the old `UIComponent.onKeyType { }`
      *
      * Also see [gg.essential.elementa.events.UIKeyEvent] & [gg.essential.elementa.events.UICharEvent].
      *
