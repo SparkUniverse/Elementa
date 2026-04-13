@@ -214,8 +214,27 @@ class ObservedDuration(override val untracked: Duration, override val changesAt:
 
     override fun toString(): String = getValue().toString()
 
-    fun toMillis(): ObservedLong =
-        ObservedLong(untracked.toMillis()) { changesAt(Duration.ofMillis(it)) }
+    operator fun unaryMinus(): ObservedDuration = negated()
+    fun negated(): ObservedDuration =
+        ObservedDuration(untracked.negated()) { changesAt(it.negated()) }
+
+    // Pretty much ObservableLong.div, but we leave the actual conversion to Duration,
+    // so we don't have to worry about overflow.
+    private fun toUnit(durationToUnit: (Duration) -> Long, unitToDuration: (Long) -> Duration): ObservedLong {
+        if (untracked.isNegative) return -(-this).toUnit(durationToUnit, unitToDuration)
+        val oldResult = durationToUnit(untracked)
+        return ObservedLong(oldResult) { newResult ->
+            if (newResult > oldResult) changesAt(unitToDuration(newResult))
+            if (newResult < oldResult) changesAt(unitToDuration(newResult + 1).minusNanos(1))
+        }
+    }
+
+    fun toNanos(): ObservedLong = toUnit(Duration::toNanos, Duration::ofNanos)
+    fun toMillis(): ObservedLong = toUnit(Duration::toMillis, Duration::ofMillis)
+    fun toSeconds(): ObservedLong = toUnit(Duration::getSeconds, Duration::ofSeconds)
+    fun toMinutes(): ObservedLong = toUnit(Duration::toMinutes, Duration::ofMinutes)
+    fun toHours(): ObservedLong = toUnit(Duration::toHours, Duration::ofHours)
+    fun toDays(): ObservedLong = toUnit(Duration::toDays, Duration::ofDays)
 
     val isNegative
         get() = untracked.isNegative.also { changesAt(if (it) Duration.ZERO else SMALLEST_NEGATIVE_DURATION) }
