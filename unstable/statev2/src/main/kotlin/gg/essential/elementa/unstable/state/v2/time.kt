@@ -206,6 +206,9 @@ class ObservedInstant(override val untracked: Instant, override val changesAt: (
 
 /** An [ObservedValue] for [Duration]. */
 class ObservedDuration(override val untracked: Duration, override val changesAt: (Duration) -> Unit) : ObservedValue<Duration> {
+    operator fun compareTo(other: Duration) =
+        untracked.compareTo(other).also { if (it == 0) getValue() else changesAt(other) }
+
     override fun getValue(): Duration {
         if (untracked != MIN_DURATION) changesAt(untracked.minusNanos(1))
         if (untracked != MAX_DURATION) changesAt(untracked.plusNanos(1))
