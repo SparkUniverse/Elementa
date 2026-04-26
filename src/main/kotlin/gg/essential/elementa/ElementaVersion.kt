@@ -224,6 +224,8 @@ enum class ElementaVersion {
      *
      * Also see [gg.essential.elementa.events.UIKeyEvent] & [gg.essential.elementa.events.UICharEvent].
      *
+     * Note: The other improved inputs provided by [UScreen.InputHandler] have not been implemented by V12. (e.g. mouse inputs)
+     *
      * See [UniversalCraft#125](https://github.com/SparkUniverse/UniversalCraft/pull/125) for the underlying changes.
      */
     V12,
