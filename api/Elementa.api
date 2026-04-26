@@ -948,7 +948,8 @@ public abstract class gg/essential/elementa/components/input/AbstractTextInput :
 	public final fun isActive ()Z
 	protected fun isBreakingCharacter (C)Z
 	public final fun onActivate (Lkotlin/jvm/functions/Function1;)Lgg/essential/elementa/components/input/AbstractTextInput;
-	protected abstract fun onEnterPressed ()V
+	protected fun onEnterPressed ()V
+	protected abstract fun onEnterPressed (Lgg/essential/universal/UKeyboard$Modifiers;)V
 	public final fun onUpdate (Lkotlin/jvm/functions/Function1;)Lgg/essential/elementa/components/input/AbstractTextInput;
 	protected fun recalculateAllVisualLines ()V
 	protected abstract fun recalculateDimensions ()V
@@ -1129,7 +1130,7 @@ public class gg/essential/elementa/components/input/UITextInput : gg/essential/e
 	protected final fun getPlaceholderWidth ()F
 	public fun getText ()Ljava/lang/String;
 	protected fun getTextForRender ()Ljava/lang/String;
-	protected fun onEnterPressed ()V
+	protected fun onEnterPressed (Lgg/essential/universal/UKeyboard$Modifiers;)V
 	protected fun recalculateDimensions ()V
 	protected fun screenPosToVisualPos (FF)Lgg/essential/elementa/components/input/AbstractTextInput$LinePosition;
 	protected fun scrollIntoView (Lgg/essential/elementa/components/input/AbstractTextInput$LinePosition;)V
