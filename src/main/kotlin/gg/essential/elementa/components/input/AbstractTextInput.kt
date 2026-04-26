@@ -105,33 +105,35 @@ abstract class AbstractTextInput(
         }
 
         // Return value only used when ElementaVersion >= V12
-        fun handleKeyCode(keyCode: Int): Boolean {
+        fun handleKeyCode(keyCode: Int, modifiers: UKeyboard.Modifiers): Boolean {
             if (!active) return false
 
             if (keyCode == UKeyboard.KEY_ESCAPE) {
                 releaseWindowFocus()
                 return true
-            } else if (UKeyboard.isKeyComboCtrlA(keyCode)) {
+            } else if (keyCode == UKeyboard.KEY_A && modifiers.isOnlyPlatformModifierActive()) {
                 selectAll()
                 return true
-            } else if (UKeyboard.isKeyComboCtrlC(keyCode) && hasSelection()) {
+            } else if (keyCode == UKeyboard.KEY_C && modifiers.isOnlyPlatformModifierActive() && hasSelection()) {
                 copySelection()
                 return true
-            } else if (UKeyboard.isKeyComboCtrlX(keyCode) && hasSelection()) {
+            } else if (keyCode == UKeyboard.KEY_X && modifiers.isOnlyPlatformModifierActive() && hasSelection()) {
                 copySelection()
                 deleteSelection()
                 return true
-            } else if (UKeyboard.isKeyComboCtrlV(keyCode)) {
+            } else if (keyCode == UKeyboard.KEY_V && modifiers.isOnlyPlatformModifierActive()) {
                 commitTextAddition(UDesktop.getClipboardString())
                 return true
-            } else if (UKeyboard.isKeyComboCtrlZ(keyCode)) {
+            } else if (keyCode == UKeyboard.KEY_Z && modifiers.isOnlyPlatformModifierActive()) {
                 if (undoStack.isEmpty())
                     return false
                 val operationToUndo = undoStack.pop()
                 operationToUndo.undo()
                 redoStack.push(operationToUndo)
                 return true
-            } else if (UKeyboard.isKeyComboCtrlShiftZ(keyCode) || UKeyboard.isKeyComboCtrlY(keyCode)) {
+            } else if ((keyCode == UKeyboard.KEY_Z && modifiers.isPlatformModifierActive() && modifiers.isShift && !modifiers.isAlt)
+                || (keyCode == UKeyboard.KEY_Y && modifiers.isOnlyPlatformModifierActive())
+            ) {
                 if (redoStack.isEmpty())
                     return false
                 val operationToRedo = redoStack.pop()
@@ -139,8 +141,8 @@ abstract class AbstractTextInput(
                 undoStack.push(operationToRedo)
                 return true
             } else if (keyCode == UKeyboard.KEY_LEFT) {
-                val holdingShift = UKeyboard.isShiftKeyDown()
-                val holdingCtrl = UKeyboard.isCtrlKeyDown()
+                val holdingShift = modifiers.isShift
+                val holdingCtrl = modifiers.isCtrl
 
                 val newCursorPosition = when {
                     holdingCtrl -> getNearestWordBoundary(cursor, Direction.Left)
@@ -157,8 +159,8 @@ abstract class AbstractTextInput(
                 cursorNeedsRefocus = true
                 return true
             } else if (keyCode == UKeyboard.KEY_RIGHT) {
-                val holdingShift = UKeyboard.isShiftKeyDown()
-                val holdingCtrl = UKeyboard.isCtrlKeyDown()
+                val holdingShift = modifiers.isShift
+                val holdingCtrl = modifiers.isCtrl
 
                 val newCursorPosition = when {
                     holdingCtrl -> getNearestWordBoundary(cursor, Direction.Right)
@@ -182,7 +184,7 @@ abstract class AbstractTextInput(
                     screenPosToVisualPos(currX, currY - lineHeight)
                 }
 
-                if (UKeyboard.isShiftKeyDown()) {
+                if (modifiers.isShift) {
                     cursor = newVisualPos
                     cursorNeedsRefocus = true
                 } else {
@@ -197,7 +199,7 @@ abstract class AbstractTextInput(
                     screenPosToVisualPos(currX, currY + lineHeight)
                 }
 
-                if (UKeyboard.isShiftKeyDown()) {
+                if (modifiers.isShift) {
                     cursor = newVisualPos
                     cursorNeedsRefocus = true
                 } else {
@@ -208,7 +210,7 @@ abstract class AbstractTextInput(
                 if (hasSelection()) {
                     deleteSelection()
                 } else if (!cursor.isAtAbsoluteStart) {
-                    val startPos = if (UKeyboard.isCtrlKeyDown()) {
+                    val startPos = if (modifiers.isCtrl) {
                         getNearestWordBoundary(cursor, Direction.Left)
                     } else cursor.offsetColumn(-1).toTextualPos()
                     val endPos = cursor.toTextualPos()
@@ -221,7 +223,7 @@ abstract class AbstractTextInput(
                     deleteSelection()
                 } else if (!cursor.isAtAbsoluteEnd) {
                     val startPos = cursor.toTextualPos()
-                    val endPos = if (UKeyboard.isCtrlKeyDown()) {
+                    val endPos = if (modifiers.isCtrl) {
                         getNearestWordBoundary(cursor, Direction.Right)
                     } else cursor.offsetColumn(1).toTextualPos()
 
@@ -229,7 +231,7 @@ abstract class AbstractTextInput(
                 }
                 return true
             } else if (keyCode == UKeyboard.KEY_HOME) {
-                if (UKeyboard.isShiftKeyDown()) {
+                if (modifiers.isShift) {
                     cursor = cursor.withColumn(0)
                     cursorNeedsRefocus = true
                 } else {
@@ -238,7 +240,7 @@ abstract class AbstractTextInput(
                 return true
             } else if (keyCode == UKeyboard.KEY_END) {
                 cursor.withColumn(visualLines[cursor.line].length).also {
-                    if (UKeyboard.isShiftKeyDown()) {
+                    if (modifiers.isShift) {
                         cursor = it
                         cursorNeedsRefocus = true
                     } else {
@@ -247,7 +249,7 @@ abstract class AbstractTextInput(
                 }
                 return true
             } else if (keyCode == UKeyboard.KEY_ENTER) { // Enter
-                onEnterPressed()
+                onEnterPressed(modifiers)
                 return true
             }
 
@@ -257,12 +259,12 @@ abstract class AbstractTextInput(
         // Pre ElementaVersion.V12 function
         @Suppress("DEPRECATION")
         onKeyType { char, key ->
-            handleKeyCode(key) || handleChar(char)
+            handleKeyCode(key, UKeyboard.getKeyModifiers()) || handleChar(char)
         }
 
         // ElementaVersion.V12+ functions
         onCharTyped.add { charEvent -> handleCodePoint(charEvent.codepoint) }
-        onKeyPressed.add { keyEvent -> handleKeyCode(keyEvent.key) }
+        onKeyPressed.add { keyEvent -> handleKeyCode(keyEvent.key, keyEvent.modifiers) }
 
         onMouseScroll {
             val heightDifference = getHeight() - visualLines.size * lineHeight
@@ -428,7 +430,9 @@ abstract class AbstractTextInput(
     protected abstract fun screenPosToVisualPos(x: Float, y: Float): LinePosition
     protected abstract fun recalculateDimensions()
     protected abstract fun textToLines(text: String): List<String>
-    protected abstract fun onEnterPressed()
+    @Deprecated("Inconsistent with key input event modifiers.", replaceWith = ReplaceWith("onEnterPressed(modifiers)"))
+    protected open fun onEnterPressed() = onEnterPressed(UKeyboard.getKeyModifiers())
+    protected abstract fun onEnterPressed(modifiers: UKeyboard.Modifiers)
 
     fun setActive(isActive: Boolean) = apply {
         active = isActive

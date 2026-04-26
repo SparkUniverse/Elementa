@@ -63,8 +63,8 @@ class UIMultilineTextInput @JvmOverloads constructor(
         setHeight((lineHeight * visualLines.size).pixels().coerceAtMost(maxHeight!!))
     }
 
-    override fun onEnterPressed() {
-        if (UKeyboard.isShiftKeyDown()) {
+    override fun onEnterPressed(modifiers: UKeyboard.Modifiers) {
+        if (modifiers.isShift) {
             commitTextAddition("\n")
             updateAction(getText())
         } else {

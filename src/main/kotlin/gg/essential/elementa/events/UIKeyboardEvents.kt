@@ -12,12 +12,9 @@ class UIKeyEvent(
     val scanCode: Int,
     val modifiers: UKeyboard.Modifiers,
 ) {
-
-    // These checks read the current keyboard state to account for OS differences where we cannot fully rely on `modifiers`.
-    // E.G. macOS using CMD + C for copy
-    val isCopy get() = UKeyboard.isKeyComboCtrlC(key)
-    val isCut get() = UKeyboard.isKeyComboCtrlX(key)
-    val isPaste get() = UKeyboard.isKeyComboCtrlV(key)
+    val isCopy get() = key == UKeyboard.KEY_C && modifiers.isOnlyPlatformModifierActive()
+    val isCut get() = key == UKeyboard.KEY_X && modifiers.isOnlyPlatformModifierActive()
+    val isPaste get() = key == UKeyboard.KEY_V && modifiers.isOnlyPlatformModifierActive()
 }
 
 

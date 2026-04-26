@@ -2,6 +2,7 @@ package gg.essential.elementa.components.input
 
 import gg.essential.elementa.constraints.WidthConstraint
 import gg.essential.elementa.dsl.*
+import gg.essential.universal.UKeyboard
 import gg.essential.universal.UMatrixStack
 import java.awt.Color
 
@@ -102,7 +103,7 @@ open class UITextInput @JvmOverloads constructor(
         return listOf(text)
     }
 
-    override fun onEnterPressed() {
+    override fun onEnterPressed(modifiers: UKeyboard.Modifiers) {
         activateAction(getText())
     }
 
