@@ -11,7 +11,6 @@ import gg.essential.elementa.font.FontRenderer
 import gg.essential.elementa.utils.elementaDev
 import gg.essential.elementa.utils.requireMainThread
 import gg.essential.universal.*
-import org.lwjgl.opengl.GL11
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.TimeUnit
 
@@ -178,7 +177,7 @@ class Window @JvmOverloads constructor(
             // We may have thrown in the middle of a ScissorEffect, in which case we
             // need to disable the scissor if we don't want half the user's screen gone
             ScissorEffect.currentScissorState = null
-            GL11.glDisable(GL11.GL_SCISSOR_TEST)
+            UGraphics.disableScissor()
 
             UMinecraft.currentScreenObj = when {
                 e is StackOverflowError && elementaDev -> {

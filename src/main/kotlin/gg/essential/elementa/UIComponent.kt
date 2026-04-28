@@ -20,10 +20,10 @@ import gg.essential.elementa.state.v2.ReferenceHolder
 import gg.essential.elementa.utils.*
 import gg.essential.elementa.utils.requireMainThread
 import gg.essential.elementa.utils.requireState
+import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
 import gg.essential.universal.UMouse
 import gg.essential.universal.UResolution
-import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
@@ -1800,8 +1800,9 @@ abstract class UIComponent : Observable(), ReferenceHolder {
          * Draws a colored outline around a given area
          */
         internal fun drawDebugOutline(matrixStack: UMatrixStack,left: Double, top: Double, right: Double, bottom: Double, component: UIComponent) {
-            if (ScissorEffect.currentScissorState != null) {
-                GL11.glDisable(GL11.GL_SCISSOR_TEST)
+            val scissorState = ScissorEffect.currentScissorState
+            if (scissorState != null) {
+                UGraphics.disableScissor()
             }
 
             val color = getDebugColor(component.depth(), (component.parent.hashCode() / PI) % PI)
@@ -1832,8 +1833,8 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             // Left outline block
             UIBlock.drawBlock(matrixStack, color, left - DEBUG_OUTLINE_WIDTH, top, left, bottom)
 
-            if (ScissorEffect.currentScissorState != null) {
-                GL11.glEnable(GL11.GL_SCISSOR_TEST)
+            if (scissorState != null) {
+                UGraphics.enableScissor(scissorState.x, scissorState.y, scissorState.width, scissorState.height)
             }
         }
 
