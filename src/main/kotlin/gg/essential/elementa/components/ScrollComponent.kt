@@ -144,6 +144,7 @@ class ScrollComponent constructor(
     private val mouseScrollLambda: UIComponent.(UIScrollEvent) -> Unit = {
         if (Window.of(this).version >= ElementaVersion.v5) {
             // new behavior
+            @Suppress("DEPRECATION") // Modifiers not provided for mouse sroll events
             val scrollDirection = if (!UKeyboard.isShiftKeyDown()) primaryScrollDirection else secondaryScrollDirection
             if (scrollDirection != null) {
                 if (onScroll(it.delta.toFloat(), isHorizontal = scrollDirection == Direction.Horizontal) || !passthroughScroll) {
@@ -157,6 +158,7 @@ class ScrollComponent constructor(
             }
         } else {
             // old behavior
+            @Suppress("DEPRECATION") // Modifiers not provided for mouse sroll events
             if (UKeyboard.isShiftKeyDown() && horizontalScrollEnabled) {
                 onScroll(it.delta.toFloat(), isHorizontal = true)
             } else if (!UKeyboard.isShiftKeyDown() && verticalScrollEnabled) {

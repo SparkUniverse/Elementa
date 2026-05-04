@@ -2,6 +2,8 @@ package gg.essential.elementa
 
 import gg.essential.elementa.components.Window
 import gg.essential.elementa.constraints.animation.*
+import gg.essential.elementa.events.UICharEvent
+import gg.essential.elementa.events.UIKeyEvent
 import gg.essential.universal.UKeyboard
 import gg.essential.universal.UMatrixStack
 import gg.essential.universal.UMouse
@@ -21,7 +23,7 @@ abstract class WindowScreen @JvmOverloads constructor(
     private val drawDefaultBackground: Boolean = true,
     restoreCurrentGuiOnClose: Boolean = false,
     newGuiScale: Int = -1
-) : UScreen(restoreCurrentGuiOnClose, newGuiScale) {
+) : UScreen(restoreCurrentGuiOnClose, newGuiScale), UScreen.InputHandler {
     val window = Window(version)
     private var isInitialized = false
 
@@ -35,8 +37,22 @@ abstract class WindowScreen @JvmOverloads constructor(
     ) : this(ElementaVersion.v0, enableRepeatKeys, drawDefaultBackground, restoreCurrentGuiOnClose, newGuiScale)
 
     init {
-        window.onKeyType { typedChar, keyCode ->
-            defaultKeyBehavior(typedChar, keyCode)
+        if (version >= ElementaVersion.v12) {
+            window.onKeyPressed.add { keyEvent ->
+                super.uKeyPressed(keyEvent.key, keyEvent.scanCode, keyEvent.modifiers)
+            }
+            window.onCharTyped.add { charEvent ->
+                super.uCharTyped(charEvent.codepoint)
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            window.onKeyType { typedChar, keyCode ->
+                defaultKeyBehavior(typedChar, keyCode)
+            }
+
+            // This will ensure that inputs go to the old `on*(): Unit` input functions
+            // rather than the V12+ `u*(): Boolean` functions
+            inputHandler = null
         }
     }
 
@@ -60,6 +76,8 @@ abstract class WindowScreen @JvmOverloads constructor(
         window.draw(matrixStack)
     }
 
+    @Deprecated("See [ElementaVersion.V12]")
+    @Suppress("DEPRECATION")
     override fun onMouseClicked(mouseX: Double, mouseY: Double, mouseButton: Int) {
         super.onMouseClicked(mouseX, mouseY, mouseButton)
 
@@ -79,11 +97,33 @@ abstract class WindowScreen @JvmOverloads constructor(
         window.mouseClick(adjustedMouseX, adjustedMouseY, mouseButton)
     }
 
+    // Called only when ElementaVersion >= V12
+    override fun uMouseClicked(x: Double, y: Double, button: Int, modifiers: UKeyboard.Modifiers): Boolean {
+        super.uMouseClicked(x, y, button, modifiers)
+
+        // We also need to pass along clicks
+        window.mouseClick(x, y, button)
+
+        return false // TODO returning implementation, see uKeyPressed()
+    }
+
+    @Deprecated("See [ElementaVersion.V12]")
+    @Suppress("DEPRECATION")
     override fun onMouseReleased(mouseX: Double, mouseY: Double, state: Int) {
         super.onMouseReleased(mouseX, mouseY, state)
 
         // We also need to pass along mouse releases
         window.mouseRelease()
+    }
+
+    // Called only when ElementaVersion >= V12
+    override fun uMouseReleased(x: Double, y: Double, button: Int, modifiers: UKeyboard.Modifiers): Boolean {
+        super.uMouseReleased(x, y, button, modifiers)
+
+        // We also need to pass along mouse releases
+        window.mouseRelease()
+
+        return false // TODO returning implementation, see uKeyPressed()
     }
 
     @Suppress("DEPRECATION")
@@ -100,6 +140,8 @@ abstract class WindowScreen @JvmOverloads constructor(
         }
     }
 
+    @Deprecated("See [ElementaVersion.V12]")
+    @Suppress("DEPRECATION")
     override fun onMouseScrolled(mouseX: Double, mouseY: Double, deltaHorizontal: Double, deltaVertical: Double) {
         super.onMouseScrolled(mouseX, mouseY, deltaHorizontal, deltaVertical)
 
@@ -108,9 +150,30 @@ abstract class WindowScreen @JvmOverloads constructor(
         }
     }
 
+    // Called only when ElementaVersion >= V12
+    override fun uMouseScrolled(x: Double, y: Double, scrollX: Double, scrollY: Double): Boolean {
+        super.uMouseScrolled(x, y, scrollX, scrollY)
+
+        window.mouseScroll(scrollX, scrollY)
+
+        return false // TODO returning implementation, see uKeyPressed()
+    }
+
+    @Suppress("DEPRECATION")
+    @Deprecated("Method is not called when ElementaVersion >= V12. See ElementaVersion.V12 for details.")
     override fun onKeyPressed(keyCode: Int, typedChar: Char, modifiers: UKeyboard.Modifiers?) {
         // We also need to pass along typed keys
         window.keyType(typedChar, keyCode)
+    }
+
+    // Called only when ElementaVersion >= V12
+    override fun uKeyPressed(key: Int, scanCode: Int, modifiers: UKeyboard.Modifiers): Boolean {
+        return window.keyPressed(UIKeyEvent(key, scanCode, modifiers))
+    }
+
+    // Called only when ElementaVersion >= V12
+    override fun uCharTyped(codepoint: Int): Boolean {
+        return window.charTyped(UICharEvent(codepoint))
     }
 
     override fun initScreen(width: Int, height: Int) {
@@ -133,7 +196,9 @@ abstract class WindowScreen @JvmOverloads constructor(
             UKeyboard.allowRepeatEvents(false)
     }
 
+    @Deprecated("[See ElementaVersion.V12] This method is not called when ElementaVersion >= V12.")
     fun defaultKeyBehavior(typedChar: Char, keyCode: Int) {
+        @Suppress("DEPRECATION")
         super.onKeyPressed(keyCode, typedChar, UKeyboard.getModifiers())
     }
 

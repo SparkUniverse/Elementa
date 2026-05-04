@@ -50,6 +50,7 @@ class InspectorNode(private val inspector: Inspector, val targetComponent: UICom
         event.stopImmediatePropagation()
         toggleSelection()
     }.onMouseScroll { event ->
+        @Suppress("DEPRECATION") // Modifiers not provided for mouse sroll events
         if (!UKeyboard.isShiftKeyDown()) return@onMouseScroll
         event.stopImmediatePropagation()
         inspector.scrollSource(this@InspectorNode, event.delta > 0)

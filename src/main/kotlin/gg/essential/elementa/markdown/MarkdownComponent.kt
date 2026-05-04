@@ -110,10 +110,21 @@ class MarkdownComponent(
                 grabWindowFocus()
             }
 
+            // Pre ElementaVersion.V12 function
+            @Suppress("DEPRECATION")
             onKeyType { _, keyCode ->
                 if (selection != null && keyCode == UKeyboard.KEY_C && UKeyboard.isCtrlKeyDown()) {
                     UDesktop.setClipboardString(drawables.selectedText(UKeyboard.isShiftKeyDown()))
                 }
+            }
+
+            // ElementaVersion.V12+ function
+            onKeyPressed.add { keyEvent ->
+                if (selection != null && keyEvent.isCopy) {
+                    UDesktop.setClipboardString(drawables.selectedText(keyEvent.modifiers.isShift))
+                    return@add true
+                }
+                return@add false
             }
         }
         configState.onSetValue {

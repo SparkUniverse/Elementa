@@ -124,6 +124,7 @@ abstract class TreeNode {
 
             arrowComponent.onMouseClick { event ->
                 event.stopImmediatePropagation()
+                @Suppress("DEPRECATION") //TODO pass modifiers when they become available, see [ElementaVersion.V12]
                 val isRecursive = UKeyboard.isShiftKeyDown()
 
                 if (opened) {
