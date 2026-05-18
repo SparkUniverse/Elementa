@@ -7,6 +7,7 @@ import gg.essential.elementa.utils.ResourceCache
 import gg.essential.elementa.utils.drawTexture
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.render.UGpuSampler
 import gg.essential.universal.utils.ReleasedDynamicTexture
 import org.lwjgl.opengl.GL11
 import java.awt.Color
@@ -77,7 +78,7 @@ open class UIImage @JvmOverloads constructor(
 
     override fun drawImage(matrixStack: UMatrixStack, x: Double, y: Double, width: Double, height: Double, color: Color) {
         when {
-            texture != null -> drawTexture(matrixStack, texture!!, color, x, y, width, height, textureMinFilter.glMode, textureMagFilter.glMode)
+            texture != null -> drawTexture(matrixStack, texture!!, color, x, y, width, height, textureMinFilter, textureMagFilter)
             imageFuture.isCompletedExceptionally -> failureImage.drawImageCompat(matrixStack, x, y, width, height, color)
             else -> loadingImage.drawImageCompat(matrixStack, x, y, width, height, color)
         }
@@ -115,13 +116,13 @@ open class UIImage @JvmOverloads constructor(
             waiting.poll().applyTexture(texture)
     }
 
-    enum class TextureScalingMode(internal val glMode: Int) {
-        NEAREST(GL11.GL_NEAREST),
-        LINEAR(GL11.GL_LINEAR),
-        NEAREST_MIPMAP_NEAREST(GL11.GL_NEAREST_MIPMAP_NEAREST),
-        LINEAR_MIPMAP_NEAREST(GL11.GL_LINEAR_MIPMAP_NEAREST),
-        NEAREST_MIPMAP_LINEAR(GL11.GL_NEAREST_MIPMAP_LINEAR),
-        LINEAR_MIPMAP_LINEAR(GL11.GL_LINEAR_MIPMAP_LINEAR)
+    enum class TextureScalingMode(internal val glMode: Int, internal val ucMode: UGpuSampler.FilterMode, internal val useMipmaps: Boolean) {
+        NEAREST(GL11.GL_NEAREST, UGpuSampler.FilterMode.NEAREST, false),
+        LINEAR(GL11.GL_LINEAR, UGpuSampler.FilterMode.LINEAR, false),
+        NEAREST_MIPMAP_NEAREST(GL11.GL_NEAREST_MIPMAP_NEAREST, UGpuSampler.FilterMode.NEAREST, true),
+        LINEAR_MIPMAP_NEAREST(GL11.GL_LINEAR_MIPMAP_NEAREST, UGpuSampler.FilterMode.LINEAR, true),
+        NEAREST_MIPMAP_LINEAR(GL11.GL_NEAREST_MIPMAP_LINEAR, UGpuSampler.FilterMode.NEAREST, true),
+        LINEAR_MIPMAP_LINEAR(GL11.GL_LINEAR_MIPMAP_LINEAR, UGpuSampler.FilterMode.LINEAR, true)
     }
 
     companion object {

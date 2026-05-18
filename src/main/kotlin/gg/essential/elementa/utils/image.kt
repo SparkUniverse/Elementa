@@ -1,8 +1,10 @@
 package gg.essential.elementa.utils
 
 import gg.essential.elementa.ElementaVersion
+import gg.essential.elementa.components.UIImage
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.render.UGpuSampler
 import gg.essential.universal.render.URenderPipeline
 import gg.essential.universal.shader.BlendState
 import gg.essential.universal.utils.ReleasedDynamicTexture
@@ -24,21 +26,16 @@ internal fun drawTexture(
     y: Double,
     width: Double,
     height: Double,
-    textureMinFilter: Int = GL11.GL_NEAREST,
-    textureMagFilter: Int = GL11.GL_NEAREST
+    textureMinFilter: UIImage.TextureScalingMode = UIImage.TextureScalingMode.NEAREST,
+    textureMagFilter: UIImage.TextureScalingMode = UIImage.TextureScalingMode.NEAREST,
 ) {
     matrixStack.push()
 
     matrixStack.scale(1f, 1f, 50f)
-    val glId = texture.dynamicGlId
     val red = color.red.toFloat() / 255f
     val green = color.green.toFloat() / 255f
     val blue = color.blue.toFloat() / 255f
     val alpha = color.alpha.toFloat() / 255f
-    UGraphics.configureTexture(glId) {
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, textureMinFilter)
-        GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, textureMagFilter)
-    }
 
     fun drawTexturedQuad(vertexConsumer: UVertexConsumer) {
         vertexConsumer.pos(matrixStack, x, y + height, 0.0).tex(0.0, 1.0).color(red, green, blue, alpha).endVertex()
@@ -48,12 +45,24 @@ internal fun drawTexture(
     }
 
     if (URenderPipeline.isRequired || ElementaVersion.atLeastV9Active) {
+        val gpuTextureView = texture.gpuTextureView
         val bufferBuilder = UBufferBuilder.create(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR)
         drawTexturedQuad(bufferBuilder)
         bufferBuilder.build()?.drawAndClose(if (ElementaVersion.atLeastV10Active) TEXTURED_QUAD_PIPELINE2 else TEXTURED_QUAD_PIPELINE) {
-            texture(0, glId)
+            texture(0, gpuTextureView, UGpuSampler(
+                UGpuSampler.AddressMode.CLAMP_TO_EDGE,
+                UGpuSampler.AddressMode.CLAMP_TO_EDGE,
+                textureMinFilter.ucMode,
+                textureMagFilter.ucMode,
+                textureMinFilter.useMipmaps,
+            ))
         }
     } else {
+        val glId = texture.dynamicGlId
+        UGraphics.configureTexture(glId) {
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, textureMinFilter.glMode)
+            GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, textureMagFilter.glMode)
+        }
         @Suppress("DEPRECATION")
         UGraphics.enableBlend()
         UGraphics.enableAlpha()
