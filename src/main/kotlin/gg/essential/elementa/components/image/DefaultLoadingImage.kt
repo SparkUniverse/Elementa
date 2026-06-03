@@ -1,10 +1,10 @@
 package gg.essential.elementa.components.image
 
+import gg.essential.elementa.components.UIImage
 import gg.essential.elementa.utils.drawTexture
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
 import gg.essential.universal.utils.ReleasedDynamicTexture
-import org.lwjgl.opengl.GL11
 import java.awt.Color
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
@@ -34,8 +34,8 @@ object DefaultLoadingImage : ImageProvider {
             y,
             width,
             height,
-            textureMinFilter = GL11.GL_LINEAR,
-            textureMagFilter = GL11.GL_LINEAR,
+            textureMinFilter = UIImage.TextureScalingMode.LINEAR,
+            textureMagFilter = UIImage.TextureScalingMode.LINEAR,
         )
     }
 }
