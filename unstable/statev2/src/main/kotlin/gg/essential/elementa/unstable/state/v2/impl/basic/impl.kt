@@ -13,10 +13,8 @@ import kotlin.collections.asSequence
 /**
  * Semi-lazy node graph implementation.
  *
- * The actual code is extremely similar to [gg.essential.elementa.unstable.state.v2.impl.minimal.MarkThenPullImpl] (literally
- * only a single line difference), however the mechanism by which it functions is not.
- * The code has been duplicated, so we continue to have a simple reference implementation even when this implementation
- * evolves further.
+ * The actual code is extremely similar to [gg.essential.elementa.unstable.state.v2.impl.minimal.MarkThenPullImpl]
+ * (originally only a single line difference), however the mechanism by which it functions is not.
  *
  * This implementation operates in three phases:
  * - The first phase propagates a may-be-dirty state to all potentially affected nodes
@@ -187,35 +185,30 @@ private class Node<T>(
         update.flush()
     }
 
-    private fun mark(update: Update, newState: NodeState) {
-        val oldState = state
-        if (oldState.ordinal >= newState.ordinal) {
-            return
-        }
-
-        if (newState == NodeState.Dirty) {
-            update.queueNode(this)
-        }
-
-        state = newState
-    }
-
     private fun markDirty(update: Update) {
-        mark(update, NodeState.Dirty)
-
-        for (dep in dependents) {
-            dep.markToBeChecked(update)
+        when (state) {
+            NodeState.Clean -> {
+                for (dep in dependents) {
+                    dep.markToBeChecked()
+                }
+            }
+            NodeState.ToBeChecked -> {} // dependents will already have been marked
+            NodeState.Dirty, NodeState.Dead -> return // already dirty, nothing to do
         }
+
+        update.queueNode(this)
+
+        state = NodeState.Dirty
     }
 
-    private fun markToBeChecked(update: Update) {
+    private fun markToBeChecked() {
         if (state != NodeState.Clean) return
 
-        mark(update, NodeState.ToBeChecked)
-
         for (dep in dependents) {
-            dep.markToBeChecked(update)
+            dep.markToBeChecked()
         }
+
+        state = NodeState.ToBeChecked
     }
 
     fun update(update: Update) {
@@ -260,7 +253,7 @@ private class Node<T>(
                 value = newValue
 
                 for (dep in dependents) {
-                    dep.mark(update, NodeState.Dirty)
+                    dep.markDirty(update)
                 }
             }
         }
