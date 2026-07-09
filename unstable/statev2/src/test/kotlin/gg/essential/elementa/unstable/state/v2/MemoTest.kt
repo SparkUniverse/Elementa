@@ -35,16 +35,14 @@ class MemoTest {
         assertEquals(1, ran, "memo result should be memoized")
 
         state.set(1)
-        // Ideally we wouldn't run the computation if no one is subscribed, current implementation does though
-        // assertEquals(1, ran, "memo should not be updated if no one is subscribed")
+        assertEquals(1, ran, "memo should not be updated if no one is subscribed")
         assertEquals(2, memoState.getUntracked())
         assertEquals(2, ran, "memo should only be evaluated once")
         assertEquals(2, memoState.getUntracked())
         assertEquals(2, ran, "memo result should be memoized")
 
         state.set(2)
-        // Ideally we wouldn't run the computation if no one is subscribed, current implementation does though
-        // assertEquals(2, ran, "memo should not be updated if no one is subscribed")
+        assertEquals(2, ran, "memo should not be updated if no one is subscribed")
         assertEquals(3, memoState.getUntracked())
         assertEquals(3, ran, "memo should only be evaluated once")
         assertEquals(3, memoState.getUntracked())

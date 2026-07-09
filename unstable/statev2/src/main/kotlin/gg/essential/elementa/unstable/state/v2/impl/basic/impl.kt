@@ -25,11 +25,15 @@ import kotlin.collections.asSequence
  * Unlike [gg.essential.elementa.unstable.state.v2.impl.minimal.MarkThenPullImpl], this means that sub-graphs which are
  * potentially affected but whose dependencies have not actually changed, will not be visited (more than once per
  * them actually changing; as opposed to having to re-visit every time they are potentially affected).
- * That does mean that this implementation will in exchange potentially visit intermediate nodes which do not actually
- * have any effects attached to them any more (hence it only being "semi lazy").
+ * That does mean that this implementation will in exchange potentially visit intermediate nodes which, by the time
+ * they're being visited, do not actually have any effects attached to them any more (hence it only being "semi lazy").
  * However, in practice, non-affected nodes usually vastly outnumber dead intermediate nodes (especially because
  * those are usually garbage collected together with the respective effects that used them) by one to two orders of
  * magnitude, making this well worth it.
+ *
+ * Furthermore, support has later been added to dynamically unregister such intermediate nodes which no longer have
+ * any effects attached to them, which almost completely eliminates the above downside, at the cost of making
+ * `getUntracked` more expensive on such nodes when called frequently, and a bit more internal bookkeeping.
  */
 internal object MarkThenPushAndPullImpl : Impl {
     override fun <T> mutableState(value: T): MutableState<T> {
@@ -121,6 +125,40 @@ private class Node<T>(
     private val dependents: Sequence<Node<*>>
         get() = allDependents.asSequence().filterNot { it.suspended }.mapNotNull { it.dependent }
 
+    /**
+     * Tracks how many of [allDependents] have [NodeKind.Effect] nodes attached to them (directly or transitively).
+     * A number of 0 indicates that there are no [NodeKind.Effect] nodes observing this value in any way, so we don't
+     * actually need to update it when one of its dependencies changes (we can defer that update until someone actually
+     * wants the value).
+     *
+     * This intentionally uses [allDependents] rather than [dependents] and ignores the [Edge.suspended] flag for the
+     * same reason that flag exists in the first place: When re-evaluating a node, we don't want to have to decrement
+     * this counter on all its dependencies (and potentially their transitive dependencies), only to then likely have
+     * to increment it again on most of them as the node re-subscribes to the same nodes again.
+     * Instead we'll only update this counter when we also update the actual [allDependents] list.
+     */
+    private var dependentsWithEffects = if (kind == NodeKind.Effect) 1 else 0
+        set(value) {
+            if (field == 0 && value > 0) {
+                for (edge in allDependencies) {
+                    edge.dependency.dependentsWithEffects++
+                }
+            } else if (field > 0 && value == 0) {
+                for (edge in allDependencies) {
+                    edge.dependency.dependentsWithEffects--
+                }
+                // Note: We must not yet unregister our dependency edges here!
+                // For one, that'll likely result in a ConcurrentModificationException,
+                // but more importantly, if we do that, then we won't know whether our value is up-to-date any more.
+                // One of our dependencies could change, and we wouldn't know about it. So effectively we'd have
+                // to re-compute all such effects on every call to `getUntracked`, which would be very expensive.
+                // Instead we'll stay subscribed even when there's no downstream `effect` any more, and only
+                // unsubscribe once we know we're Dirty.
+                // This is handled in [markDirty].
+            }
+            field = value
+        }
+
     override fun Observer.get(): T {
         return getTracked(this@get)
     }
@@ -153,6 +191,10 @@ private class Node<T>(
         val edge = Edge(dependency, dependent)
         dependency.allDependents.add(edge)
         dependent.allDependencies.add(edge)
+
+        if (dependent.dependentsWithEffects > 0) {
+            dependency.dependentsWithEffects++
+        }
 
         // To prevent unbounded growth, we'll clean up any stale edges whenever we add a new one
         // (this is really fast in when there isn't anything to do thanks to the ReferenceQueue)
@@ -196,7 +238,28 @@ private class Node<T>(
             NodeState.Dirty, NodeState.Dead -> return // already dirty, nothing to do
         }
 
-        update.queueNode(this)
+        // The node is dirty. If any effect is observing it, it needs to be updated.
+        if (dependentsWithEffects > 0) {
+            update.queueNode(this)
+        } else {
+            // otherwise we can defer updating until someone actually needs its value.
+
+            // We can now also dispose of all our dependency edges.
+            // The only thing our dependencies could do with those edges is try to mark us as ToBeChecked or Dirty,
+            // but we're already Dirty, so that wouldn't change anything.
+            // And by disposing of these edges, we reduce the amount of downstream dependents which our dependencies
+            // have to mark on every change.
+            // See also the `Note` comment in the implementation of [dependentsWithEffects].
+            for (edge in allDependencies) {
+                // We cannot remove the edge from `edge.allDependents` directly, because the caller is likely iterating
+                // over that list right now.
+                // We can mark it as garbage collected though, and let the existing stale edge cleanup code deal with
+                // it automatically.
+                edge.clear() // sets reference value to `null`, so the edge appears as stale
+                edge.enqueue() // enqueues edge in its ReferenceQueue, so cleanupStaleReferences will do something
+            }
+            allDependencies.clear()
+        }
 
         state = NodeState.Dirty
     }
@@ -243,6 +306,9 @@ private class Node<T>(
             allDependencies.removeIf { edge ->
                 if (edge.suspended) {
                     edge.dependency.allDependents.remove(edge)
+                    if (dependentsWithEffects > 0) {
+                        edge.dependency.dependentsWithEffects--
+                    }
                     true
                 } else {
                     false
@@ -265,6 +331,7 @@ private class Node<T>(
 
         for (edge in allDependencies) {
             edge.dependency.allDependents.remove(edge)
+            edge.dependency.dependentsWithEffects--
         }
         allDependencies.clear()
 
@@ -285,7 +352,19 @@ private class Node<T>(
         @Suppress("ControlFlowWithEmptyBody")
         while (queue.poll() != null);
 
-        allDependents.removeIf { it.dependent == null }
+        var updatedEffectsCount = 0
+        allDependents.removeIf { edge ->
+            val dependent = edge.dependent
+            if (dependent == null) {
+                true
+            } else {
+                if (dependent.dependentsWithEffects > 0) {
+                    updatedEffectsCount += 1
+                }
+                false
+            }
+        }
+        dependentsWithEffects = updatedEffectsCount
     }
 
     /**

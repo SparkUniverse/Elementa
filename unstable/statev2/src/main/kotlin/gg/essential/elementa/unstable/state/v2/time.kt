@@ -59,19 +59,7 @@ class StateScheduler(val time: State<Instant>) {
         var trigger = triggerCache[bitsMatching]
         if (trigger == null || trigger.first != nextWakeupTime) {
             trigger = Pair(nextWakeupTime, memo {
-                // FIXME States are currently not un-registered when they no longer have any subscribers, only once
-                //  garbage collections deletes them, this is usually good enough but here (and especially during tests)
-                //  it can result in a lot more than 64 states being registered to the root time source state. To avoid
-                //  that, we skip subscribing to the root time source state altogether when our target time has been
-                //  reached, thereby explicitly removing the subscription of this memo from the root time source state.
-                //  Should the State implementation ever be optimized to handle this itself, this can be simplified to:
-                //    timeSource() >= nextWakeupTime
-                if (time.getUntracked() >= nextWakeupTime) {
-                    true
-                } else {
-                    time()
-                    false
-                }
+                time() >= nextWakeupTime
             }.let {
                 // FIXME while a single `memo` is functionality sufficient to decouple evaluation of the subscribers
                 //  from the time source State, a second `memo` is required due to current implementation details of
