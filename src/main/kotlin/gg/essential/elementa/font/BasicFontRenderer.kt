@@ -8,6 +8,7 @@ import gg.essential.elementa.font.data.Font
 import gg.essential.elementa.font.data.Glyph
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.render.UGpuSampler
 import gg.essential.universal.render.URenderPipeline
 import gg.essential.universal.shader.BlendState
 import gg.essential.universal.vertex.UBufferBuilder
@@ -153,7 +154,13 @@ class BasicFontRenderer(
             val bufferBuilder = UBufferBuilder.create(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR)
             drawStringNow(bufferBuilder, matrixStack, string, color, x, y, originalPointSize)
             bufferBuilder.build()?.drawAndClose(if (ElementaVersion.atLeastV10Active) PIPELINE2 else PIPELINE) {
-                texture(0, regularFont.getTexture().dynamicGlId)
+                texture(0, regularFont.getTexture().gpuTextureView, UGpuSampler(
+                    UGpuSampler.AddressMode.CLAMP_TO_EDGE,
+                    UGpuSampler.AddressMode.CLAMP_TO_EDGE,
+                    UGpuSampler.FilterMode.NEAREST,
+                    UGpuSampler.FilterMode.NEAREST,
+                    false,
+                ))
             }
         } else {
             UGraphics.bindTexture(0, regularFont.getTexture().dynamicGlId)
