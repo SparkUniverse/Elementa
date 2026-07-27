@@ -74,10 +74,21 @@ class XAnimationComponent(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    private var effectiveOldConstraint = oldConstraint
+
     override fun getXPositionImpl(component: UIComponent): Float {
         update(component)
 
-        val startX = oldConstraint.getXPosition(component)
+        while (true) {
+            val constraint = effectiveOldConstraint
+            if (constraint is XAnimationComponent && constraint.isComplete()) {
+                effectiveOldConstraint = constraint.newConstraint
+            } else {
+                break
+            }
+        }
+
+        val startX = effectiveOldConstraint.getXPosition(component)
         val finalX = newConstraint.getXPosition(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
@@ -88,7 +99,7 @@ class XAnimationComponent(
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
-        oldConstraint.animationFrame()
+        effectiveOldConstraint.animationFrame()
         newConstraint.animationFrame()
     }
 
@@ -97,7 +108,7 @@ class XAnimationComponent(
     }
 
     override fun visitImpl(visitor: ConstraintVisitor, type: ConstraintType) {
-        oldConstraint.visit(visitor, type, setNewConstraint = false)
+        effectiveOldConstraint.visit(visitor, type, setNewConstraint = false)
         newConstraint.visit(visitor, type, setNewConstraint = false)
     }
 }
@@ -113,10 +124,21 @@ class YAnimationComponent(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    private var effectiveOldConstraint = oldConstraint
+
     override fun getYPositionImpl(component: UIComponent): Float {
         update(component)
 
-        val startX = oldConstraint.getYPosition(component)
+        while (true) {
+            val constraint = effectiveOldConstraint
+            if (constraint is YAnimationComponent && constraint.isComplete()) {
+                effectiveOldConstraint = constraint.newConstraint
+            } else {
+                break
+            }
+        }
+
+        val startX = effectiveOldConstraint.getYPosition(component)
         val finalX = newConstraint.getYPosition(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
@@ -127,7 +149,7 @@ class YAnimationComponent(
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
-        oldConstraint.animationFrame()
+        effectiveOldConstraint.animationFrame()
         newConstraint.animationFrame()
     }
 
@@ -136,7 +158,7 @@ class YAnimationComponent(
     }
 
     override fun visitImpl(visitor: ConstraintVisitor, type: ConstraintType) {
-        oldConstraint.visit(visitor, type, setNewConstraint = false)
+        effectiveOldConstraint.visit(visitor, type, setNewConstraint = false)
         newConstraint.visit(visitor, type, setNewConstraint = false)
     }
 }
@@ -152,10 +174,21 @@ class RadiusAnimationComponent(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    private var effectiveOldConstraint = oldConstraint
+
     override fun getRadiusImpl(component: UIComponent): Float {
         update(component)
 
-        val startX = oldConstraint.getRadius(component)
+        while (true) {
+            val constraint = effectiveOldConstraint
+            if (constraint is RadiusAnimationComponent && constraint.isComplete()) {
+                effectiveOldConstraint = constraint.newConstraint
+            } else {
+                break
+            }
+        }
+
+        val startX = effectiveOldConstraint.getRadius(component)
         val finalX = newConstraint.getRadius(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
@@ -166,7 +199,7 @@ class RadiusAnimationComponent(
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
-        oldConstraint.animationFrame()
+        effectiveOldConstraint.animationFrame()
         newConstraint.animationFrame()
     }
 
@@ -175,7 +208,7 @@ class RadiusAnimationComponent(
     }
 
     override fun visitImpl(visitor: ConstraintVisitor, type: ConstraintType) {
-        oldConstraint.visit(visitor, type, setNewConstraint = false)
+        effectiveOldConstraint.visit(visitor, type, setNewConstraint = false)
         newConstraint.visit(visitor, type, setNewConstraint = false)
     }
 }
@@ -191,10 +224,21 @@ class WidthAnimationComponent(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    private var effectiveOldConstraint = oldConstraint
+
     override fun getWidthImpl(component: UIComponent): Float {
         update(component)
 
-        val startX = oldConstraint.getWidth(component)
+        while (true) {
+            val constraint = effectiveOldConstraint
+            if (constraint is WidthAnimationComponent && constraint.isComplete()) {
+                effectiveOldConstraint = constraint.newConstraint
+            } else {
+                break
+            }
+        }
+
+        val startX = effectiveOldConstraint.getWidth(component)
         val finalX = newConstraint.getWidth(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
@@ -205,7 +249,7 @@ class WidthAnimationComponent(
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
-        oldConstraint.animationFrame()
+        effectiveOldConstraint.animationFrame()
         newConstraint.animationFrame()
     }
 
@@ -214,7 +258,7 @@ class WidthAnimationComponent(
     }
 
     override fun visitImpl(visitor: ConstraintVisitor, type: ConstraintType) {
-        oldConstraint.visit(visitor, type, setNewConstraint = false)
+        effectiveOldConstraint.visit(visitor, type, setNewConstraint = false)
         newConstraint.visit(visitor, type, setNewConstraint = false)
     }
 }
@@ -230,10 +274,21 @@ class HeightAnimationComponent(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    private var effectiveOldConstraint = oldConstraint
+
     override fun getHeightImpl(component: UIComponent): Float {
         update(component)
 
-        val startX = oldConstraint.getHeight(component)
+        while (true) {
+            val constraint = effectiveOldConstraint
+            if (constraint is HeightAnimationComponent && constraint.isComplete()) {
+                effectiveOldConstraint = constraint.newConstraint
+            } else {
+                break
+            }
+        }
+
+        val startX = effectiveOldConstraint.getHeight(component)
         val finalX = newConstraint.getHeight(component)
 
         return startX + ((finalX - startX) * getPercentComplete())
@@ -259,7 +314,7 @@ class HeightAnimationComponent(
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
-        oldConstraint.animationFrame()
+        effectiveOldConstraint.animationFrame()
         newConstraint.animationFrame()
     }
 
@@ -268,7 +323,7 @@ class HeightAnimationComponent(
     }
 
     override fun visitImpl(visitor: ConstraintVisitor, type: ConstraintType) {
-        oldConstraint.visit(visitor, type, setNewConstraint = false)
+        effectiveOldConstraint.visit(visitor, type, setNewConstraint = false)
         newConstraint.visit(visitor, type, setNewConstraint = false)
     }
 }
@@ -284,10 +339,21 @@ class ColorAnimationComponent(
     override var recalculate = true
     override var constrainTo: UIComponent? = null
 
+    private var effectiveOldConstraint = oldConstraint
+
     override fun getColorImpl(component: UIComponent): Color {
         update(component)
 
-        val startColor = oldConstraint.getColor(component)
+        while (true) {
+            val constraint = effectiveOldConstraint
+            if (constraint is ColorAnimationComponent && constraint.isComplete()) {
+                effectiveOldConstraint = constraint.newConstraint
+            } else {
+                break
+            }
+        }
+
+        val startColor = effectiveOldConstraint.getColor(component)
         val endColor = newConstraint.getColor(component)
         val percentComplete = getPercentComplete()
 
@@ -304,7 +370,7 @@ class ColorAnimationComponent(
     override fun animationFrame() {
         super<AnimationComponent>.animationFrame()
 
-        oldConstraint.animationFrame()
+        effectiveOldConstraint.animationFrame()
         newConstraint.animationFrame()
     }
 
@@ -313,7 +379,7 @@ class ColorAnimationComponent(
     }
 
     override fun visitImpl(visitor: ConstraintVisitor, type: ConstraintType) {
-        oldConstraint.visit(visitor, type, setNewConstraint = false)
+        effectiveOldConstraint.visit(visitor, type, setNewConstraint = false)
         newConstraint.visit(visitor, type, setNewConstraint = false)
     }
 }
