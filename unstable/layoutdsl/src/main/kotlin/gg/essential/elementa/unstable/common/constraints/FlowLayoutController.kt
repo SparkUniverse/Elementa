@@ -47,8 +47,16 @@ class FlowLayoutController(
 
     }
 
-    class Layout(var x: Float, var y: Float, var yPadding: Float)
+    class Layout(
+        var x: Float,
+        var y: Float,
+        var yPadding: Float,
+        var cachedWidth: Float,
+        var cachedHeight: Float,
+    )
     private val cachedLayout = mutableMapOf<UIComponent, Layout>()
+    private var cachedLayoutInvalid = true
+    private var cachedLayoutContainerWidth = 0f
 
     fun getLayout(component: UIComponent): Layout {
         // Recompute layout if required
@@ -60,9 +68,30 @@ class FlowLayoutController(
 
     private fun layout() {
         val containerWidth = component.getWidth()
+        if (cachedLayoutContainerWidth != containerWidth) {
+            cachedLayoutContainerWidth = containerWidth
+            cachedLayoutInvalid = true
+        }
+
+        for (child in component.children) {
+            val layout = cachedLayout.getOrPut(child) { Layout(0f, 0f, 0f, -1f, -1f) }
+            val width = child.getWidth()
+            val height = child.getHeight()
+            if (layout.cachedWidth != width || layout.cachedHeight != height) {
+                layout.cachedWidth = width
+                layout.cachedHeight = height
+                cachedLayoutInvalid = true
+            }
+        }
+
+        if (!cachedLayoutInvalid) {
+            return
+        }
+
+        val children = component.children.map { cachedLayout.getValue(it) }
 
         class Row(val startIndex: Int, override val size: Int, val maxHeight: Float) : AbstractList<Float>() {
-            override fun get(index: Int): Float = component.children[startIndex + index].getWidth()
+            override fun get(index: Int): Float = children[startIndex + index].cachedWidth
         }
         val rows = sequence {
             val spacing = xSpacingMin.roundToRealPixels()
@@ -70,8 +99,8 @@ class FlowLayoutController(
             var size = 0
             var currentWidth = -spacing
             var maxHeight = 0f
-            for ((index, child) in component.children.withIndex()) {
-                val childWidth = child.getWidth()
+            for ((index, child) in children.withIndex()) {
+                val childWidth = child.cachedWidth
                 if (currentWidth + spacing + childWidth > containerWidth + EPSILON && size > 0) {
                     yield(Row(startIndex, size, maxHeight))
                     startIndex = index
@@ -81,7 +110,7 @@ class FlowLayoutController(
                 }
                 size++
                 currentWidth += spacing + childWidth
-                maxHeight = max(maxHeight, child.getHeight())
+                maxHeight = max(maxHeight, child.cachedHeight)
             }
             if (size > 0) {
                 yield(Row(startIndex, size, maxHeight))
@@ -91,18 +120,18 @@ class FlowLayoutController(
         var y = 0f
         for ((rowIndex, row) in rows.withIndex()) {
             itemArrangement.arrange(containerWidth, row) { i, x ->
-                val child = component.children[row.startIndex + i]
-                val height = child.getHeight()
-                cachedLayout[child] = Layout(
-                    x = x,
-                    y = y + itemAlignment.align(row.maxHeight, height),
-                    // This allows ChildBasedSizeConstraint to function for the parent height by emitting negative
-                    // padding for all but the first item in a row
-                    yPadding = (if (i == 0) row.maxHeight + (if (rowIndex == 0) 0f else ySpacing) else 0f) - height,
-                )
+                val child = children[row.startIndex + i]
+                val height = child.cachedHeight
+                child.x = x
+                child.y = y + itemAlignment.align(row.maxHeight, height)
+                // This allows ChildBasedSizeConstraint to function for the parent height by emitting negative
+                // padding for all but the first item in a row
+                child.yPadding = (if (i == 0) row.maxHeight + (if (rowIndex == 0) 0f else ySpacing) else 0f) - height
             }
             y += row.maxHeight + ySpacing
         }
+
+        cachedLayoutInvalid = false
     }
 
     init {
@@ -111,6 +140,7 @@ class FlowLayoutController(
             @Suppress("UNCHECKED_CAST")
             val event = maybeEvent as? ObservableListEvent<UIComponent> ?: return@addObserver
             wrapperConstraint.recalculate = true
+            cachedLayoutInvalid = true
             when (event) {
                 is ObservableAddEvent -> applyConstraints(event.element.value)
                 is ObservableRemoveEvent -> cachedLayout.remove(event.element.value)
