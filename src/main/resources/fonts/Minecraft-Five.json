@@ -5,7 +5,7 @@
     "width": 64,
     "height": 64,
     "yOrigin": "bottom",
-    "baseCharHeight": 5.0,
+    "baseCharHeight": 6.0,
     "belowLineHeight": 1.0,
     "shadowHeight": 1.0
   },
@@ -942,9 +942,9 @@
       "advance": 0.80000000000000004,
       "planeBounds": {
         "left": 0.025000000000000029,
-        "bottom": 0.475,
+        "bottom": -0.19500000000000001,
         "right": 0.77500000000000002,
-        "top": 0.72499999999999998
+        "top": 0.055
       },
       "atlasBounds": {
         "left": 40.5,
