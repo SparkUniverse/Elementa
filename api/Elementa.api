@@ -2892,9 +2892,13 @@ public final class gg/essential/elementa/font/data/AtlasBounds {
 	public final fun copy (FFFF)Lgg/essential/elementa/font/data/AtlasBounds;
 	public static synthetic fun copy$default (Lgg/essential/elementa/font/data/AtlasBounds;FFFFILjava/lang/Object;)Lgg/essential/elementa/font/data/AtlasBounds;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getB ()F
 	public final fun getBottom ()F
+	public final fun getL ()F
 	public final fun getLeft ()F
+	public final fun getR ()F
 	public final fun getRight ()F
+	public final fun getT ()F
 	public final fun getTop ()F
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
@@ -2964,9 +2968,13 @@ public final class gg/essential/elementa/font/data/PlaneBounds {
 	public final fun copy (FFFF)Lgg/essential/elementa/font/data/PlaneBounds;
 	public static synthetic fun copy$default (Lgg/essential/elementa/font/data/PlaneBounds;FFFFILjava/lang/Object;)Lgg/essential/elementa/font/data/PlaneBounds;
 	public fun equals (Ljava/lang/Object;)Z
+	public final fun getB ()F
 	public final fun getBottom ()F
+	public final fun getL ()F
 	public final fun getLeft ()F
+	public final fun getR ()F
 	public final fun getRight ()F
+	public final fun getT ()F
 	public final fun getTop ()F
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
