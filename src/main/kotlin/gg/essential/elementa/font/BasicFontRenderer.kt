@@ -281,11 +281,11 @@ class BasicFontRenderer(
     }
 
     private companion object {
-        private val PIPELINE = URenderPipeline.builderWithDefaultShader("elementa:basic_font", UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_COLOR).apply {
+        private val PIPELINE = URenderPipeline.builderWithDefaultShader("elementa:basic_font", UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR).apply {
             @Suppress("DEPRECATION")
             blendState = BlendState.NORMAL.copy(srcAlpha = BlendState.Param.ONE, dstAlpha = BlendState.Param.ZERO)
         }.build()
-        private val PIPELINE2 = URenderPipeline.builderWithDefaultShader("elementa:basic_font", UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_COLOR).apply {
+        private val PIPELINE2 = URenderPipeline.builderWithDefaultShader("elementa:basic_font", UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR).apply {
             blendState = BlendState.ALPHA
         }.build()
     }
