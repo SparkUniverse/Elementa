@@ -96,63 +96,9 @@ class BasicFontRenderer(
         shadow: Boolean,
         shadowColor: Color?
     ) {
-        /*
-            10 point font is the default used in Elementa.
-            Adjust the point size based on this font's size.
-         */
-        val scaledPointSize = originalPointSize / 10 * regularFont.fontInfo.atlas.size
-
-        /*
-            Moved one pixel up so that the main body of the text is in
-            the top left of the component. This change keeps text location
-            in the same location as the vanilla font renderer relative to
-            a UIText component.
-         */
-        if (shadow) {
-            drawStringNow(
-                matrixStack,
-                string,
-                shadowColor ?: Color(
-                    ((color.rgb and 16579836).shr(2)).or((color.rgb).and(-16777216))
-                ),
-                x + 1,
-                y,
-                scaledPointSize * scale
-            )
-        }
-        drawStringNow(
-            matrixStack,
-            string,
-            color,
-            x,
-            y - 1,
-            scaledPointSize * scale
-        )
-    }
-
-    override fun getBaseLineHeight(): Float {
-        return regularFont.fontInfo.atlas.baseCharHeight
-    }
-
-    override fun getShadowHeight(): Float {
-        return regularFont.fontInfo.atlas.shadowHeight
-    }
-
-    override fun getBelowLineHeight(): Float {
-        return regularFont.fontInfo.atlas.belowLineHeight
-    }
-
-    private fun drawStringNow(
-        matrixStack: UMatrixStack,
-        string: String,
-        color: Color,
-        x: Float,
-        y: Float,
-        originalPointSize: Float
-    ) {
         if (URenderPipeline.isRequired || ElementaVersion.atLeastV9Active) {
             val bufferBuilder = UBufferBuilder.create(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR)
-            drawStringNow(bufferBuilder, matrixStack, string, color, x, y, originalPointSize)
+            drawString(bufferBuilder, matrixStack, string, color, x, y, originalPointSize / 10 * scale, shadow, shadowColor)
             bufferBuilder.build()?.drawAndClose(if (ElementaVersion.atLeastV10Active) PIPELINE2 else PIPELINE) {
                 texture(0, regularFont.getTexture().gpuTextureView, UGpuSampler(
                     UGpuSampler.AddressMode.CLAMP_TO_EDGE,
@@ -167,9 +113,64 @@ class BasicFontRenderer(
             val bufferBuilder = UGraphics.getFromTessellator()
             @Suppress("DEPRECATION")
             bufferBuilder.beginWithDefaultShader(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR)
-            drawStringNow(bufferBuilder.asUVertexConsumer(), matrixStack, string, color, x, y, originalPointSize)
+            drawString(bufferBuilder.asUVertexConsumer(), matrixStack, string, color, x, y, originalPointSize / 10 * scale, shadow, shadowColor)
             bufferBuilder.drawDirect()
         }
+    }
+
+    private fun drawString(
+        vertexConsumer: UVertexConsumer,
+        matrixStack: UMatrixStack,
+        string: String,
+        color: Color,
+        x: Float,
+        y: Float,
+        scale: Float,
+        shadow: Boolean,
+        shadowColor: Color?
+    ) {
+        val scaledPointSize = scale * regularFont.fontInfo.atlas.size
+
+        /*
+            Moved one pixel up so that the main body of the text is in
+            the top left of the component. This change keeps text location
+            in the same location as the vanilla font renderer relative to
+            a UIText component.
+         */
+        if (shadow) {
+            drawStringNow(
+                vertexConsumer,
+                matrixStack,
+                string,
+                shadowColor ?: Color(
+                    ((color.rgb and 16579836).shr(2)).or((color.rgb).and(-16777216))
+                ),
+                x + 1,
+                y,
+                scaledPointSize,
+            )
+        }
+        drawStringNow(
+            vertexConsumer,
+            matrixStack,
+            string,
+            color,
+            x,
+            y - 1,
+            scaledPointSize,
+        )
+    }
+
+    override fun getBaseLineHeight(): Float {
+        return regularFont.fontInfo.atlas.baseCharHeight
+    }
+
+    override fun getShadowHeight(): Float {
+        return regularFont.fontInfo.atlas.shadowHeight
+    }
+
+    override fun getBelowLineHeight(): Float {
+        return regularFont.fontInfo.atlas.belowLineHeight
     }
 
     private fun drawStringNow(
