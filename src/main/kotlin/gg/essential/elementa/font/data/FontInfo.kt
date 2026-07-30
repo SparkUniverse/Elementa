@@ -62,16 +62,21 @@ data class PlaneBounds(
     @SerializedName("top")
     private val _top: Float
 ) {
-    /**
-     * msdfgen exports the plane locations with .025 subtracted from the
-     * Y coordinate of each glyph, so we must correct for this
-     */
+    val l: Float get() = _left
+    val b: Float get() = _bottom
+    val r: Float get() = _right
+    val t: Float get() = _top
+
+    @Deprecated("Returns incorrect value") // technically this one's right, but `top` and `bottom` aren't
     val left: Float
         get() = _left
+    @Deprecated("Returns incorrect value")
     val bottom: Float
         get() = _bottom + 0.025f
+    @Deprecated("Returns incorrect value") // technically this one's right, but `top` and `bottom` aren't
     val right: Float
         get() = _right
+    @Deprecated("Returns incorrect value")
     val top: Float
         get() = _top + 0.025f
 }
@@ -87,17 +92,47 @@ data class AtlasBounds(
     @SerializedName("top")
     private val _top: Float
 ) {
-    /**
-     * msdfgen exports UV locations in the middle of pixels.
-     * This causes the rendering to occur slightly of from
-     * where you would expect it and incorrect texel mapping.
-     */
+    val l: Float get() = _left
+    val b: Float get() = _bottom
+    val r: Float get() = _right
+    val t: Float get() = _top
+
+    @Deprecated("Returns incorrect value")
     val left: Float
         get() = _left + .5f
+    @Deprecated("Returns incorrect value")
     val bottom: Float
         get() = _bottom + .5f
+    @Deprecated("Returns incorrect value")
     val right: Float
         get() = _right + .5f
+    @Deprecated("Returns incorrect value")
     val top: Float
         get() = _top + .5f
+}
+
+/**
+ * msdfgen inflates all glyphs by half a pixel so all the edges are drawn properly when using MSDF.
+ * This function un-does that, because we don't need it in our pixel-font renderer
+ * ([gg.essential.elementa.font.BasicFontRenderer]) and it makes any sizing math more difficult.
+ */
+internal fun FontInfo.shrinkGlyphsByHalfAPixel(): FontInfo {
+    val a = 0.5f // half a pixel in atlas coordinates
+    val p = a / atlas.size // half a pixel in plane coordinates
+    return FontInfo(
+        atlas,
+        metrics,
+        glyphs.mapValues { (_, glyph) ->
+            Glyph(
+                glyph.unicode,
+                glyph.advance,
+                glyph.planeBounds?.let { bounds ->
+                    PlaneBounds(bounds.l + p, bounds.b + p, bounds.r - p, bounds.t - p)
+                },
+                glyph.atlasBounds?.let { bounds ->
+                    AtlasBounds(bounds.l + a, bounds.b + a, bounds.r - a, bounds.t - a)
+                },
+            )
+        },
+    )
 }
