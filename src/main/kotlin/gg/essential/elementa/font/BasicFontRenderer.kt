@@ -136,8 +136,6 @@ class BasicFontRenderer(
         shadow: Boolean,
         shadowColor: Color?
     ) {
-        val scaledPointSize = scale * regularFontInfo.atlas.size
-
         if (shadow) {
             drawStringNow(
                 vertexConsumer,
@@ -148,7 +146,7 @@ class BasicFontRenderer(
                 ),
                 x + 1,
                 y + 1,
-                scaledPointSize,
+                scale,
             )
         }
         drawStringNow(
@@ -158,7 +156,7 @@ class BasicFontRenderer(
             color,
             x,
             y,
-            scaledPointSize,
+            scale,
         )
     }
 
@@ -181,8 +179,10 @@ class BasicFontRenderer(
         color: Color,
         x: Float,
         y: Float,
-        originalPointSize: Float
+        scale: Float,
     ) {
+        val scaledPointSize = scale * regularFontInfo.atlas.size
+
         var currentX = x
         var i = 0
         while (i < string.length) {
@@ -204,8 +204,8 @@ class BasicFontRenderer(
             val planeBounds = glyph.planeBounds
 
             if (planeBounds != null) {
-                val width = (planeBounds.r - planeBounds.l) * originalPointSize
-                val height = (planeBounds.t - planeBounds.b) * originalPointSize
+                val width = (planeBounds.r - planeBounds.l) * scaledPointSize
+                val height = (planeBounds.t - planeBounds.b) * scaledPointSize
 
                 drawGlyph(
                     vertexConsumer,
@@ -213,13 +213,13 @@ class BasicFontRenderer(
                     glyph,
                     color,
                     currentX,
-                    y + regularFontInfo.atlas.baseCharHeight - planeBounds.t * originalPointSize,
+                    y + regularFontInfo.atlas.baseCharHeight * scale - planeBounds.t * scaledPointSize,
                     width,
                     height
                 )
             }
 
-            currentX += computeAdvance(regularFontInfo, glyph) * originalPointSize
+            currentX += computeAdvance(regularFontInfo, glyph) * scaledPointSize
             i++
         }
 
