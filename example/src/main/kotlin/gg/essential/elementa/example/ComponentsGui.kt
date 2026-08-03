@@ -344,7 +344,7 @@ class ComponentsGui : WindowScreen(ElementaVersion.V2) {
     companion object {
         // AdinaVoicu, CC0, via Wikimedia Commons
         // https://commons.wikimedia.org/wiki/File:Tabby_cat_with_blue_eyes-3336579.jpg
-        val exampleImageUrl = URL("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Tabby_cat_with_blue_eyes-3336579.jpg/200px-Tabby_cat_with_blue_eyes-3336579.jpg")
+        val exampleImageUrl = URL("https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Tabby_cat_with_blue_eyes-3336579.jpg/250px-Tabby_cat_with_blue_eyes-3336579.jpg")
         val exampleBlurHash = "K8HnZ@.7|,4TIr?H01My5Y"
     }
 }
