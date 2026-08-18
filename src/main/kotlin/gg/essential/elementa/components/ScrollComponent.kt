@@ -224,11 +224,11 @@ class ScrollComponent constructor(
                 setYAnimation(Animations.IN_SIN, 0.1f, verticalOffset.pixels())
             }
             // Run our scroll adjust event, normally updating [scrollBarGrip]
-            var percent = (innerPadding - horizontalOffset) / horizontalRange.width()
+            var percent = if (horizontalRange.width() == 0f) 0f else (innerPadding - horizontalOffset) / horizontalRange.width()
             var percentageOfParent = width / actualWidth
             horizontalScrollAdjustEvents.forEach { it(percent, percentageOfParent) }
 
-            percent = (innerPadding - verticalOffset) / verticalRange.width()
+            percent = if (verticalRange.width() == 0f) 0f else (innerPadding - verticalOffset) / verticalRange.width()
             percentageOfParent = height / actualHeight
             verticalScrollAdjustEvents.forEach { it(percent, percentageOfParent) }
         }
