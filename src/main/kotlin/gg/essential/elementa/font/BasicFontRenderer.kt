@@ -8,6 +8,7 @@ import gg.essential.elementa.font.data.Font
 import gg.essential.elementa.font.data.FontInfo
 import gg.essential.elementa.font.data.Glyph
 import gg.essential.elementa.font.data.shrinkGlyphsByHalfAPixel
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
 import gg.essential.universal.render.UGpuSampler
@@ -92,6 +93,37 @@ class BasicFontRenderer(
         return regularFontInfo.metrics.lineHeight * pointSize
     }
 
+    override fun extract(
+        extractor: ElementaExtractor,
+        string: String,
+        color: Color,
+        x: Int,
+        y: Int,
+        scale: Float,
+        shadow: Boolean,
+        shadowColor: Color?
+    ) {
+        val pointSize = 10 * scale / extractor.guiScale
+        val w = (getStringWidth(string, pointSize) * extractor.guiScale).roundToInt()
+        val h = (getStringHeight(string, pointSize) * extractor.guiScale).roundToInt()
+        val textures = listOf(regularFontTexture.gpuTextureView to UGpuSampler(
+            UGpuSampler.AddressMode.CLAMP_TO_EDGE,
+            UGpuSampler.AddressMode.CLAMP_TO_EDGE,
+            UGpuSampler.FilterMode.NEAREST,
+            UGpuSampler.FilterMode.NEAREST,
+            false,
+        ))
+        val vertices = string.length * 4 * (if (shadow) 2 else 1)
+
+        extractor.custom(x, y, x + w, y + h, PIPELINE2, textures, vertices) { buffer, _, _ ->
+            drawString(buffer, UMatrixStack.UNIT, string, color, x.toFloat(), y.toFloat(), scale, shadow, shadowColor)
+        }
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractMcScale(extractor, string, color, x, y, originalPointSize / 10 * scale, shadow, shadowColor)")
+    )
     override fun drawString(
         matrixStack: UMatrixStack,
         string: String,

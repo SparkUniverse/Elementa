@@ -2,10 +2,16 @@ package gg.essential.elementa
 
 import gg.essential.elementa.components.Window
 import gg.essential.elementa.constraints.animation.*
+import gg.essential.elementa.renderer.ElementaRenderState
+import gg.essential.elementa.renderer.ElementaRenderer
+import gg.essential.universal.UGraphics
 import gg.essential.universal.UKeyboard
 import gg.essential.universal.UMatrixStack
 import gg.essential.universal.UMouse
 import gg.essential.universal.UScreen
+import gg.essential.universal.render.UGpuFormat
+import gg.essential.universal.render.UGpuTexture
+import gg.essential.universal.render.UGpuTextureView
 
 import java.awt.Color
 import kotlin.math.floor
@@ -23,6 +29,25 @@ abstract class WindowScreen @JvmOverloads constructor(
     newGuiScale: Int = -1
 ) : UScreen(restoreCurrentGuiOnClose, newGuiScale) {
     val window = Window(version)
+
+    /**
+     * Whether the new [ElementaRenderer], and therefore [Window.extractRenderState] instead of [Window.draw], should be
+     * used. This is required as of Minecraft 26.3, and the new preferred mode of operation on other versions as well.
+     *
+     * **This requires that all your components and effects support the new `extract`-style methods.**
+     *
+     * This flag exists to allow for migration to the new methods independent from other [ElementaVersion] changes.
+     * It may become mandatory with a future [ElementaVersion] though if supporting the old renderer becomes too much of
+     * a burdon.
+     */
+    var useElementaRenderer: Boolean = isRendererRequired
+        set(value) {
+            if (field && !value) {
+                throw UnsupportedOperationException("Cannot be disabled once enabled.")
+            }
+            field = value
+        }
+
     private var isInitialized = false
 
     @Deprecated("Add ElementaVersion as the first argument to opt-in to improved behavior.")
@@ -42,6 +67,23 @@ abstract class WindowScreen @JvmOverloads constructor(
 
     open fun afterInitialization() { }
 
+    override fun uCreateRenderer(): Renderer? {
+        return if (useElementaRenderer) ElementaUScreenRenderer() else null
+    }
+
+    override fun uExtractRenderState(mouseX: Int, mouseY: Int, partialTicks: Float): RenderState {
+        if (!isInitialized) {
+            isInitialized = true
+            afterInitialization()
+        }
+
+        window.prepareFrame()
+        return ElementaUScreenRenderState(
+            window.extractRenderState(),
+            drawDefaultBackground,
+        )
+    }
+
     override fun onDrawScreen(matrixStack: UMatrixStack, mouseX: Int, mouseY: Int, partialTicks: Float) {
         if (!isInitialized) {
             isInitialized = true
@@ -57,6 +99,7 @@ abstract class WindowScreen @JvmOverloads constructor(
         // is not constrained to being used solely inside of a GuiScreen, all the programmer
         // needs to do is call the [Window] events when appropriate, whenever that may be.
         // In our example, it is in the overridden [GuiScreen#drawScreen] method.
+        @Suppress("DEPRECATION")
         window.draw(matrixStack)
     }
 
@@ -165,3 +208,67 @@ abstract class WindowScreen @JvmOverloads constructor(
         window.apply { this@stopAnimating.stopAnimating() }
     }
 }
+
+private class ElementaUScreenRenderer : UScreen.Renderer {
+    private val elementaRenderer = ElementaRenderer()
+
+    private var lastWidth = 0
+    private var lastHeight = 0
+    private var lastTextureView: UGpuTextureView? = null
+
+    override fun render(state: UScreen.RenderState): UGpuTextureView {
+        state as ElementaUScreenRenderState
+
+        var width = state.elementaRenderState.screenWidth
+        var height = state.elementaRenderState.screenHeight
+
+        if (width == 0 || height == 0) {
+            width = 1
+            height = 1
+        }
+
+        if (lastWidth != width || lastHeight != height) {
+            lastWidth = width
+            lastHeight = height
+            lastTextureView?.texture?.close()
+            lastTextureView?.close()
+            lastTextureView = null
+        }
+
+        val textureView = lastTextureView ?: run {
+            val device = UGraphics.getDevice()
+            val texture = device.createTexture(
+                null,
+                UGpuTexture.Usage.TEXTURE_BINDING + UGpuTexture.Usage.RENDER_ATTACHMENT,
+                UGpuFormat.DEFAULT_RGBA,
+                width,
+                height,
+                1,
+            )
+            device.createTextureView(texture, 0, 1)
+        }.also { lastTextureView = it }
+
+        elementaRenderer.renderToTexture(
+            textureView,
+            0, 0,
+            0, 0,
+            width, height,
+            state.elementaRenderState,
+        )
+
+        return textureView
+    }
+
+    override fun close() {
+        lastTextureView?.texture?.close()
+        lastTextureView?.close()
+        lastTextureView = null
+
+        elementaRenderer.close()
+    }
+}
+
+private class ElementaUScreenRenderState(
+    val elementaRenderState: ElementaRenderState,
+    override val background: Boolean,
+) : UScreen.RenderState

@@ -249,6 +249,10 @@ class TreeGraphComponent(
         }
     }
 
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         beforeDrawCompat(matrixStack)
 
@@ -264,6 +268,7 @@ class TreeGraphComponent(
 
         lines.forEach { style.lineDrawer(it.first, it.second) }
 
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 }

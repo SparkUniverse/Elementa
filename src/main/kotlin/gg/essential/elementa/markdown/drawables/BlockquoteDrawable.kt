@@ -3,6 +3,8 @@ package gg.essential.elementa.markdown.drawables
 import gg.essential.elementa.components.UIBlock
 import gg.essential.elementa.markdown.DrawState
 import gg.essential.elementa.markdown.MarkdownComponent
+import gg.essential.elementa.renderer.ElementaExtractor
+import gg.essential.elementa.renderer.fillMcScaleXYWH
 import gg.essential.universal.UMatrixStack
 
 class BlockquoteDrawable(md: MarkdownComponent, val drawables: DrawableList) : Drawable(md) {
@@ -65,6 +67,18 @@ class BlockquoteDrawable(md: MarkdownComponent, val drawables: DrawableList) : D
         )
 
         drawables.forEach { it.drawCompat(matrixStack, state) }
+    }
+
+    override fun extract(extractor: ElementaExtractor, state: DrawState) {
+        extractor.fillMcScaleXYWH(
+            x + state.xShift + config.blockquoteConfig.spaceBeforeDivider,
+            y + state.yShift + config.blockquoteConfig.spaceBeforeBlockquote,
+            config.blockquoteConfig.dividerWidth,
+            dividerHeight,
+            config.blockquoteConfig.dividerColor,
+        )
+
+        drawables.forEach { it.extract(extractor, state) }
     }
 
     override fun cursorAt(mouseX: Float, mouseY: Float, dragged: Boolean, mouseButton: Int) = drawables.cursorAt(mouseX, mouseY, dragged, mouseButton)

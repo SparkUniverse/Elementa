@@ -18,6 +18,8 @@ import java.net.URL
 
 class ComponentsGui : WindowScreen(ElementaVersion.V2) {
     init {
+        useElementaRenderer = true
+
         ComponentType("UIContainer") {
             val bar = UIBlock().constrain {
                 x = 2.pixels()

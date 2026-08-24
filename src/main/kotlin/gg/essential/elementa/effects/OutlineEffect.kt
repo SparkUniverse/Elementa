@@ -1,6 +1,8 @@
 package gg.essential.elementa.effects
 
-import gg.essential.elementa.components.UIBlock
+import gg.essential.elementa.renderer.ElementaExtractor
+import gg.essential.elementa.renderer.ImmediateElementaExtractor
+import gg.essential.elementa.renderer.fillMcScale
 import gg.essential.elementa.state.BasicState
 import gg.essential.elementa.state.MappedState
 import gg.essential.elementa.state.State
@@ -72,24 +74,42 @@ class OutlineEffect @JvmOverloads constructor(
         sides = sides - side
     }
 
+    override fun extractBeforeChildren(extractor: ElementaExtractor) {
+        if (!drawAfterChildren)
+            drawOutline(extractor)
+    }
+
+    override fun extractAfter(extractor: ElementaExtractor) {
+        if (drawAfterChildren)
+            drawOutline(extractor)
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractBeforeChildren(extractor)")
+    )
     override fun beforeChildrenDraw(matrixStack: UMatrixStack) {
         if (!drawAfterChildren)
-            drawOutline(matrixStack)
+            drawOutline(ImmediateElementaExtractor(matrixStack))
     }
 
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractAfter(extractor)")
+    )
     override fun afterDraw(matrixStack: UMatrixStack) {
         if (drawAfterChildren)
-            drawOutline(matrixStack)
+            drawOutline(ImmediateElementaExtractor(matrixStack))
     }
 
-    private fun drawOutline(matrixStack: UMatrixStack) {
+    private fun drawOutline(extractor: ElementaExtractor) {
         val color = colorState.get()
         val width = widthState.get()
 
-        val left = boundComponent.getLeft().toDouble()
-        val right = boundComponent.getRight().toDouble()
-        val top = boundComponent.getTop().toDouble()
-        val bottom = boundComponent.getBottom().toDouble()
+        val left = boundComponent.getLeft()
+        val right = boundComponent.getRight()
+        val top = boundComponent.getTop()
+        val bottom = boundComponent.getBottom()
 
         val leftBounds = if (drawInsideChildren) {
             left to (left + width)
@@ -109,36 +129,36 @@ class OutlineEffect @JvmOverloads constructor(
 
         // Left outline block
         if (hasLeft)
-            UIBlock.drawBlock(matrixStack, color, leftBounds.first, top, leftBounds.second, bottom)
+            extractor.fillMcScale(leftBounds.first, top, leftBounds.second, bottom, color)
 
         // Top outline block
         if (hasTop)
-            UIBlock.drawBlock(matrixStack, color, left, topBounds.first, right, topBounds.second)
+            extractor.fillMcScale(left, topBounds.first, right, topBounds.second, color)
 
         // Right outline block
         if (hasRight)
-            UIBlock.drawBlock(matrixStack, color, rightBounds.first, top, rightBounds.second, bottom)
+            extractor.fillMcScale(rightBounds.first, top, rightBounds.second, bottom, color)
 
         // Bottom outline block
         if (hasBottom)
-            UIBlock.drawBlock(matrixStack, color, left, bottomBounds.first, right, bottomBounds.second)
+            extractor.fillMcScale(left, bottomBounds.first, right, bottomBounds.second, color)
 
         if (!drawInsideChildren) {
             // Top left square
             if (hasLeft && hasTop)
-                UIBlock.drawBlock(matrixStack, color, leftBounds.first, topBounds.first, left, top)
+                extractor.fillMcScale(leftBounds.first, topBounds.first, left, top, color)
 
             // Top right square
             if (hasRight && hasTop)
-                UIBlock.drawBlock(matrixStack, color, right, topBounds.first, rightBounds.second, top)
+                extractor.fillMcScale(right, topBounds.first, rightBounds.second, top, color)
 
             // Bottom right square
             if (hasRight && hasBottom)
-                UIBlock.drawBlock(matrixStack, color, right, bottom, rightBounds.second, bottomBounds.second)
+                extractor.fillMcScale(right, bottom, rightBounds.second, bottomBounds.second, color)
 
             // Bottom left square
             if (hasBottom && hasLeft)
-                UIBlock.drawBlock(matrixStack, color, leftBounds.first, bottom, left, bottomBounds.second)
+                extractor.fillMcScale(leftBounds.first, bottom, left, bottomBounds.second, color)
         }
     }
 

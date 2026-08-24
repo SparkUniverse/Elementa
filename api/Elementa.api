@@ -66,6 +66,8 @@ public abstract class gg/essential/elementa/UIComponent : java/util/Observable, 
 	public final fun drawCompat (Lgg/essential/universal/UMatrixStack;)V
 	public final fun enableEffect (Lgg/essential/elementa/effects/Effect;)Lgg/essential/elementa/UIComponent;
 	public final fun enableEffects ([Lgg/essential/elementa/effects/Effect;)Lgg/essential/elementa/UIComponent;
+	public final fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	protected final fun fireClickEvent (Lgg/essential/elementa/events/UIClickEvent;)V
 	protected final fun fireScrollEvent (Lgg/essential/elementa/events/UIScrollEvent;)V
 	public final fun focus ()V
@@ -224,6 +226,7 @@ public final class gg/essential/elementa/VanillaFontRenderer : gg/essential/elem
 	public static final field SHADOW_HEIGHT F
 	public fun <init> ()V
 	public fun drawString (Lgg/essential/universal/UMatrixStack;Ljava/lang/String;Ljava/awt/Color;FFFFZLjava/awt/Color;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;Ljava/awt/Color;IIFZLjava/awt/Color;)V
 	public fun getBaseLineHeight ()F
 	public fun getBelowLineHeight ()F
 	public fun getCachedValue ()Lgg/essential/elementa/font/FontProvider;
@@ -268,6 +271,7 @@ public abstract class gg/essential/elementa/WindowScreen : gg/essential/universa
 	public static synthetic fun animate$default (Lgg/essential/elementa/WindowScreen;Lkotlin/reflect/KMutableProperty0;Lgg/essential/elementa/constraints/animation/AnimationStrategy;FJFILjava/lang/Object;)V
 	public static synthetic fun animate$default (Lgg/essential/elementa/WindowScreen;Lkotlin/reflect/KMutableProperty0;Lgg/essential/elementa/constraints/animation/AnimationStrategy;FLjava/awt/Color;FILjava/lang/Object;)V
 	public final fun defaultKeyBehavior (CI)V
+	public final fun getUseElementaRenderer ()Z
 	public final fun getWindow ()Lgg/essential/elementa/components/Window;
 	public fun initScreen (II)V
 	public fun onDrawScreen (Lgg/essential/universal/UMatrixStack;IIF)V
@@ -277,7 +281,10 @@ public abstract class gg/essential/elementa/WindowScreen : gg/essential/universa
 	public fun onMouseScrolled (D)V
 	public fun onMouseScrolled (DDDD)V
 	public fun onScreenClose ()V
+	public final fun setUseElementaRenderer (Z)V
 	public final fun stopAnimating (Lkotlin/reflect/KMutableProperty0;)V
+	public fun uCreateRenderer ()Lgg/essential/universal/UScreen$Renderer;
+	public fun uExtractRenderState (IIF)Lgg/essential/universal/UScreen$RenderState;
 }
 
 public class gg/essential/elementa/components/GradientComponent : gg/essential/elementa/components/UIBlock {
@@ -291,6 +298,7 @@ public class gg/essential/elementa/components/GradientComponent : gg/essential/e
 	public final fun bindDirection (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/components/GradientComponent;
 	public final fun bindEndColor (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/components/GradientComponent;
 	public final fun bindStartColor (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/components/GradientComponent;
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public final fun getDirection ()Lgg/essential/elementa/components/GradientComponent$GradientDirection;
 	public final fun getEndColor ()Ljava/awt/Color;
 	public final fun getStartColor ()Ljava/awt/Color;
@@ -303,6 +311,7 @@ public final class gg/essential/elementa/components/GradientComponent$Companion 
 	public final fun drawGradientBlock (DDDDLjava/awt/Color;Ljava/awt/Color;Lgg/essential/elementa/components/GradientComponent$GradientDirection;)V
 	public final fun drawGradientBlock (IIIILjava/awt/Color;Ljava/awt/Color;Lgg/essential/elementa/components/GradientComponent$GradientDirection;)V
 	public final fun drawGradientBlock (Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;Ljava/awt/Color;Lgg/essential/elementa/components/GradientComponent$GradientDirection;)V
+	public final fun extractGradientBlock (Lgg/essential/elementa/renderer/ElementaExtractor;FFFFLjava/awt/Color;Ljava/awt/Color;Lgg/essential/elementa/components/GradientComponent$GradientDirection;)V
 }
 
 public final class gg/essential/elementa/components/GradientComponent$GradientColors {
@@ -553,6 +562,7 @@ public class gg/essential/elementa/components/UIBlock : gg/essential/elementa/UI
 	public fun <init> (Lgg/essential/elementa/state/State;)V
 	public fun <init> (Ljava/awt/Color;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 }
 
 public final class gg/essential/elementa/components/UIBlock$Companion {
@@ -572,6 +582,7 @@ public final class gg/essential/elementa/components/UICircle : gg/essential/elem
 	public fun <init> (FLjava/awt/Color;I)V
 	public synthetic fun <init> (FLjava/awt/Color;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public fun getHeight ()F
 	public fun getLeft ()F
 	public final fun getSteps ()I
@@ -584,6 +595,7 @@ public final class gg/essential/elementa/components/UICircle : gg/essential/elem
 public final class gg/essential/elementa/components/UICircle$Companion {
 	public final fun drawCircle (FFFLjava/awt/Color;)V
 	public final fun drawCircle (Lgg/essential/universal/UMatrixStack;FFFLjava/awt/Color;)V
+	public final fun extractCircle (Lgg/essential/elementa/renderer/ElementaExtractor;FFFLjava/awt/Color;)V
 	public final fun initShaders ()V
 }
 
@@ -602,6 +614,8 @@ public class gg/essential/elementa/components/UIImage : gg/essential/elementa/UI
 	public fun applyTexture (Lgg/essential/universal/utils/ReleasedDynamicTexture;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
 	public fun drawImage (Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;IIIILjava/awt/Color;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public static final fun get (Ljava/net/URL;)Ljava/awt/image/BufferedImage;
 	public final fun getDestroy ()Z
 	public final fun getImageHeight ()F
@@ -669,11 +683,13 @@ public class gg/essential/elementa/components/UIRoundedRectangle : gg/essential/
 	public static final field Companion Lgg/essential/elementa/components/UIRoundedRectangle$Companion;
 	public fun <init> (F)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 }
 
 public final class gg/essential/elementa/components/UIRoundedRectangle$Companion {
 	public final fun drawRoundedRectangle (FFFFFLjava/awt/Color;)V
 	public final fun drawRoundedRectangle (Lgg/essential/universal/UMatrixStack;FFFFFLjava/awt/Color;)V
+	public final fun extractRoundedRectangle (Lgg/essential/elementa/renderer/ElementaExtractor;FFFFFLjava/awt/Color;)V
 	public final fun initShaders ()V
 }
 
@@ -684,6 +700,7 @@ public class gg/essential/elementa/components/UIShape : gg/essential/elementa/UI
 	public final fun addVertex (Lgg/essential/elementa/components/UIPoint;)Lgg/essential/elementa/components/UIShape;
 	public final fun addVertices ([Lgg/essential/elementa/components/UIPoint;)Lgg/essential/elementa/components/UIShape;
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public final fun getDrawMode ()I
 	public final fun getVertices ()Ljava/util/List;
 	public final fun setDrawMode (I)V
@@ -701,6 +718,7 @@ public class gg/essential/elementa/components/UIText : gg/essential/elementa/UIC
 	public final fun bindShadowColor (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/components/UIText;
 	public final fun bindText (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/components/UIText;
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public fun getHeight ()F
 	public final fun getShadow ()Z
 	public final synthetic fun getShadowColor ()Lgg/essential/elementa/state/State;
@@ -735,6 +753,7 @@ public class gg/essential/elementa/components/UIWrappedText : gg/essential/eleme
 	public final fun bindShadowColor (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/components/UIWrappedText;
 	public final fun bindText (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/components/UIWrappedText;
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public final fun getShadow ()Z
 	public final synthetic fun getShadowColor ()Lgg/essential/elementa/state/State;
 	public final fun getShadowColor ()Ljava/awt/Color;
@@ -759,6 +778,7 @@ public final class gg/essential/elementa/components/Window : gg/essential/elemen
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
 	public final fun drawFloatingComponents ()V
 	public final fun drawFloatingComponents (Lgg/essential/universal/UMatrixStack;)V
+	public final fun extractRenderState ()Lgg/essential/elementa/renderer/ElementaRenderState;
 	public final fun focus (Lgg/essential/elementa/UIComponent;)V
 	public final fun getAnimationFPS ()I
 	public final fun getAnimationTimeMs ()J
@@ -780,6 +800,7 @@ public final class gg/essential/elementa/components/Window : gg/essential/elemen
 	public fun mouseRelease ()V
 	public fun mouseScroll (D)V
 	public fun mouseScroll (DD)V
+	public final fun prepareFrame ()V
 	public final fun removeFloatingComponent (Lgg/essential/elementa/UIComponent;)V
 	public final fun setHoveredFloatingComponent (Lgg/essential/elementa/UIComponent;)V
 	public final fun unfocus ()V
@@ -800,6 +821,8 @@ public class gg/essential/elementa/components/image/BlurHashImage : gg/essential
 	public fun <init> (Ljava/lang/String;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
 	public fun drawImage (Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;IIIILjava/awt/Color;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public static final fun ofFile (Ljava/lang/String;Ljava/io/File;)Lgg/essential/elementa/components/UIImage;
 	public static final fun ofResource (Ljava/lang/String;Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public static final fun ofURL (Ljava/lang/String;Ljava/net/URL;)Lgg/essential/elementa/components/UIImage;
@@ -819,11 +842,13 @@ public abstract interface class gg/essential/elementa/components/image/Cacheable
 public final class gg/essential/elementa/components/image/DefaultFailureImage : gg/essential/elementa/components/image/ImageProvider {
 	public static final field INSTANCE Lgg/essential/elementa/components/image/DefaultFailureImage;
 	public fun drawImage (Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;IIIILjava/awt/Color;)V
 }
 
 public final class gg/essential/elementa/components/image/DefaultLoadingImage : gg/essential/elementa/components/image/ImageProvider {
 	public static final field INSTANCE Lgg/essential/elementa/components/image/DefaultLoadingImage;
 	public fun drawImage (Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;IIIILjava/awt/Color;)V
 }
 
 public final class gg/essential/elementa/components/image/FileImageCache : gg/essential/elementa/components/image/ImageCache {
@@ -842,12 +867,18 @@ public abstract interface class gg/essential/elementa/components/image/ImageProv
 	public fun drawImage (DDDDLjava/awt/Color;)V
 	public fun drawImage (Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;)V
 	public fun drawImageCompat (Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;IIIILjava/awt/Color;)V
 }
 
 public final class gg/essential/elementa/components/image/ImageProvider$DefaultImpls {
 	public static fun drawImage (Lgg/essential/elementa/components/image/ImageProvider;DDDDLjava/awt/Color;)V
 	public static fun drawImage (Lgg/essential/elementa/components/image/ImageProvider;Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;)V
 	public static fun drawImageCompat (Lgg/essential/elementa/components/image/ImageProvider;Lgg/essential/universal/UMatrixStack;DDDDLjava/awt/Color;)V
+	public static fun extract (Lgg/essential/elementa/components/image/ImageProvider;Lgg/essential/elementa/renderer/ElementaExtractor;IIIILjava/awt/Color;)V
+}
+
+public final class gg/essential/elementa/components/image/ImageProviderKt {
+	public static final fun extractMcScale (Lgg/essential/elementa/components/image/ImageProvider;Lgg/essential/elementa/renderer/ElementaExtractor;FFFFLjava/awt/Color;)V
 }
 
 public class gg/essential/elementa/components/image/MSDFComponent : gg/essential/elementa/UIComponent, gg/essential/elementa/components/image/CacheableImage {
@@ -902,6 +933,9 @@ public abstract class gg/essential/elementa/components/input/AbstractTextInput :
 	protected fun drawUnselectedText (Lgg/essential/universal/UMatrixStack;Ljava/lang/String;FI)V
 	protected fun drawUnselectedText (Ljava/lang/String;FI)V
 	protected final fun drawUnselectedTextCompat (Lgg/essential/universal/UMatrixStack;Ljava/lang/String;FI)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
+	protected final fun extractSelectedText (Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;FFI)V
+	protected final fun extractUnselectedText (Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;FI)V
 	protected final fun getActivateAction ()Lkotlin/jvm/functions/Function1;
 	protected final fun getActive ()Z
 	protected final fun getAllowInactiveSelection ()Z
@@ -1071,6 +1105,7 @@ public final class gg/essential/elementa/components/input/UIMultilineTextInput :
 	public fun <init> (Ljava/lang/String;ZLjava/awt/Color;Ljava/awt/Color;ZLjava/awt/Color;Ljava/awt/Color;Ljava/awt/Color;)V
 	public synthetic fun <init> (Ljava/lang/String;ZLjava/awt/Color;Ljava/awt/Color;ZLjava/awt/Color;Ljava/awt/Color;Ljava/awt/Color;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public fun getText ()Ljava/lang/String;
 	public final fun setMaxHeight (Lgg/essential/elementa/constraints/HeightConstraint;)Lgg/essential/elementa/components/input/UIMultilineTextInput;
 	public final fun setMaxLines (I)Lgg/essential/elementa/components/input/UIMultilineTextInput;
@@ -1114,6 +1149,7 @@ public class gg/essential/elementa/components/input/UITextInput : gg/essential/e
 	public fun <init> (Ljava/lang/String;ZLjava/awt/Color;Ljava/awt/Color;ZLjava/awt/Color;Ljava/awt/Color;Ljava/awt/Color;)V
 	public synthetic fun <init> (Ljava/lang/String;ZLjava/awt/Color;Ljava/awt/Color;ZLjava/awt/Color;Ljava/awt/Color;Ljava/awt/Color;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	protected final fun getMaxWidth ()Lgg/essential/elementa/constraints/WidthConstraint;
 	protected final fun getMinWidth ()Lgg/essential/elementa/constraints/WidthConstraint;
 	protected final fun getPlaceholderWidth ()F
@@ -1142,6 +1178,7 @@ public final class gg/essential/elementa/components/inspector/ArrowComponent : g
 public final class gg/essential/elementa/components/inspector/InfoBlock : gg/essential/elementa/components/UIContainer {
 	public fun <init> (Lgg/essential/elementa/components/inspector/Inspector;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 }
 
 public final class gg/essential/elementa/components/inspector/InfoBlockNode : gg/essential/elementa/components/TreeNode {
@@ -1166,6 +1203,7 @@ public final class gg/essential/elementa/components/inspector/Inspector : gg/ess
 	public fun <init> (Lgg/essential/elementa/UIComponent;Ljava/awt/Color;Ljava/awt/Color;FLgg/essential/elementa/constraints/HeightConstraint;)V
 	public synthetic fun <init> (Lgg/essential/elementa/UIComponent;Ljava/awt/Color;Ljava/awt/Color;FLgg/essential/elementa/constraints/HeightConstraint;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 }
 
 public final class gg/essential/elementa/components/inspector/Inspector$Companion {
@@ -2614,6 +2652,9 @@ public abstract class gg/essential/elementa/effects/Effect {
 	public fun beforeDraw (Lgg/essential/universal/UMatrixStack;)V
 	public final fun beforeDrawCompat (Lgg/essential/universal/UMatrixStack;)V
 	public final fun bindComponent (Lgg/essential/elementa/UIComponent;)V
+	public fun extractAfter (Lgg/essential/elementa/renderer/ElementaExtractor;)V
+	public fun extractBefore (Lgg/essential/elementa/renderer/ElementaExtractor;)V
+	public fun extractBeforeChildren (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	protected final fun getBoundComponent ()Lgg/essential/elementa/UIComponent;
 	protected final fun removeUpdateFunc (Lkotlin/jvm/functions/Function2;)V
 	protected final fun setBoundComponent (Lgg/essential/elementa/UIComponent;)V
@@ -2636,6 +2677,8 @@ public final class gg/essential/elementa/effects/OutlineEffect : gg/essential/el
 	public fun beforeChildrenDraw (Lgg/essential/universal/UMatrixStack;)V
 	public final fun bindColor (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/effects/OutlineEffect;
 	public final fun bindWidth (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/effects/OutlineEffect;
+	public fun extractAfter (Lgg/essential/elementa/renderer/ElementaExtractor;)V
+	public fun extractBeforeChildren (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public final fun getColor ()Ljava/awt/Color;
 	public final fun getDrawAfterChildren ()Z
 	public final fun getDrawInsideChildren ()Z
@@ -2680,6 +2723,8 @@ public final class gg/essential/elementa/effects/ScissorEffect : gg/essential/el
 	public synthetic fun <init> (Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;Ljava/lang/Number;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun afterDraw (Lgg/essential/universal/UMatrixStack;)V
 	public fun beforeDraw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractAfter (Lgg/essential/elementa/renderer/ElementaExtractor;)V
+	public fun extractBefore (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 }
 
 public final class gg/essential/elementa/effects/ScissorEffect$Companion {
@@ -2775,6 +2820,7 @@ public final class gg/essential/elementa/events/UIScrollEvent : gg/essential/ele
 public final class gg/essential/elementa/font/BasicFontRenderer : gg/essential/elementa/font/FontProvider {
 	public fun <init> (Lgg/essential/elementa/font/data/Font;)V
 	public fun drawString (Lgg/essential/universal/UMatrixStack;Ljava/lang/String;Ljava/awt/Color;FFFFZLjava/awt/Color;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;Ljava/awt/Color;IIFZLjava/awt/Color;)V
 	public fun getBaseLineHeight ()F
 	public fun getBelowLineHeight ()F
 	public fun getCachedValue ()Lgg/essential/elementa/font/FontProvider;
@@ -2813,6 +2859,8 @@ public abstract interface class gg/essential/elementa/font/FontProvider : gg/ess
 	public fun drawString (Ljava/lang/String;Ljava/awt/Color;FFFFZLjava/awt/Color;)V
 	public static synthetic fun drawString$default (Lgg/essential/elementa/font/FontProvider;Lgg/essential/universal/UMatrixStack;Ljava/lang/String;Ljava/awt/Color;FFFFZLjava/awt/Color;ILjava/lang/Object;)V
 	public static synthetic fun drawString$default (Lgg/essential/elementa/font/FontProvider;Ljava/lang/String;Ljava/awt/Color;FFFFZLjava/awt/Color;ILjava/lang/Object;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;Ljava/awt/Color;IIFZLjava/awt/Color;)V
+	public static synthetic fun extract$default (Lgg/essential/elementa/font/FontProvider;Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;Ljava/awt/Color;IIFZLjava/awt/Color;ILjava/lang/Object;)V
 	public abstract fun getBaseLineHeight ()F
 	public abstract fun getBelowLineHeight ()F
 	public abstract fun getShadowHeight ()F
@@ -2826,11 +2874,18 @@ public final class gg/essential/elementa/font/FontProvider$DefaultImpls {
 	public static fun drawString (Lgg/essential/elementa/font/FontProvider;Ljava/lang/String;Ljava/awt/Color;FFFFZLjava/awt/Color;)V
 	public static synthetic fun drawString$default (Lgg/essential/elementa/font/FontProvider;Lgg/essential/universal/UMatrixStack;Ljava/lang/String;Ljava/awt/Color;FFFFZLjava/awt/Color;ILjava/lang/Object;)V
 	public static synthetic fun drawString$default (Lgg/essential/elementa/font/FontProvider;Ljava/lang/String;Ljava/awt/Color;FFFFZLjava/awt/Color;ILjava/lang/Object;)V
+	public static fun extract (Lgg/essential/elementa/font/FontProvider;Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;Ljava/awt/Color;IIFZLjava/awt/Color;)V
+	public static synthetic fun extract$default (Lgg/essential/elementa/font/FontProvider;Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;Ljava/awt/Color;IIFZLjava/awt/Color;ILjava/lang/Object;)V
 	public static fun pauseIfSupported (Lgg/essential/elementa/font/FontProvider;)V
 	public static fun resumeIfSupported (Lgg/essential/elementa/font/FontProvider;)V
 	public static fun stopIfSupported (Lgg/essential/elementa/font/FontProvider;)V
 	public static fun to (Lgg/essential/elementa/font/FontProvider;Lgg/essential/elementa/UIComponent;)Lgg/essential/elementa/constraints/SuperConstraint;
 	public static fun visit (Lgg/essential/elementa/font/FontProvider;Lgg/essential/elementa/constraints/resolution/ConstraintVisitor;Lgg/essential/elementa/constraints/ConstraintType;Z)V
+}
+
+public final class gg/essential/elementa/font/FontProviderKt {
+	public static final fun extractMcScale (Lgg/essential/elementa/font/FontProvider;Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;Ljava/awt/Color;FFFZLjava/awt/Color;)V
+	public static synthetic fun extractMcScale$default (Lgg/essential/elementa/font/FontProvider;Lgg/essential/elementa/renderer/ElementaExtractor;Ljava/lang/String;Ljava/awt/Color;FFFZLjava/awt/Color;ILjava/lang/Object;)V
 }
 
 public final class gg/essential/elementa/font/FontRenderer : gg/essential/elementa/font/FontProvider {
@@ -3228,6 +3283,7 @@ public final class gg/essential/elementa/markdown/MarkdownComponent : gg/essenti
 	public fun animationFrame ()V
 	public final fun bindText (Lgg/essential/elementa/state/State;)Lgg/essential/elementa/markdown/MarkdownComponent;
 	public fun draw (Lgg/essential/universal/UMatrixStack;)V
+	public fun extractComponent (Lgg/essential/elementa/renderer/ElementaExtractor;)V
 	public final fun getConfig ()Lgg/essential/elementa/markdown/MarkdownConfig;
 	public final fun getDrawables ()Lgg/essential/elementa/markdown/drawables/DrawableList;
 	public final fun getMaxTextLineWidth ()F
@@ -3389,6 +3445,7 @@ public final class gg/essential/elementa/markdown/drawables/BlockquoteDrawable :
 	public fun cursorAtEnd ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public fun getChildren ()Ljava/util/List;
 	public final fun getDrawables ()Lgg/essential/elementa/markdown/drawables/DrawableList;
 	public final fun getMaxTextLineWidth ()F
@@ -3415,6 +3472,7 @@ public abstract class gg/essential/elementa/markdown/drawables/Drawable {
 	public fun draw (Lgg/essential/elementa/markdown/DrawState;)V
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
 	public final fun drawCompat (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public fun getChildren ()Ljava/util/List;
 	public final fun getConfig ()Lgg/essential/elementa/markdown/MarkdownConfig;
 	public final fun getHeight ()F
@@ -3531,6 +3589,7 @@ public final class gg/essential/elementa/markdown/drawables/DrawableList : gg/es
 	public fun cursorAtEnd ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public fun get (I)Lgg/essential/elementa/markdown/drawables/Drawable;
 	public synthetic fun get (I)Ljava/lang/Object;
 	public fun getChildren ()Ljava/util/List;
@@ -3585,6 +3644,7 @@ public final class gg/essential/elementa/markdown/drawables/HeaderDrawable : gg/
 	public fun cursorAtEnd ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public fun getChildren ()Ljava/util/List;
 	public final fun getDividerWidth ()Ljava/lang/Double;
 	public fun selectedText (Z)Ljava/lang/String;
@@ -3601,6 +3661,7 @@ public final class gg/essential/elementa/markdown/drawables/ImageDrawable : gg/e
 	public synthetic fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/ImageCursor;
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public final fun getSelected ()Z
 	public final fun getUrl ()Ljava/net/URL;
 	public fun hasSelectedText ()Z
@@ -3620,6 +3681,7 @@ public final class gg/essential/elementa/markdown/drawables/ListDrawable : gg/es
 	public fun cursorAtEnd ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public fun getChildren ()Ljava/util/List;
 	public final fun getMaxTextLineWidth ()F
 	public fun selectedText (Z)Ljava/lang/String;
@@ -3631,6 +3693,7 @@ public final class gg/essential/elementa/markdown/drawables/ListDrawable$ListEnt
 	public fun cursorAtEnd ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public fun getChildren ()Ljava/util/List;
 	public final fun getDrawable ()Lgg/essential/elementa/markdown/drawables/Drawable;
 	public fun selectedText (Z)Ljava/lang/String;
@@ -3642,6 +3705,7 @@ public final class gg/essential/elementa/markdown/drawables/ParagraphDrawable : 
 	public fun cursorAtEnd ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public fun getChildren ()Ljava/util/List;
 	public final fun getDrawables ()Lgg/essential/elementa/markdown/drawables/DrawableList;
 	public final fun getMaxTextLineWidth ()F
@@ -3672,6 +3736,7 @@ public final class gg/essential/elementa/markdown/drawables/TextDrawable : gg/es
 	public fun cursorAtStart ()Lgg/essential/elementa/markdown/selection/TextCursor;
 	public fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
 	public final fun ensureTrimmed ()V
+	public fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public final fun getFormattedText ()Ljava/lang/String;
 	public final fun getLinkedTexts ()Lgg/essential/elementa/markdown/drawables/TextDrawable$LinkedTexts;
 	public final fun getScaleModifier ()F
@@ -3695,6 +3760,8 @@ public final class gg/essential/elementa/markdown/drawables/TextDrawable$Compani
 	public final fun drawString (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/MarkdownConfig;Lgg/essential/elementa/font/FontProvider;Ljava/lang/String;FFZZZLgg/essential/elementa/markdown/HeaderLevelConfig;)V
 	public static synthetic fun drawString$default (Lgg/essential/elementa/markdown/drawables/TextDrawable$Companion;Lgg/essential/elementa/markdown/MarkdownConfig;Lgg/essential/elementa/font/FontProvider;Ljava/lang/String;FFZZZILjava/lang/Object;)V
 	public static synthetic fun drawString$default (Lgg/essential/elementa/markdown/drawables/TextDrawable$Companion;Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/MarkdownConfig;Lgg/essential/elementa/font/FontProvider;Ljava/lang/String;FFZZZLgg/essential/elementa/markdown/HeaderLevelConfig;ILjava/lang/Object;)V
+	public final fun extractString (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/MarkdownConfig;Lgg/essential/elementa/font/FontProvider;Ljava/lang/String;FFFZZZLgg/essential/elementa/markdown/HeaderLevelConfig;)V
+	public static synthetic fun extractString$default (Lgg/essential/elementa/markdown/drawables/TextDrawable$Companion;Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/MarkdownConfig;Lgg/essential/elementa/font/FontProvider;Ljava/lang/String;FFFZZZLgg/essential/elementa/markdown/HeaderLevelConfig;ILjava/lang/Object;)V
 }
 
 public final class gg/essential/elementa/markdown/drawables/TextDrawable$LinkedTexts {
@@ -3760,6 +3827,7 @@ public abstract class gg/essential/elementa/markdown/selection/Cursor {
 	public abstract fun compareTo (Lgg/essential/elementa/markdown/selection/Cursor;)I
 	public final fun draw (Lgg/essential/elementa/markdown/DrawState;)V
 	public final fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public final fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	protected final fun getHeight ()D
 	public final fun getTarget ()Lgg/essential/elementa/markdown/drawables/Drawable;
 	protected final fun getWidth ()D
@@ -3777,6 +3845,7 @@ public final class gg/essential/elementa/markdown/selection/Selection {
 	public synthetic fun <init> (Lgg/essential/elementa/markdown/selection/Cursor;Lgg/essential/elementa/markdown/selection/Cursor;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun draw (Lgg/essential/elementa/markdown/DrawState;)V
 	public final fun draw (Lgg/essential/universal/UMatrixStack;Lgg/essential/elementa/markdown/DrawState;)V
+	public final fun extract (Lgg/essential/elementa/renderer/ElementaExtractor;Lgg/essential/elementa/markdown/DrawState;)V
 	public final fun getDrawables ()Ljava/util/List;
 	public final fun getEnd ()Lgg/essential/elementa/markdown/selection/Cursor;
 	public final fun getStart ()Lgg/essential/elementa/markdown/selection/Cursor;
@@ -3791,6 +3860,108 @@ public final class gg/essential/elementa/markdown/selection/TextCursor : gg/esse
 	public fun <init> (Lgg/essential/elementa/markdown/drawables/TextDrawable;I)V
 	public fun compareTo (Lgg/essential/elementa/markdown/selection/Cursor;)I
 	public final fun getOffset ()I
+}
+
+public abstract interface class gg/essential/elementa/renderer/ElementaExtractor {
+	public abstract fun blit (IIIIFFFFLgg/essential/universal/render/UGpuTextureView;Lgg/essential/universal/render/UGpuSampler;ZZLjava/awt/Color;)V
+	public abstract fun custom (IIIILgg/essential/universal/render/URenderPipeline;Ljava/util/List;ILkotlin/jvm/functions/Function3;)V
+	public abstract fun fill (IIIILjava/awt/Color;)V
+	public abstract fun getGuiScale ()F
+	public abstract fun getVersion ()Lgg/essential/elementa/ElementaVersion;
+	public abstract fun isVisible (IIII)Z
+	public abstract fun popPostProcessing (Lgg/essential/elementa/renderer/PostProcessingRenderer$Factory;)V
+	public abstract fun popScissor ()V
+	public abstract fun pushPostProcessing (Lgg/essential/elementa/renderer/PostProcessingRenderer$Factory;Ljava/lang/Object;)V
+	public abstract fun pushScissor (IIII)V
+	public abstract fun pushScissorRaw (IIII)V
+	public abstract fun special (IIIILgg/essential/elementa/renderer/SpecialRenderer$Factory;Ljava/lang/Object;)V
+}
+
+public final class gg/essential/elementa/renderer/ElementaExtractorKt {
+	public static final fun fillMcScale (Lgg/essential/elementa/renderer/ElementaExtractor;FFFFLjava/awt/Color;)V
+	public static final fun fillMcScaleXYWH (Lgg/essential/elementa/renderer/ElementaExtractor;FFFFLjava/awt/Color;)V
+	public static final fun fillXYWH (Lgg/essential/elementa/renderer/ElementaExtractor;IIIILjava/awt/Color;)V
+}
+
+public final class gg/essential/elementa/renderer/ElementaRenderState {
+	public final fun getBoundsX1 ()I
+	public final fun getBoundsX2 ()I
+	public final fun getBoundsY1 ()I
+	public final fun getBoundsY2 ()I
+	public final fun getScreenHeight ()I
+	public final fun getScreenWidth ()I
+}
+
+public final class gg/essential/elementa/renderer/ElementaRenderer : java/lang/AutoCloseable {
+	public fun <init> ()V
+	public fun close ()V
+	public final fun renderToTexture (Lgg/essential/universal/render/UGpuTextureView;IIIIIILgg/essential/elementa/renderer/ElementaRenderState;)V
+}
+
+public final class gg/essential/elementa/renderer/ImmediateElementaExtractor : gg/essential/elementa/renderer/ElementaExtractor {
+	public fun <init> (Lgg/essential/universal/UMatrixStack;)V
+	public fun blit (IIIIFFFFLgg/essential/universal/render/UGpuTextureView;Lgg/essential/universal/render/UGpuSampler;ZZLjava/awt/Color;)V
+	public fun custom (IIIILgg/essential/universal/render/URenderPipeline;Ljava/util/List;ILkotlin/jvm/functions/Function3;)V
+	public fun fill (IIIILjava/awt/Color;)V
+	public fun getGuiScale ()F
+	public final fun getMatrixStack ()Lgg/essential/universal/UMatrixStack;
+	public fun getVersion ()Lgg/essential/elementa/ElementaVersion;
+	public fun isVisible (IIII)Z
+	public fun popPostProcessing (Lgg/essential/elementa/renderer/PostProcessingRenderer$Factory;)Ljava/lang/Void;
+	public synthetic fun popPostProcessing (Lgg/essential/elementa/renderer/PostProcessingRenderer$Factory;)V
+	public fun popScissor ()Ljava/lang/Void;
+	public synthetic fun popScissor ()V
+	public fun pushPostProcessing (Lgg/essential/elementa/renderer/PostProcessingRenderer$Factory;Ljava/lang/Object;)Ljava/lang/Void;
+	public synthetic fun pushPostProcessing (Lgg/essential/elementa/renderer/PostProcessingRenderer$Factory;Ljava/lang/Object;)V
+	public fun pushScissor (IIII)Ljava/lang/Void;
+	public synthetic fun pushScissor (IIII)V
+	public fun pushScissorRaw (IIII)Ljava/lang/Void;
+	public synthetic fun pushScissorRaw (IIII)V
+	public fun special (IIIILgg/essential/elementa/renderer/SpecialRenderer$Factory;Ljava/lang/Object;)V
+}
+
+public abstract interface class gg/essential/elementa/renderer/PostProcessingRenderer : java/lang/AutoCloseable {
+	public abstract fun render (Lgg/essential/universal/render/UGpuTextureView;Lgg/essential/universal/render/UGpuTextureView;Ljava/util/List;)V
+}
+
+public abstract interface class gg/essential/elementa/renderer/PostProcessingRenderer$Factory {
+	public abstract fun create ()Lgg/essential/elementa/renderer/PostProcessingRenderer;
+}
+
+public final class gg/essential/elementa/renderer/PostProcessingRenderer$Instance {
+	public fun <init> (IIIIIIIILjava/lang/Object;)V
+	public final fun getArgs ()Ljava/lang/Object;
+	public final fun getDstX ()I
+	public final fun getDstY ()I
+	public final fun getHeight ()I
+	public final fun getSrcX ()I
+	public final fun getSrcY ()I
+	public final fun getWidth ()I
+	public final fun getX ()I
+	public final fun getY ()I
+}
+
+public abstract interface class gg/essential/elementa/renderer/SpecialRenderer : java/lang/AutoCloseable {
+	public abstract fun getOnlyDrawsInBounds ()Z
+	public abstract fun getSupportsScissor ()Z
+	public abstract fun render (Lgg/essential/universal/render/UGpuTextureView;Ljava/util/List;)V
+}
+
+public abstract interface class gg/essential/elementa/renderer/SpecialRenderer$Factory {
+	public abstract fun create ()Lgg/essential/elementa/renderer/SpecialRenderer;
+}
+
+public final class gg/essential/elementa/renderer/SpecialRenderer$Instance {
+	public fun <init> (IIIIIIIILjava/lang/Object;)V
+	public final fun getArgs ()Ljava/lang/Object;
+	public final fun getDstX ()I
+	public final fun getDstY ()I
+	public final fun getHeight ()I
+	public final fun getScissorHeight ()I
+	public final fun getScissorWidth ()I
+	public final fun getScissorX ()I
+	public final fun getScissorY ()I
+	public final fun getWidth ()I
 }
 
 public final class gg/essential/elementa/shaders/FloatUniform : gg/essential/elementa/shaders/ShaderUniform {

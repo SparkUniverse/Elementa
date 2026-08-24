@@ -13,6 +13,7 @@ import gg.essential.elementa.constraints.debug.withDebugger
 import gg.essential.elementa.dsl.*
 import gg.essential.elementa.effects.OutlineEffect
 import gg.essential.elementa.effects.ScissorEffect
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 import java.awt.Color
 
@@ -390,6 +391,17 @@ class ConstraintResolutionGui(
             component.parent = this
         }
 
+        override fun extractComponent(extractor: ElementaExtractor) {
+            withDebugger(CycleSafeConstraintDebugger(RecalculatingConstraintDebugger())) {
+                component.extract(extractor)
+            }
+        }
+
+        @Deprecated(
+            "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+            replaceWith = ReplaceWith("extract(extractor)")
+        )
+        @Suppress("DEPRECATION")
         override fun draw(matrixStack: UMatrixStack) {
             beforeDraw(matrixStack)
 

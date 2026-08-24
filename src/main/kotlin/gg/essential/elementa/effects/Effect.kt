@@ -3,6 +3,7 @@ package gg.essential.elementa.effects
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.UIComponent.Flags
 import gg.essential.elementa.components.UpdateFunc
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 
 /**
@@ -64,19 +65,36 @@ abstract class Effect {
     @Deprecated("See [ElementaVersion.V8].")
     open fun animationFrame() {}
 
+    open fun extractBefore(extractor: ElementaExtractor) {}
+    open fun extractAfter(extractor: ElementaExtractor) {}
+
+    open fun extractBeforeChildren(extractor: ElementaExtractor) {}
+
     /**
      * Set up all drawing, turn on shaders, etc.
      */
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractBefore(extractor)")
+    )
     open fun beforeDraw(matrixStack: UMatrixStack) {}
 
     /**
      * Called after this component draws but before it's children are drawn.
      */
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractBeforeChildren(extractor)")
+    )
     open fun beforeChildrenDraw(matrixStack: UMatrixStack) {}
 
     /**
      * Clean up all of this feature's GL states, etc.
      */
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractAfter(extractor)")
+    )
     open fun afterDraw(matrixStack: UMatrixStack) {}
 
 
@@ -84,18 +102,21 @@ abstract class Effect {
         UMatrixStack.Compat.DEPRECATED,
         ReplaceWith("beforeDraw(matrixStack)")
     )
+    @Suppress("DEPRECATION")
     open fun beforeDraw() = beforeDraw(UMatrixStack.Compat.get())
 
     @Deprecated(
         UMatrixStack.Compat.DEPRECATED,
         ReplaceWith("beforeChildrenDraw(matrixStack)")
     )
+    @Suppress("DEPRECATION")
     open fun beforeChildrenDraw() = beforeChildrenDraw(UMatrixStack.Compat.get())
 
     @Deprecated(
         UMatrixStack.Compat.DEPRECATED,
         ReplaceWith("afterDraw(matrixStack)")
     )
+    @Suppress("DEPRECATION")
     open fun afterDraw() = afterDraw(UMatrixStack.Compat.get())
 
     @Suppress("DEPRECATION")

@@ -11,6 +11,7 @@ import gg.essential.elementa.constraints.animation.*
 import gg.essential.elementa.constraints.debug.CycleSafeConstraintDebugger
 import gg.essential.elementa.constraints.debug.withDebugger
 import gg.essential.elementa.dsl.*
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 import java.awt.Color
 
@@ -275,9 +276,21 @@ class InfoBlock(private val inspector: Inspector) : UIContainer() {
         }
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        update()
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
+    @Suppress("DEPRECATION")
     override fun draw(matrixStack: UMatrixStack) {
         super.draw(matrixStack)
+        update()
+    }
 
+    private fun update() {
         if (cachedComponent != inspector.selectedNode?.targetComponent) {
             cachedComponent = inspector.selectedNode?.targetComponent
             cachedComponent?.let {

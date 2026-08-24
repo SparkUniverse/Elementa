@@ -4,6 +4,7 @@ import gg.essential.elementa.constraints.HeightConstraint
 import gg.essential.elementa.dsl.coerceAtMost
 import gg.essential.elementa.dsl.pixels
 import gg.essential.elementa.dsl.width
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.elementa.utils.splitStringToWidthTruncated
 import gg.essential.universal.UKeyboard
 import gg.essential.universal.UMatrixStack
@@ -72,6 +73,90 @@ class UIMultilineTextInput @JvmOverloads constructor(
         }
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        val textScale = getTextScale()
+        if (!active && !hasText()) {
+            val textToDraw = splitStringToWidthTruncated(placeholder, getWidth(), textScale, 1)[0]
+            extractUnselectedText(extractor, textToDraw, getLeft(), 0)
+            super.extractComponent(extractor)
+            return
+        }
+
+        if (hasSelection()) {
+            cursorComponent.hide(instantly = true)
+        } else if (active) {
+            cursorComponent.unhide()
+            val (cursorPosX, cursorPosY) = cursor.toScreenPos()
+            cursorComponent.setX((cursorPosX ).pixels())
+            cursorComponent.setY((cursorPosY ).pixels())
+        }
+
+        val (selectionStart, selectionEnd) = getSelection()
+
+        for ((i, visualLine) in visualLines.withIndex()) {
+            val topOffset = (lineHeight * i * getTextScale()) + verticalScrollingOffset
+            if (topOffset < -lineHeight * getTextScale() || topOffset > getHeight() + lineHeight * getTextScale())
+                continue
+
+            if (!hasSelection() || i < selectionStart.line || i > selectionEnd.line) {
+                extractUnselectedText(extractor, visualLine.text, getLeft(), i)
+            } else {
+                val startText = when {
+                    i == selectionStart.line && selectionStart.column > 0 -> {
+                        visualLine.text.substring(0, selectionStart.column)
+                    }
+                    else -> ""
+                }
+
+                val selectedText = when {
+                    selectionStart.line == selectionEnd.line -> visualLine.text.substring(
+                        selectionStart.column,
+                        selectionEnd.column
+                    )
+                    i > selectionStart.line && i < selectionEnd.line -> visualLine.text
+                    i == selectionStart.line -> visualLine.text.substring(selectionStart.column)
+                    i == selectionEnd.line -> visualLine.text.substring(0, selectionEnd.column)
+                    else -> ""
+                }
+
+                val endText = when {
+                    i == selectionEnd.line && selectionEnd.column < visualLines[i].length -> {
+                        visualLine.text.substring(selectionEnd.column)
+                    }
+                    else -> ""
+                }
+
+                val startTextWidth = startText.width(textScale)
+                val selectedTextWidth = selectedText.width(textScale)
+
+                val newlinePadding = if (i < selectionEnd.line) ' '.width(textScale) else 0f
+
+                if (startText.isNotEmpty())
+                    extractUnselectedText(extractor, startText, getLeft(), i)
+
+                if (selectedText.isNotEmpty() || newlinePadding != 0f) {
+                    extractSelectedText(
+                        extractor,
+                        selectedText,
+                        getLeft() + startTextWidth,
+                        getLeft() + startTextWidth + selectedTextWidth + newlinePadding,
+                        i
+                    )
+                }
+
+                if (endText.isNotEmpty())
+                    extractUnselectedText(extractor, endText, getLeft() + startTextWidth + selectedTextWidth, i)
+            }
+        }
+
+        super.extractComponent(extractor)
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
+    @Suppress("DEPRECATION")
     override fun draw(matrixStack: UMatrixStack) {
         beforeDraw(matrixStack)
 

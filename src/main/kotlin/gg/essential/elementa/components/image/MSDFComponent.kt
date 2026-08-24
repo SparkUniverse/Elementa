@@ -62,6 +62,11 @@ open class MSDFComponent constructor(
     constructor(imageFunction: () -> BufferedImage) : this(CompletableFuture.supplyAsync(imageFunction))
 
 
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
+    @Suppress("DEPRECATION")
     override fun draw(matrixStack: UMatrixStack) {
         beforeDrawCompat(matrixStack)
 

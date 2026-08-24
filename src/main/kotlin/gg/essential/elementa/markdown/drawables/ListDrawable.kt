@@ -3,6 +3,7 @@ package gg.essential.elementa.markdown.drawables
 import gg.essential.elementa.dsl.width
 import gg.essential.elementa.markdown.DrawState
 import gg.essential.elementa.markdown.MarkdownComponent
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 
 class ListDrawable(
@@ -123,6 +124,10 @@ class ListDrawable(
         listItems.forEach { it.drawCompat(matrixStack, state) }
     }
 
+    override fun extract(extractor: ElementaExtractor, state: DrawState) {
+        listItems.forEach { it.extract(extractor, state) }
+    }
+
     override fun cursorAt(mouseX: Float, mouseY: Float, dragged: Boolean, mouseButton: Int) = drawables.cursorAt(mouseX, mouseY, dragged, mouseButton)
     override fun cursorAtStart() = drawables.cursorAtStart()
     override fun cursorAtEnd() = drawables.cursorAtEnd()
@@ -169,6 +174,13 @@ class ListDrawable(
             if (drawable !is ListDrawable)
                 TextDrawable.drawString(matrixStack, config, md.getFontProvider(), symbol, newX + state.xShift, y + state.yShift)
             drawable.drawCompat(matrixStack, state)
+        }
+
+        override fun extract(extractor: ElementaExtractor, state: DrawState) {
+            val newX = x + symbolWidth - actualSymbolWidth
+            if (drawable !is ListDrawable)
+                TextDrawable.extractString(extractor, config, md.getFontProvider(), symbol, newX + state.xShift, y + state.yShift, 1f)
+            drawable.extract(extractor, state)
         }
 
         override fun cursorAt(mouseX: Float, mouseY: Float, dragged: Boolean, mouseButton: Int) =

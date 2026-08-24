@@ -4,6 +4,7 @@ import gg.essential.elementa.markdown.DrawState
 import gg.essential.elementa.markdown.drawables.Drawable
 import gg.essential.elementa.markdown.drawables.ImageDrawable
 import gg.essential.elementa.markdown.drawables.TextDrawable
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 
 class Selection private constructor(val start: Cursor<*>, val end: Cursor<*>) {
@@ -58,6 +59,11 @@ class Selection private constructor(val start: Cursor<*>, val end: Cursor<*>) {
     fun draw(matrixStack: UMatrixStack, state: DrawState) {
         start.draw(matrixStack, state)
         end.draw(matrixStack, state)
+    }
+
+    fun extract(extractor: ElementaExtractor, state: DrawState) {
+        start.extract(extractor, state)
+        end.extract(extractor, state)
     }
 
     fun remove() {

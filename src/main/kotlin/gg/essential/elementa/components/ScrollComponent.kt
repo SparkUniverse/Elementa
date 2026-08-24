@@ -192,7 +192,29 @@ class ScrollComponent constructor(
     private var lastActualWidth = 0f
     private var lastActualHeight = 0f
 
+    init {
+        addUpdateFunc(object : UpdateFunc {
+            override fun invoke(dt: Float, dtMs: Int) {
+                if (Window.of(this@ScrollComponent).usesLegacyDraw) {
+                    // handled by `draw` override below
+                    removeUpdateFunc(this)
+                    return
+                }
+                doUpdate()
+            }
+        })
+    }
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
+        doUpdate()
+        @Suppress("DEPRECATION")
+        super.draw(matrixStack)
+    }
+
+    private fun doUpdate() {
         val width = getWidth()
         val height = getHeight()
         if (width != lastWidth || height != lastHeight) {
@@ -232,8 +254,6 @@ class ScrollComponent constructor(
             percentageOfParent = height / actualHeight
             verticalScrollAdjustEvents.forEach { it(percent, percentageOfParent) }
         }
-
-        super.draw(matrixStack)
     }
 
     /**

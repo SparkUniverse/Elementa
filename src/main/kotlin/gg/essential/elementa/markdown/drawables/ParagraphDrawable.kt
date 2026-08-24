@@ -8,6 +8,7 @@ import gg.essential.elementa.markdown.MarkdownComponent
 import gg.essential.elementa.markdown.selection.Cursor
 import gg.essential.elementa.markdown.selection.ImageCursor
 import gg.essential.elementa.markdown.selection.TextCursor
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.elementa.utils.withAlpha
 import gg.essential.universal.UDesktop
 import gg.essential.universal.UMatrixStack
@@ -291,6 +292,10 @@ class ParagraphDrawable(
                 layout.elementHeight.toDouble()
             )
         }
+    }
+
+    override fun extract(extractor: ElementaExtractor, state: DrawState) {
+        drawables.forEach { it.extract(extractor, state) }
     }
 
     override fun cursorAt(mouseX: Float, mouseY: Float, dragged: Boolean, mouseButton: Int): Cursor<*> {

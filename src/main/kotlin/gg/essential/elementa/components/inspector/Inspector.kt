@@ -6,6 +6,9 @@ import gg.essential.elementa.constraints.*
 import gg.essential.elementa.dsl.*
 import gg.essential.elementa.effects.OutlineEffect
 import gg.essential.elementa.effects.ScissorEffect
+import gg.essential.elementa.renderer.ElementaExtractor
+import gg.essential.elementa.renderer.impl.Rect
+import gg.essential.elementa.renderer.ScissorExtractingElementaExtractor
 import gg.essential.elementa.utils.ObservableAddEvent
 import gg.essential.elementa.utils.ObservableClearEvent
 import gg.essential.elementa.utils.ObservableRemoveEvent
@@ -13,6 +16,7 @@ import gg.essential.elementa.utils.devPropSet
 import gg.essential.elementa.utils.elementaDebug
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.UResolution
 import gg.essential.universal.render.DrawCallBuilder
 import gg.essential.universal.render.URenderPipeline
 import gg.essential.universal.shader.BlendState
@@ -22,6 +26,7 @@ import java.io.FileNotFoundException
 import java.net.ConnectException
 import java.net.URL
 import java.text.NumberFormat
+import kotlin.math.roundToInt
 
 class Inspector @JvmOverloads constructor(
     rootComponent: UIComponent,
@@ -291,6 +296,50 @@ class Inspector @JvmOverloads constructor(
         }
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        separator1.setWidth(container.getWidth().pixels())
+        separator2.setWidth(container.getWidth().pixels())
+
+        if (isClickSelecting) {
+            val (mouseX, mouseY) = getMousePosition()
+            getClickSelectTarget(mouseX, mouseY)
+        } else {
+            selectedNode?.targetComponent
+        }?.also { component ->
+            val scissors = generateSequence(component) { if (it.parent != it) it.parent else null }
+                .flatMap { it.effects.filterIsInstance<ScissorEffect>().asReversed() }
+                .toList()
+                .reversed()
+
+            val window = Window.of(this)
+            val guiScale = UResolution.scaleFactor.toFloat()
+            val screenSize = Rect(0, 0, (window.getWidth() * guiScale).roundToInt(), (window.getHeight() * guiScale).roundToInt())
+
+            val scissorExtractor = ScissorExtractingElementaExtractor(screenSize, guiScale)
+            scissors.forEach { it.extractBefore(scissorExtractor) }
+            val scissorRect = scissorExtractor.scissorStack.last()
+            scissors.asReversed().forEach { it.extractAfter(scissorExtractor) }
+
+            val componentRect = Rect(
+                (component.getLeft() * guiScale).roundToInt(),
+                (component.getTop() * guiScale).roundToInt(),
+                (component.getRight() * guiScale).roundToInt(),
+                (component.getBottom() * guiScale).roundToInt(),
+            )
+
+            for (r in componentRect.subtract(scissorRect)) {
+                extractor.fill(r.x1, r.y1, r.x2, r.y2, Color(255, 100, 100, 100))
+            }
+
+            val r = componentRect.intersection(scissorRect)
+            extractor.fill(r.x1, r.y1, r.x2, r.y2, Color(129, 212, 250, 100))
+        }
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         separator1.setWidth(container.getWidth().pixels())
         separator2.setWidth(container.getWidth().pixels())
@@ -327,8 +376,10 @@ class Inspector @JvmOverloads constructor(
             matrixStack.pop()
 
             // Draw a highlight on the element respecting its scissor effects
+            @Suppress("DEPRECATION")
             scissors.forEach { it.beforeDraw(matrixStack) }
             drawQuad(HIGHLIGHT_PIPELINE, Color(129, 212, 250, 100))
+            @Suppress("DEPRECATION")
             scissors.asReversed().forEach { it.afterDraw(matrixStack) }
 
             // Then draw another highlight (with depth testing such that we do not overwrite the previous one)
@@ -342,6 +393,7 @@ class Inspector @JvmOverloads constructor(
         val debugState = elementaDebug
         elementaDebug = false
         try {
+            @Suppress("DEPRECATION")
             super.draw(matrixStack)
         } finally {
             elementaDebug = debugState

@@ -5,6 +5,7 @@ import gg.essential.elementa.markdown.MarkdownComponent
 import gg.essential.elementa.markdown.MarkdownConfig
 import gg.essential.elementa.markdown.selection.Cursor
 import gg.essential.elementa.markdown.selection.TextCursor
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
@@ -74,6 +75,9 @@ abstract class Drawable(val md: MarkdownComponent) {
     fun drawCompat(matrixStack: UMatrixStack, state: DrawState) = UMatrixStack.Compat.runLegacyMethod(matrixStack) { draw(state) }
 
     open fun draw(matrixStack: UMatrixStack, state: DrawState) {
+    }
+
+    open fun extract(extractor: ElementaExtractor, state: DrawState) {
     }
 
     open fun beforeDraw(state: DrawState) {

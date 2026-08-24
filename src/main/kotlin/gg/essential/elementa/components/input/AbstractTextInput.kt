@@ -10,6 +10,9 @@ import gg.essential.elementa.constraints.CenterConstraint
 import gg.essential.elementa.constraints.animation.Animations
 import gg.essential.elementa.dsl.*
 import gg.essential.elementa.effects.ScissorEffect
+import gg.essential.elementa.font.extractMcScale
+import gg.essential.elementa.renderer.ElementaExtractor
+import gg.essential.elementa.renderer.fillMcScale
 import gg.essential.elementa.utils.getStringSplitToWidth
 import gg.essential.universal.UDesktop
 import gg.essential.universal.UKeyboard
@@ -353,10 +356,21 @@ abstract class AbstractTextInput(
         enableEffect(ScissorEffect())
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        cursorComponent.setHeight(
+            (lineHeight * getTextScale()).pixels()
+        )
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         cursorComponent.setHeight(
             (lineHeight * getTextScale()).pixels()
         )
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 
@@ -690,6 +704,7 @@ abstract class AbstractTextInput(
     protected open fun hasText() = textualLines.size > 1 || textualLines[0].text.isNotEmpty()
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("drawUnselectedText(matrixStack, text, left, row)"))
+    @Suppress("DEPRECATION")
     protected open fun drawUnselectedText(text: String, left: Float, row: Int) =
         drawUnselectedText(UMatrixStack.Compat.get(), text, left, row)
 
@@ -697,6 +712,8 @@ abstract class AbstractTextInput(
     protected fun drawUnselectedTextCompat(matrixStack: UMatrixStack, text: String, left: Float, row: Int) =
         UMatrixStack.Compat.runLegacyMethod(matrixStack) { drawUnselectedText(text, left, row) }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
+    @Suppress("DEPRECATION")
     protected open fun drawUnselectedText(matrixStack: UMatrixStack, text: String, left: Float, row: Int) {
         // TODO: Shadow color
         getFontProvider().drawString(
@@ -711,14 +728,31 @@ abstract class AbstractTextInput(
         )
     }
 
+    protected fun extractUnselectedText(extractor: ElementaExtractor, text: String, left: Float, row: Int) {
+        // TODO: Shadow color
+        getFontProvider().extractMcScale(
+            extractor,
+            text,
+            getColor(),
+            left - horizontalScrollingOffset,
+            getTop() + ((lineHeight * row + 1) * getTextScale()) + verticalScrollingOffset,
+            getTextScale(),
+            shadow = false
+        )
+    }
+
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("drawSelectedText(matrixStack, text, left, right, row)"))
+    @Suppress("DEPRECATION")
     protected open fun drawSelectedText(text: String, left: Float, right: Float, row: Int) =
         drawSelectedText(UMatrixStack.Compat.get(), text, left, right, row)
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     @Suppress("DEPRECATION")
     protected fun drawSelectedTextCompat(matrixStack: UMatrixStack, text: String, left: Float, right: Float, row: Int) =
         UMatrixStack.Compat.runLegacyMethod(matrixStack) { drawSelectedText(text, left, right, row) }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
+    @Suppress("DEPRECATION")
     protected open fun drawSelectedText(matrixStack: UMatrixStack, text: String, left: Float, right: Float, row: Int) {
         UIBlock.drawBlock(
             matrixStack,
@@ -736,6 +770,27 @@ abstract class AbstractTextInput(
                 left - horizontalScrollingOffset,
                 getTop() + ((lineHeight * row + 1) * getTextScale()) + verticalScrollingOffset,
                 10f,
+                getTextScale(),
+                shadow = false
+            )
+        }
+    }
+
+    protected fun extractSelectedText(extractor: ElementaExtractor, text: String, left: Float, right: Float, row: Int) {
+        extractor.fillMcScale(
+            left - horizontalScrollingOffset,
+            getTop() + (lineHeight * row * getTextScale()) + verticalScrollingOffset,
+            right - horizontalScrollingOffset,
+            getTop() + (lineHeight * ((row + 1) * getTextScale())) + verticalScrollingOffset,
+            if (active) selectionBackgroundColor else inactiveSelectionBackgroundColor,
+        )
+        if (text.isNotEmpty()) {
+            getFontProvider().extractMcScale(
+                extractor,
+                text,
+                if (active) selectionForegroundColor else inactiveSelectionForegroundColor,
+                left - horizontalScrollingOffset,
+                getTop() + ((lineHeight * row + 1) * getTextScale()) + verticalScrollingOffset,
                 getTextScale(),
                 shadow = false
             )

@@ -11,6 +11,7 @@ import gg.essential.elementa.dsl.toConstraint
 import gg.essential.elementa.dsl.childOf
 import gg.essential.elementa.dsl.constrain
 import gg.essential.elementa.dsl.pixels
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UKeyboard
 import gg.essential.universal.UMatrixStack
 import java.awt.Color
@@ -31,9 +32,20 @@ class InspectorNode(private val inspector: Inspector, val targetComponent: UICom
             width = TextAspectConstraint()
         } childOf this
 
+        override fun extractComponent(extractor: ElementaExtractor) {
+            update()
+        }
+        @Deprecated(
+            "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+            replaceWith = ReplaceWith("extract(extractor)")
+        )
+        @Suppress("DEPRECATION")
         override fun draw(matrixStack: UMatrixStack) {
             super.draw(matrixStack)
+            update()
+        }
 
+        private fun update() {
             val isCurrentlyHidden = targetComponent.parent != targetComponent && !targetComponent.parent.children.contains(
                 targetComponent
             )

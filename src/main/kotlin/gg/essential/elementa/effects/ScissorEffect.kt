@@ -1,6 +1,7 @@
 package gg.essential.elementa.effects
 
 import gg.essential.elementa.UIComponent
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.elementa.utils.roundToRealPixels
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
@@ -43,7 +44,24 @@ class ScissorEffect @JvmOverloads constructor(
         )
     }
 
-    override fun beforeDraw(matrixStack: UMatrixStack) {
+    override fun extractBefore(extractor: ElementaExtractor) {
+        val state = setupScissor()
+        extractor.pushScissor(
+            state.x,
+            UResolution.viewportHeight - state.y - state.height,
+            state.x + state.width,
+            UResolution.viewportHeight - state.y,
+        )
+    }
+
+    override fun extractAfter(extractor: ElementaExtractor) {
+        extractor.popScissor()
+
+        currentScissorState = oldState
+        oldState = null
+    }
+
+    private fun setupScissor(): ScissorState {
         val bounds = customBoundingBox?.getScissorBounds() ?: scissorBounds ?: boundComponent.getScissorBounds()
         val scaleFactor = UResolution.scaleFactor
 
@@ -72,11 +90,24 @@ class ScissorEffect @JvmOverloads constructor(
             height = min(y2, oldY2) - y
         }
 
-        UGraphics.enableScissor(x, y, width.coerceAtLeast(0), height.coerceAtLeast(0))
-
-        currentScissorState = ScissorState(x, y, width.coerceAtLeast(0), height.coerceAtLeast(0))
+        val newState = ScissorState(x, y, width.coerceAtLeast(0), height.coerceAtLeast(0))
+        currentScissorState = newState
+        return newState
     }
 
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractBefore(extractor)")
+    )
+    override fun beforeDraw(matrixStack: UMatrixStack) {
+        val state = setupScissor()
+        UGraphics.enableScissor(state.x, state.y, state.width, state.height)
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractAfter(extractor)")
+    )
     override fun afterDraw(matrixStack: UMatrixStack) {
         val state = oldState
 

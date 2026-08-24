@@ -5,6 +5,7 @@ import gg.essential.elementa.markdown.MarkdownComponent
 import gg.essential.elementa.markdown.MarkdownConfig
 import gg.essential.elementa.markdown.selection.Cursor
 import gg.essential.elementa.markdown.selection.TextCursor
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 
 /**
@@ -101,6 +102,10 @@ class DrawableList(
 
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         forEach { it.drawCompat(matrixStack, state) }
+    }
+
+    override fun extract(extractor: ElementaExtractor, state: DrawState) {
+        forEach { it.extract(extractor, state) }
     }
 
     override fun selectedText(asMarkdown: Boolean): String {
