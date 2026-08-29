@@ -29,13 +29,19 @@ open class SiblingConstraint @JvmOverloads constructor(
         val index = component.parent.children.indexOf(component)
 
         if (alignOpposite) {
-            if (index == 0) return component.parent.getRight() - component.getWidth()
-            val sibling = component.parent.children[index - 1]
-            return getLeftmostPoint(sibling, component.parent, index) - component.getWidth() - padding
+            if (index > 0) {
+                val sibling = component.parent.children[index - 1]
+                return getLeftmostPoint(sibling, component.parent, index) - component.getWidth() - padding
+            } else {
+                return component.parent.getRight() - component.getWidth()
+            }
         } else {
-            if (index == 0) return component.parent.getLeft()
-            val sibling = component.parent.children[index - 1]
-            return getRightmostPoint(sibling, component.parent, index) + padding
+            if (index > 0) {
+                val sibling = component.parent.children[index - 1]
+                return getRightmostPoint(sibling, component.parent, index) + padding
+            } else {
+                return component.parent.getLeft()
+            }
         }
     }
 
@@ -51,13 +57,19 @@ open class SiblingConstraint @JvmOverloads constructor(
         val index = component.parent.children.indexOf(component)
 
         if (alignOpposite) {
-            if (index == 0) return component.parent.getBottom() - component.getHeight()
-            val sibling = component.parent.children[index - 1]
-            return getHighestPoint(sibling, component.parent, index) - component.getHeight() - padding
+            if (index > 0) {
+                val sibling = component.parent.children[index - 1]
+                return getHighestPoint(sibling, component.parent, index) - component.getHeight() - padding
+            } else {
+                return component.parent.getBottom() - component.getHeight()
+            }
         } else {
-            if (index == 0) return component.parent.getTop()
-            val sibling = component.parent.children[index - 1]
-            return getLowestPoint(sibling, component.parent, index) + padding
+            if (index > 0) {
+                val sibling = component.parent.children[index - 1]
+                return getLowestPoint(sibling, component.parent, index) + padding
+            } else {
+                return component.parent.getTop()
+            }
         }
     }
 
