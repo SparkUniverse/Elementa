@@ -274,7 +274,7 @@ internal class ElementaRendererImpl(
     }
 
     // When in dev mode, we'll apply a random offset to special and post-processing renderer targets to ensure
-    // they work reliably and don't e.g. accidentially rely on rendering to 0/0.
+    // they work reliably and don't e.g. accidentally rely on rendering to 0/0.
     private val shake = System.getProperty("elementa.dev.renderer.shake", elementaDev.toString()).toBoolean()
     private val shakeRandom = Random(0L)
     private fun shake(packings: List<Packing>): List<Packing> = if (!shake) packings else packings.map { shake(it) }

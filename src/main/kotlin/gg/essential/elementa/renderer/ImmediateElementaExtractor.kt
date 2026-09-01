@@ -20,7 +20,7 @@ import java.awt.Color
  * This implementation of [ElementaExtractor] which directly draws to the global render target.
  *
  * Its intended use case is for components which should support both [UIComponent.extractComponent] and
- * [UIComponent.draw] for backwards compatibility, but for which both implementations essential do the same thing.
+ * [UIComponent.draw] for backwards compatibility, but for which both implementations essentially do the same thing.
  * Such components can then implement only [UIComponent.extractComponent] and forward [UIComponent.draw] to
  * [UIComponent.extractComponent] using an instance of this class as the extractor.
  *

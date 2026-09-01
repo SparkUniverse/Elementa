@@ -227,7 +227,7 @@ private fun renderTextureAtlas(
             1 - (packY + height).toFloat() / atlasSize.h,
         )
 
-        // We prefer coping from an existing atlas, as that allows us to do a single draw for multiple textures
+        // We prefer copying from an existing atlas, as that allows us to do a single draw for multiple textures
         val copySrc = existingAtlas.get(element) ?: element
         copyJobs.add(TexturedElement(
             Rect.xywh(packX, packY, width, height),

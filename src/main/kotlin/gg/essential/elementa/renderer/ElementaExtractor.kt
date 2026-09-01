@@ -79,7 +79,6 @@ interface ElementaExtractor {
      * The same factory should ideally be re-used between different calls to this method.
      * This allows the renderer to process multiple instances at once and for it to be re-used across frames.
      * To pass data to the renderer which is specific to this call, use the generic [args] parameter.
-     *
      */
     fun <T> special(
         x1: Int, y1: Int, x2: Int, y2: Int,

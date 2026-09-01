@@ -23,7 +23,7 @@ internal class ScissorExtractingElementaExtractor(
 
     override fun pushScissorRaw(x1: Int, y1: Int, x2: Int, y2: Int) {
         val rect = Rect.ltrbChecked(x1, y1, x2, y2)
-        require(rect in screenSize) { "$rect is out of bounds $screenSize"}
+        require(rect in screenSize) { "$rect is out of bounds $screenSize" }
         scissorStack.add(rect)
     }
 

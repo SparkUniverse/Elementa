@@ -9,10 +9,10 @@ import gg.essential.universal.render.UGpuTextureView
  */
 interface SpecialRenderer<T> : AutoCloseable {
     /**
-     * Indicates that this renderer will respect the `scissor*` propeties of [Instance] and will not draw outside of
+     * Indicates that this renderer will respect the `scissor*` properties of [Instance] and will not draw outside of
      * them.
      *
-     * This is generally desireable as it allows the gui renderer to pack instance more compactly.
+     * This is generally desirable as it allows the gui renderer to pack instance more compactly.
      *
      * If this is not supported, the gui renderer will usually (provided [onlyDrawsInBounds] is `true`) ask this special
      * renderer to draw the whole component, but then later only copy parts of the resulting texture to the screen.
