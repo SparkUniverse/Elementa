@@ -1,5 +1,6 @@
 package gg.essential.elementa.renderer.impl
 
+import gg.essential.elementa.utils.NEAREST
 import gg.essential.universal.render.UGpuDevice
 import gg.essential.universal.render.UGpuFormat
 import gg.essential.universal.render.UGpuSampler

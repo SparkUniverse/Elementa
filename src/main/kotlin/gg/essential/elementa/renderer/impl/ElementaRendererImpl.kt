@@ -3,6 +3,7 @@ package gg.essential.elementa.renderer.impl
 import gg.essential.elementa.renderer.ElementaRenderState
 import gg.essential.elementa.renderer.PostProcessingRenderer
 import gg.essential.elementa.renderer.SpecialRenderer
+import gg.essential.elementa.utils.NEAREST
 import gg.essential.elementa.utils.elementaDev
 import gg.essential.universal.render.UGpuDevice
 import gg.essential.universal.render.UGpuFormat

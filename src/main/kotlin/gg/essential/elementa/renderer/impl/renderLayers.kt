@@ -10,6 +10,7 @@ import gg.essential.universal.render.UGpuSampler
 import gg.essential.universal.render.UGpuTextureView
 import gg.essential.universal.render.URenderPass
 import gg.essential.universal.render.URenderPipeline
+import gg.essential.universal.shader.BlendState
 import gg.essential.universal.vertex.UBufferBuilder
 import java.util.WeakHashMap
 import kotlin.use
@@ -142,11 +143,21 @@ private class ColoredBatchBuilder : BatchBuilder {
         }
         val (indexBuffer, indexType) = SharedIndexBuffers.quads(quads * 4)
 
-        renderPass.pipeline(PIPELINE_COLOR)
+        renderPass.pipeline(PIPELINE)
         renderPass.vertexBuffer(0, gpuBuffer.slice())
         renderPass.indexBuffer(indexBuffer, indexType)
         renderPass.drawIndexed(quads * 6)
         gpuBuffer.close()
+    }
+
+    companion object {
+        private val PIPELINE = URenderPipeline.builderWithDefaultShader(
+            "elementa:renderer/color",
+            UGraphics.DrawMode.QUADS,
+            UGraphics.CommonVertexFormats.POSITION_COLOR,
+        ).apply {
+            blendState = BlendState.ALPHA
+        }.build()
     }
 }
 
@@ -195,12 +206,30 @@ private class TexturedBatchBuilder(
         }
         val (indexBuffer, indexType) = SharedIndexBuffers.quads(quads * 4)
 
-        renderPass.pipeline(if (premultipliedAlpha) PIPELINE_TEXTURE_PREMULTIPLIED_ALPHA else PIPELINE_TEXTURE)
+        renderPass.pipeline(if (premultipliedAlpha) PIPELINE_PREMULTIPLIED_ALPHA else PIPELINE)
         renderPass.vertexBuffer(0, gpuBuffer.slice())
         renderPass.indexBuffer(indexBuffer, indexType)
         renderPass.texture("Sampler0", textureView, sampler)
         renderPass.drawIndexed(quads * 6)
         gpuBuffer.close()
+    }
+
+    companion object {
+        private val PIPELINE = URenderPipeline.builderWithDefaultShader(
+            "elementa:renderer/texture",
+            UGraphics.DrawMode.QUADS,
+            UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR,
+        ).apply {
+            blendState = BlendState.ALPHA
+        }.build()
+
+        private val PIPELINE_PREMULTIPLIED_ALPHA = URenderPipeline.builderWithDefaultShader(
+            "elementa:renderer/texture_premultiplied_alpha",
+            UGraphics.DrawMode.QUADS,
+            UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR,
+        ).apply {
+            blendState = BlendState.PREMULTIPLIED_ALPHA
+        }.build()
     }
 }
 
