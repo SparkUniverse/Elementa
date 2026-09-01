@@ -27,6 +27,7 @@ internal class ElementaRendererImpl(
         UGpuFormat.DEFAULT_RGBA,
     )
     private val specialRendererCache = SpecialRendererCache()
+    private val postProcessingRendererCache = PostProcessingRendererCache()
     private val textureAtlasCache = TextureAtlasCache(device, maxAtlasSize)
 
     fun renderToTexture(
@@ -51,6 +52,7 @@ internal class ElementaRendererImpl(
         temporaryTexturesCache.endFrame()
         if (shake && shakeRandom.nextInt(10) == 0) temporaryTexturesCache.endFrame()
         specialRendererCache.endFrame()
+        postProcessingRendererCache.endFrame()
     }
 
     private data class Id(val indexOfList: Int, val indexInList: Int)
@@ -209,13 +211,12 @@ internal class ElementaRendererImpl(
             )
         })
         for ((factory, instancesForFactory) in byFactory) {
-            val renderer = factory.create()
+            val renderer = postProcessingRendererCache.provide(factory)
             @Suppress("UNCHECKED_CAST")
             fun <T> renderUnchecked(renderer: PostProcessingRenderer<T>, instances: List<PostProcessingRenderer.Instance<*>>) {
                 renderer.render(outTextureView, rawTextureView, instances as List<PostProcessingRenderer.Instance<T>>)
             }
             renderUnchecked(renderer, instancesForFactory)
-            renderer.close()
         }
 
         for ((index, x, y) in packing.entries) {
@@ -295,6 +296,7 @@ internal class ElementaRendererImpl(
 
     override fun close() {
         textureAtlasCache.close()
+        postProcessingRendererCache.close()
         specialRendererCache.close()
         temporaryTexturesCache.close()
     }
