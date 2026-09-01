@@ -58,13 +58,15 @@ internal class ElementaExtractorImpl(
     override fun fill(
         x1: Int, y1: Int, x2: Int, y2: Int,
         color: Color,
-    ) = addElement(
-        ColoredElement(
+    ) {
+        if (color.alpha == 0) return
+
+        addElement(ColoredElement(
             Rect.ltrbChecked(x1, y1, x2, y2),
             scissorStack.last(),
             color,
-        )
-    )
+        ))
+    }
 
     override fun blit(
         x1: Int, y1: Int, x2: Int, y2: Int,
@@ -72,8 +74,14 @@ internal class ElementaExtractorImpl(
         texture: UGpuTextureView, sampler: UGpuSampler,
         textureContentImmutable: Boolean, premultipliedAlpha: Boolean,
         color: Color,
-    ) = addElement(
-        TexturedElement(
+    ) {
+        if (premultipliedAlpha) {
+            if (color.rgb == 0) return
+        } else {
+            if (color.alpha == 0) return
+        }
+
+        addElement(TexturedElement(
             Rect.ltrbChecked(x1, y1, x2, y2),
             scissorStack.last(),
             texture,
@@ -82,8 +90,8 @@ internal class ElementaExtractorImpl(
             premultipliedAlpha,
             color,
             u1, v1, u2, v2,
-        )
-    )
+        ))
+    }
 
     override fun custom(
         x1: Int, y1: Int, x2: Int, y2: Int,

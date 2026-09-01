@@ -79,16 +79,13 @@ open class UIImage @JvmOverloads constructor(
     constructor(imageFunction: () -> BufferedImage) : this(CompletableFuture.supplyAsync(imageFunction))
 
     override fun extractComponent(extractor: ElementaExtractor) {
-        val color = getColor()
-        if (color.alpha == 0) return
-
         extract(
             extractor,
             (getLeft() * extractor.guiScale).roundToInt(),
             (getTop() * extractor.guiScale).roundToInt(),
             (getWidth() * extractor.guiScale).roundToInt(),
             (getHeight() * extractor.guiScale).roundToInt(),
-            color,
+            getColor(),
         )
     }
 

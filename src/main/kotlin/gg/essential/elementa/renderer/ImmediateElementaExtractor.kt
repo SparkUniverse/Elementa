@@ -44,6 +44,7 @@ class ImmediateElementaExtractor(val matrixStack: UMatrixStack) : ElementaExtrac
     override fun isVisible(x1: Int, y1: Int, x2: Int, y2: Int) = true
 
     override fun fill(x1: Int, y1: Int, x2: Int, y2: Int, color: Color) {
+        // Note: We're explicitly not early returning on color.alpha == 0 here to honor the class contract.
         UIBlock.drawBlock(matrixStack, color, x1 * invScale, y1 * invScale, x2 * invScale, y2 * invScale)
     }
 
@@ -54,6 +55,12 @@ class ImmediateElementaExtractor(val matrixStack: UMatrixStack) : ElementaExtrac
         textureContentImmutable: Boolean, premultipliedAlpha: Boolean,
         color: Color,
     ) {
+        if (premultipliedAlpha) {
+            if (color.rgb == 0) return
+        } else {
+            if (color.alpha == 0) return
+        }
+
         val pipeline = if (premultipliedAlpha) PIPELINE_TEXTURE_PREMULTIPLIED_ALPHA else PIPELINE_TEXTURE
 
         val bufferBuilder = UBufferBuilder.create(UGraphics.DrawMode.QUADS, UGraphics.CommonVertexFormats.POSITION_TEXTURE_COLOR)
