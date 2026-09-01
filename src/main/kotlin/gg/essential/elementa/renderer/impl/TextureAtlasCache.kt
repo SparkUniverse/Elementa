@@ -157,7 +157,7 @@ private class TextureAtlasImpl(
                 //   q.e.d.
                 //</editor-fold>
                 with(element.color) {
-                    Color(red * alpha / 256, green * alpha / 256, blue * alpha / 256, alpha)
+                    Color(red * alpha / 255, green * alpha / 255, blue * alpha / 255, alpha)
                 }
             } else {
                 // No change necessary, both texture and atlas contain the exact same content, so it doesn't matter
