@@ -15,7 +15,7 @@ internal fun sortIntoLayers(elements: Sequence<Element>): List<MutableList<Eleme
     val layers = mutableListOf<MutableList<Element>>()
     for (element in elements) {
         val bounds = element.bounds
-        var targetLayer = -1
+        var targetLayer = 0
         for (layer in layers.indices.reversed()) {
             var intersects = false
             var needsNewLayer = false
@@ -32,9 +32,6 @@ internal fun sortIntoLayers(elements: Sequence<Element>): List<MutableList<Eleme
                 targetLayer = if (needsNewLayer) layer + 1 else layer
                 break
             }
-        }
-        if (targetLayer == -1) {
-            targetLayer = 0
         }
         if (targetLayer > layers.lastIndex) {
             layers.add(mutableListOf())
