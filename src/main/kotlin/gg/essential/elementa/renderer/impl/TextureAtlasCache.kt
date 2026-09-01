@@ -213,7 +213,7 @@ private fun renderTextureAtlas(
     ), 0, 1)
 
     val copyJobs = mutableListOf<Element>()
-    val atlasMap = WeakHashMap<CacheKey, TextureAtlasImpl.Entry>()
+    val atlasMap = mutableMapOf<CacheKey, TextureAtlasImpl.Entry>()
 
     for ((id, packX, packY) in packing.entries) {
         val element = elements[id]
