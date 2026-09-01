@@ -29,10 +29,7 @@ open class UIRoundedRectangle(radius: Float) : UIComponent() {
     }
 
     override fun extractComponent(extractor: ElementaExtractor) {
-        val color = getColor()
-        if (color.alpha == 0) return
-
-        extractRoundedRectangle(extractor, getLeft(), getTop(), getRight(), getBottom(), getRadius(), color)
+        extractRoundedRectangle(extractor, getLeft(), getTop(), getRight(), getBottom(), getRadius(), getColor())
     }
 
     @Deprecated(
@@ -135,6 +132,7 @@ open class UIRoundedRectangle(radius: Float) : UIComponent() {
         }
 
         fun extractRoundedRectangle(extractor: ElementaExtractor, left: Float, top: Float, right: Float, bottom: Float, radius: Float, color: Color) {
+            if (color.alpha == 0) return
             extractRoundedRectanglePixelSpace(
                 extractor,
                 (left * extractor.guiScale).roundToInt(),
