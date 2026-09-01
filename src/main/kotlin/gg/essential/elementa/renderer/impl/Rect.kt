@@ -50,6 +50,8 @@ internal data class Rect(val x1: Int, val y1: Int, val x2: Int, val y2: Int) : C
      * Returns zero to four [Rect]s which cover exactly the resulting shape.
      */
     fun subtract(other: Rect): List<Rect> {
+        if (!intersects(other)) return listOf(this)
+        if (other.contains(this)) return emptyList()
         return listOfNotNull(
             Rect(x1, y1, x2, min(y2, other.y1)).ifPositiveElseNull,
             Rect(max(x1, other.x2), max(y1, other.y1), x2, min(y2, other.y2)).ifPositiveElseNull,
