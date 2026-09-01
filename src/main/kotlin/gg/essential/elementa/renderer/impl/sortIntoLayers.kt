@@ -24,6 +24,7 @@ internal fun sortIntoLayers(elements: Sequence<Element>): List<MutableList<Eleme
                     intersects = true
                     if (element !is ColoredElement || other !is ColoredElement) {
                         needsNewLayer = true
+                        break
                     }
                 }
             }
