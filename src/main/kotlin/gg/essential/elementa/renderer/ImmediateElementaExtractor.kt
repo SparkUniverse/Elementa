@@ -100,7 +100,6 @@ class ImmediateElementaExtractor(val matrixStack: UMatrixStack) : ElementaExtrac
         val h = y2 - y1
         if (w <= 0 || h <= 0) return
 
-        val renderer = factory.create()
         val device = UGraphics.getDevice()
         val texture = device.createTexture(
             null,
@@ -110,21 +109,25 @@ class ImmediateElementaExtractor(val matrixStack: UMatrixStack) : ElementaExtrac
             h,
             1,
         )
-        device.clearColor(texture, 0f, 0f, 0f, 0f)
         val textureView = device.createTextureView(texture, 0, 1)
-        renderer.render(textureView, listOf(
-            SpecialRenderer.Instance(
-                0, 0, w, h,
-                0, 0, w, h,
-                args,
-            )
-        ))
-        renderer.close()
+        try {
+            device.clearColor(texture, 0f, 0f, 0f, 0f)
 
-        blit(x1, y1, x2, y2, 0f, 1f, 1f, 0f, textureView, SAMPLER_NEAREST, false, true, Color.WHITE)
+            factory.create().use { renderer ->
+                renderer.render(textureView, listOf(
+                    SpecialRenderer.Instance(
+                        0, 0, w, h,
+                        0, 0, w, h,
+                        args,
+                    )
+                ))
+            }
 
-        textureView.close()
-        texture.close()
+            blit(x1, y1, x2, y2, 0f, 1f, 1f, 0f, textureView, SAMPLER_NEAREST, false, true, Color.WHITE)
+        } finally {
+            textureView.close()
+            texture.close()
+        }
     }
 
     override fun <T> pushPostProcessing(factory: PostProcessingRenderer.Factory<T>, args: T) =
