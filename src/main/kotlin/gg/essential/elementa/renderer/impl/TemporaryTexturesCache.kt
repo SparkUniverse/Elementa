@@ -6,12 +6,12 @@ import gg.essential.universal.render.UGpuTexture
 import gg.essential.universal.render.UGpuTextureView
 
 internal class TemporaryTexturesCache(
-    val device: UGpuDevice,
-    val usage: UGpuTexture.Usage,
-    val format: UGpuFormat,
+    private val device: UGpuDevice,
+    private val usage: UGpuTexture.Usage,
+    private val format: UGpuFormat,
 ) : AutoCloseable {
-    val available = mutableListOf<UGpuTextureView>() // always sorted by area
-    val used = mutableListOf<UGpuTextureView>()
+    private val available = mutableListOf<UGpuTextureView>() // always sorted by area
+    private val used = mutableListOf<UGpuTextureView>()
 
     fun provide(width: Int, height: Int): UGpuTextureView {
         val area = width * height
