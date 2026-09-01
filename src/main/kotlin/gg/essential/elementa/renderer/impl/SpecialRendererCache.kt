@@ -3,7 +3,7 @@ package gg.essential.elementa.renderer.impl
 import gg.essential.elementa.renderer.SpecialRenderer
 
 internal class SpecialRendererCache : AutoCloseable {
-    class Entry<T> : AutoCloseable {
+    private class Entry<T> : AutoCloseable {
         val available = mutableListOf<SpecialRenderer<T>>()
         val used = mutableListOf<SpecialRenderer<T>>()
 
@@ -24,7 +24,7 @@ internal class SpecialRendererCache : AutoCloseable {
             used.clear()
         }
     }
-    val entries = mutableMapOf<SpecialRenderer.Factory<*>, Entry<*>>()
+    private val entries = mutableMapOf<SpecialRenderer.Factory<*>, Entry<*>>()
 
     fun <T> provide(factory: SpecialRenderer.Factory<T>): SpecialRenderer<T> {
         @Suppress("UNCHECKED_CAST")
