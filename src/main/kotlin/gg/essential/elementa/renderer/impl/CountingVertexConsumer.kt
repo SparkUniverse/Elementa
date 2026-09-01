@@ -4,6 +4,7 @@ import gg.essential.universal.vertex.UVertexConsumer
 
 internal class CountingVertexConsumer(inner: UVertexConsumer, val maxCount: Int) : DelegatingVertexConsumer(inner) {
     var count = 0
+        private set
 
     override fun endVertex(): UVertexConsumer {
         count++
