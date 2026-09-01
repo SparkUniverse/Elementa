@@ -57,10 +57,14 @@ internal class TemporaryTexturesCache(
         used.clear()
     }
 
-    override fun close() {
+    fun flush() {
         available.forEach { it.close(); it.texture.close() }
         available.clear()
         used.forEach { it.close(); it.texture.close() }
         used.clear()
+    }
+
+    override fun close() {
+        flush()
     }
 }

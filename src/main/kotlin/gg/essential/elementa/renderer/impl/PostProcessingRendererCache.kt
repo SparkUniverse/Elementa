@@ -41,8 +41,12 @@ internal class PostProcessingRendererCache : AutoCloseable {
         }
     }
 
-    override fun close() {
+    fun flush() {
         entries.values.forEach { it.close() }
         entries.clear()
+    }
+
+    override fun close() {
+        flush()
     }
 }

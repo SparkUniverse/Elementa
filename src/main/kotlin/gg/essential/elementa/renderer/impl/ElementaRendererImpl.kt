@@ -50,9 +50,9 @@ internal class ElementaRendererImpl(
         )
 
         temporaryTexturesCache.endFrame()
-        if (shake && shakeRandom.nextInt(10) == 0) temporaryTexturesCache.endFrame()
         specialRendererCache.endFrame()
         postProcessingRendererCache.endFrame()
+        shakeAtEndOfFrame()
     }
 
     private data class Id(val indexOfList: Int, val indexInList: Int)
@@ -292,6 +292,19 @@ internal class ElementaRendererImpl(
             packing.atlasHeight + extraHeight,
             packing.entries.map { PackingEntry(it.id, it.x + extraX, it.y + extraY) }
         )
+    }
+    private fun shakeAtEndOfFrame() {
+        if (!shake) return
+
+        // For the above shaking of the atlas size to be effective, we also have to regularily flush our temporary textures
+        // cache, otherwise it'd just keep the biggest size cached and use it for all future requests.
+        // We don't want to flush it every call though, cause then we might not notice if a special/post-processing renderer
+        if (shakeRandom.nextInt(10) == 0) temporaryTexturesCache.flush()
+
+        // We'll also occasionally flush the special and post-processing renderer caches, so to make sure no one's
+        // relying on the same cached instance being used for the same element every frame
+        if (shakeRandom.nextInt(10) == 0) specialRendererCache.flush()
+        if (shakeRandom.nextInt(10) == 0) postProcessingRendererCache.flush()
     }
 
     override fun close() {
