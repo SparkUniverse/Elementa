@@ -298,7 +298,8 @@ internal class ElementaRendererImpl(
 
         // For the above shaking of the atlas size to be effective, we also have to regularily flush our temporary textures
         // cache, otherwise it'd just keep the biggest size cached and use it for all future requests.
-        // We don't want to flush it every call though, cause then we might not notice if a special/post-processing renderer
+        // We don't want to flush it every call though, cause then we might not notice if a special/post-processing
+        // renderer misbehaves when it is cached. We want both scenarios - texture re-use and size-changes - tested.
         if (shakeRandom.nextInt(10) == 0) temporaryTexturesCache.flush()
 
         // We'll also occasionally flush the special and post-processing renderer caches, so to make sure no one's
