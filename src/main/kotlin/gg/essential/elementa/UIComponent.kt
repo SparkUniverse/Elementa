@@ -16,6 +16,8 @@ import gg.essential.elementa.effects.ScissorEffect
 import gg.essential.elementa.events.UIClickEvent
 import gg.essential.elementa.events.UIScrollEvent
 import gg.essential.elementa.font.FontProvider
+import gg.essential.elementa.renderer.ElementaExtractor
+import gg.essential.elementa.renderer.impl.isVisible
 import gg.essential.elementa.state.v2.ReferenceHolder
 import gg.essential.elementa.utils.*
 import gg.essential.elementa.utils.requireMainThread
@@ -545,7 +547,53 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         effects.forEach { it.setup() }
     }
 
+    fun extract(extractor: ElementaExtractor) {
+        if (this is Window) {
+            version.enableFor {
+                doExtract(extractor)
+            }
+        } else {
+            doExtract(extractor)
+        }
+    }
+    private fun doExtract(extractor: ElementaExtractor) {
+        if (!isInitialized) {
+            isInitialized = true
+            afterInitialization()
+        }
+
+        for (effect in effects) {
+            effect.extractBefore(extractor)
+        }
+
+        extractComponent(extractor)
+
+        for (effect in effects) {
+            effect.extractBeforeChildren(extractor)
+        }
+
+        forEachChild { child ->
+            if (child.isFloating) return@forEachChild
+            if (!alwaysDrawChildren() && !extractor.isVisible(child)) return@forEachChild
+            child.extract(extractor)
+        }
+
+        if (this is Window) {
+            for (component in floatingComponents ?: emptyList()) {
+                component.extract(extractor)
+            }
+        }
+
+        for (effect in effects.asReversed()) {
+            effect.extractAfter(extractor)
+        }
+    }
+
+    open fun extractComponent(extractor: ElementaExtractor) {
+    }
+
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("draw(matrixStack)"))
+    @Suppress("DEPRECATION")
     open fun draw() = draw(UMatrixStack.Compat.get())
 
     @Suppress("DEPRECATION")
@@ -555,6 +603,12 @@ abstract class UIComponent : Observable(), ReferenceHolder {
      * Does the actual drawing for this component, meant to be overridden by specific components.
      * Also does some housekeeping dealing with hovering and effects.
      */
+    @Deprecated(
+        "`draw`-style rendering is deprecated. " +
+                "Override `extractComponent` instead. " +
+                "Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     open fun draw(matrixStack: UMatrixStack) {
         if (ElementaVersion.active < ElementaVersion.v4) {
             if (!isInitialized) {
@@ -605,6 +659,8 @@ abstract class UIComponent : Observable(), ReferenceHolder {
         afterDrawCompat(matrixStack)
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead. " +
+            "There's no replacement for `beforeDraw`, override plain `extractComponent` or use an `Effect` instead.")
     open fun beforeDraw(matrixStack: UMatrixStack) {
         if (didCallBeforeDraw && !warnedAboutBeforeDraw) {
             warnedAboutBeforeDraw = true
@@ -624,28 +680,35 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             }
         }
 
-        effects.forEach { it.beforeDraw(matrixStack) }
+        effects.forEach { @Suppress("DEPRECATION") it.beforeDraw(matrixStack) }
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead. " +
+            "There's no replacement for `afterDraw`, override plain `extractComponent` or use an `Effect` instead.")
     open fun afterDraw(matrixStack: UMatrixStack) {
         if (ElementaVersion.active >= ElementaVersion.v3) {
-            effects.asReversed().forEach { it.afterDraw(matrixStack) }
+            effects.asReversed().forEach { @Suppress("DEPRECATION") it.afterDraw(matrixStack) }
         } else {
-            effects.forEach { it.afterDraw(matrixStack) }
+            effects.forEach { @Suppress("DEPRECATION") it.afterDraw(matrixStack) }
         }
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead. " +
+            "There's no replacement for `beforeChildrenDraw`, override plain `extractComponent` or use an `Effect` instead.")
     open fun beforeChildrenDraw(matrixStack: UMatrixStack) {
-        effects.forEach { it.beforeChildrenDraw(matrixStack) }
+        effects.forEach { @Suppress("DEPRECATION") it.beforeChildrenDraw(matrixStack) }
     }
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("beforeDraw(matrixStack)"))
+    @Suppress("DEPRECATION")
     open fun beforeDraw() = beforeDraw(UMatrixStack.Compat.get())
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("afterDraw(matrixStack)"))
+    @Suppress("DEPRECATION")
     open fun afterDraw() = afterDraw(UMatrixStack.Compat.get())
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("beforeChildrenDraw(matrixStack)"))
+    @Suppress("DEPRECATION")
     open fun beforeChildrenDraw() = beforeChildrenDraw(UMatrixStack.Compat.get())
 
     @Suppress("DEPRECATION")

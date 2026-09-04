@@ -3,6 +3,7 @@ package gg.essential.elementa.components
 import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.dsl.toConstraint
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
 import gg.essential.universal.render.URenderPipeline
@@ -10,6 +11,7 @@ import gg.essential.universal.shader.BlendState
 import gg.essential.universal.vertex.UBufferBuilder
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import kotlin.math.roundToInt
 
 // feeling cute, might delete this class later
 //   (he did not delete the class later)
@@ -39,6 +41,32 @@ open class UIShape @JvmOverloads constructor(color: Color = Color.WHITE) : UICom
 
     fun getVertices() = vertices
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        val color = getColor()
+        if (color.alpha == 0) return
+
+        extractor.custom(
+            (getLeft() * extractor.guiScale).roundToInt(),
+            (getTop() * extractor.guiScale).roundToInt(),
+            (getRight() * extractor.guiScale).roundToInt(),
+            (getBottom() * extractor.guiScale).roundToInt(),
+            PIPELINE2,
+            emptyList(),
+            vertices.size,
+        ) { builder, _, _ ->
+            vertices.forEach {
+                val x = it.absoluteX.toDouble() * extractor.guiScale
+                val y = it.absoluteY.toDouble() * extractor.guiScale
+                builder.pos(UMatrixStack.UNIT, x, y, 0.0).color(color).endVertex()
+            }
+        }
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
+    @Suppress("DEPRECATION")
     override fun draw(matrixStack: UMatrixStack) {
         beforeDrawCompat(matrixStack)
 

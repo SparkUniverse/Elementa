@@ -148,7 +148,12 @@ class PlotComponent(
         return PlotPoint(newX, newY)
     }
 
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
 
         drawWidth = if (yBounds.showLabels) {

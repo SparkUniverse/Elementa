@@ -6,6 +6,8 @@ import gg.essential.elementa.UIConstraints
 import gg.essential.elementa.constraints.CenterConstraint
 import gg.essential.elementa.dsl.basicHeightConstraint
 import gg.essential.elementa.dsl.width
+import gg.essential.elementa.font.extractMcScale
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.elementa.state.BasicState
 import gg.essential.elementa.state.MappedState
 import gg.essential.elementa.state.State
@@ -133,6 +135,58 @@ open class UIWrappedText @JvmOverloads constructor(
      */
     fun getTextWidth() = textWidthState.get()
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        val textScale = getTextScale()
+        val x = getLeft()
+        val y = getTop() + (if (verticallyCenteredState.get()) fontProviderState.get().getBelowLineHeight() * textScale else 0f)
+        val width = getWidth()
+        val color = getColor()
+
+        val lines = if (trimText) {
+            splitStringToWidthTruncated(
+                textState.get(),
+                width,
+                textScale,
+                getMaxLines(),
+                ensureSpaceAtEndOfLines = false,
+                fontProvider = getFontProvider(),
+                trimmedTextSuffix = trimmedTextSuffix
+            )
+        } else {
+            getStringSplitToWidth(
+                textState.get(),
+                width,
+                textScale,
+                ensureSpaceAtEndOfLines = false,
+                fontProvider = getFontProvider()
+            )
+        }.map { it.trimEnd() }
+
+        val shadow = shadowState.get()
+        val shadowColor = shadowColorState.get()
+
+        lines.forEachIndexed { i, line ->
+            val xOffset = if (centered) {
+                (width - line.width(textScale, getFontProvider())) / 2f
+            } else 0f
+
+            getFontProvider().extractMcScale(
+                extractor,
+                line,
+                color,
+                x + xOffset,
+                y + i * lineSpacing * textScale,
+                textScale,
+                shadow,
+                if (shadow) shadowColor else null,
+            )
+        }
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         beforeDrawCompat(matrixStack)
 
@@ -144,6 +198,7 @@ open class UIWrappedText @JvmOverloads constructor(
 
         // We aren't visible, don't draw
         if (color.alpha <= 10) {
+            @Suppress("DEPRECATION")
             return super.draw(matrixStack)
         }
 
@@ -180,6 +235,7 @@ open class UIWrappedText @JvmOverloads constructor(
                 (width - line.width(textScale, getFontProvider())) / 2f
             } else 0f
 
+            @Suppress("DEPRECATION")
             getFontProvider().drawString(
                 matrixStack,
                 line,
@@ -193,6 +249,7 @@ open class UIWrappedText @JvmOverloads constructor(
             )
         }
 
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 

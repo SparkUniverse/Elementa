@@ -5,6 +5,8 @@ import gg.essential.elementa.UIComponent
 import gg.essential.elementa.UIConstraints
 import gg.essential.elementa.constraints.CenterConstraint
 import gg.essential.elementa.dsl.width
+import gg.essential.elementa.font.extractMcScale
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.elementa.state.BasicState
 import gg.essential.elementa.state.MappedState
 import gg.essential.elementa.state.State
@@ -97,6 +99,33 @@ constructor(
         return super.getHeight() * getTextScale()
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        val textWidth = textWidthState.get()
+
+        // If you're wondering why we check if the text's width is 0 instead of if the string is empty:
+        // It's better to check the width derived from the font provider, as the string may just be full of characters
+        // that can't be rendered (as they aren't supported by current font).
+        // This check prevents issues from occurring later, e.g. when calculating the scale of the text.
+        if (textWidth == 0f) return
+
+        val scale = getWidth() / textWidth
+
+        getFontProvider().extractMcScale(
+            extractor,
+            textState.get(),
+            getColor(),
+            getLeft(),
+            getTop() + (if (verticallyCenteredState.get()) fontProviderState.get().getBelowLineHeight() * scale else 0f),
+            scale,
+            shadowState.get(),
+            shadowColorState.get()
+        )
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         val textWidth = textWidthState.get()
 
@@ -116,6 +145,7 @@ constructor(
 
         // We aren't visible, don't draw
         if (color.alpha <= 10) {
+            @Suppress("DEPRECATION")
             return super.draw(matrixStack)
         }
 
@@ -126,11 +156,13 @@ constructor(
 
         val shadow = shadowState.get()
         val shadowColor = shadowColorState.get()
+        @Suppress("DEPRECATION")
         getFontProvider().drawString(
             matrixStack,
             textState.get(), color, x, y,
             10f, scale, shadow, shadowColor
         )
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 

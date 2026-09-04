@@ -3,6 +3,8 @@ package gg.essential.elementa.components
 import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.dsl.pixels
+import gg.essential.elementa.renderer.ElementaExtractor
+import gg.essential.elementa.renderer.fillXYWH
 import gg.essential.elementa.utils.readElementaShaderSource
 import gg.essential.elementa.utils.readFromLegacyShader
 import gg.essential.universal.UGraphics
@@ -14,6 +16,7 @@ import gg.essential.universal.shader.FloatUniform
 import gg.essential.universal.shader.UShader
 import gg.essential.universal.vertex.UBufferBuilder
 import java.awt.Color
+import kotlin.math.roundToInt
 
 /**
  * Alternative to [UIBlock] with rounded corners.
@@ -25,6 +28,14 @@ open class UIRoundedRectangle(radius: Float) : UIComponent() {
         setRadius(radius.pixels())
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        extractRoundedRectangle(extractor, getLeft(), getTop(), getRight(), getBottom(), getRadius(), getColor())
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         beforeDrawCompat(matrixStack)
 
@@ -34,6 +45,7 @@ open class UIRoundedRectangle(radius: Float) : UIComponent() {
         if (color.alpha != 0)
             drawRoundedRectangle(matrixStack, getLeft(), getTop(), getRight(), getBottom(), radius, color)
 
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 
@@ -117,6 +129,56 @@ open class UIRoundedRectangle(radius: Float) : UIComponent() {
             UIBlock.drawBlockWithActiveShader(matrixStack, color, left.toDouble(), top.toDouble(), right.toDouble(), bottom.toDouble())
 
             shader.unbind()
+        }
+
+        fun extractRoundedRectangle(extractor: ElementaExtractor, left: Float, top: Float, right: Float, bottom: Float, radius: Float, color: Color) {
+            if (color.alpha == 0) return
+            extractRoundedRectanglePixelSpace(
+                extractor,
+                (left * extractor.guiScale).roundToInt(),
+                (top * extractor.guiScale).roundToInt(),
+                (right * extractor.guiScale).roundToInt(),
+                (bottom * extractor.guiScale).roundToInt(),
+                radius * extractor.guiScale,
+                color,
+            )
+        }
+
+        private fun extractRoundedRectanglePixelSpace(
+            extractor: ElementaExtractor,
+            left: Int,
+            top: Int,
+            right: Int,
+            bottom: Int,
+            radius: Float,
+            color: Color
+        ) {
+            val width = right - left
+            val height = bottom - top
+            val desiredRadius = radius.roundToInt()
+            val cornerWidth = desiredRadius.coerceAtMost(width / 2)
+            val cornerHeight = desiredRadius.coerceAtMost(height / 2)
+            val centerWidth = (width - cornerWidth * 2)
+            val centerHeight = (height - cornerHeight * 2)
+
+            // Left and right quads
+            if (cornerWidth > 0 && centerHeight > 0) {
+                extractor.fillXYWH(left, top + cornerHeight, cornerWidth, centerHeight, color)
+                extractor.fillXYWH(right - cornerWidth, top + cornerHeight, cornerWidth, centerHeight, color)
+            }
+            // Center quad (includes top and bottom)
+            if (centerWidth > 0) {
+                extractor.fillXYWH(left + cornerWidth, top, centerWidth, height, color)
+            }
+            // Corners (top-left, top-right, bottom-left, bottom-right)
+            if (cornerWidth > 0 && cornerHeight > 0) {
+                fun corner(x1: Int, y1: Int, centerX: Float, centerY: Float) =
+                    UICircle.extractCirclePixelSpace(extractor, x1, y1, x1 + cornerWidth, y1 + cornerHeight, centerX, centerY, radius, color)
+                corner(left, top, left + radius, top + radius)
+                corner(right - cornerWidth, top, right - radius, top + radius)
+                corner(left, bottom - cornerHeight, left + radius, bottom - radius)
+                corner(right - cornerWidth, bottom - cornerHeight, right - radius, bottom - radius)
+            }
         }
     }
 }

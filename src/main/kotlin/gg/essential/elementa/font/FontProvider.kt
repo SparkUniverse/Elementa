@@ -1,8 +1,10 @@
 package gg.essential.elementa.font
 
 import gg.essential.elementa.constraints.SuperConstraint
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 import java.awt.Color
+import kotlin.math.roundToInt
 
 @JvmDefaultWithCompatibility
 interface FontProvider : SuperConstraint<FontProvider> {
@@ -12,6 +14,23 @@ interface FontProvider : SuperConstraint<FontProvider> {
 
     // Note: Even though this method has a default implementation, it should in all cases be implemented.
     //       The default implementation exists only for backwards compatibility.
+    fun extract(
+        extractor: ElementaExtractor,
+        string: String,
+        color: Color,
+        x: Int,
+        y: Int,
+        scale: Float,
+        shadow: Boolean = true,
+        shadowColor: Color? = null
+    ) {}
+
+    // Note: Even though this method has a default implementation, it should in all cases be implemented.
+    //       The default implementation exists only for backwards compatibility.
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractMcScale(extractor, string, color, x, y, originalPointSize / 10 * scale, shadow, shadowColor)")
+    )
     fun drawString(
         matrixStack: UMatrixStack,
         string: String,
@@ -28,6 +47,7 @@ interface FontProvider : SuperConstraint<FontProvider> {
     }
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("drawString(matrixStack, string, color, x, y, originalPointSize, scale, shadow, shadowColor)"))
+    @Suppress("DEPRECATION")
     fun drawString(
         string: String,
         color: Color,
@@ -55,3 +75,23 @@ interface FontProvider : SuperConstraint<FontProvider> {
 
     fun getBelowLineHeight(): Float
 }
+
+fun FontProvider.extractMcScale(
+    extractor: ElementaExtractor,
+    string: String,
+    color: Color,
+    x: Float,
+    y: Float,
+    scale: Float,
+    shadow: Boolean = true,
+    shadowColor: Color? = null,
+) = extract(
+    extractor,
+    string,
+    color,
+    (x * extractor.guiScale).roundToInt(),
+    (y * extractor.guiScale).roundToInt(),
+    scale * extractor.guiScale,
+    shadow,
+    shadowColor,
+)

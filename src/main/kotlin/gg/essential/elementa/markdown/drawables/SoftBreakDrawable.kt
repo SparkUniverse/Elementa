@@ -15,6 +15,7 @@ class SoftBreakDrawable(md: MarkdownComponent) : Drawable(md) {
         TODO("Not yet implemented")
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         TODO("Not yet implemented")
     }

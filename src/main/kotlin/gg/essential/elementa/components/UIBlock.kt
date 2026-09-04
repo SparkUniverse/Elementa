@@ -4,6 +4,8 @@ import gg.essential.elementa.ElementaVersion
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.constraints.ColorConstraint
 import gg.essential.elementa.dsl.toConstraint
+import gg.essential.elementa.renderer.ElementaExtractor
+import gg.essential.elementa.renderer.fillMcScale
 import gg.essential.elementa.state.State
 import gg.essential.elementa.state.toConstraint
 import gg.essential.universal.UGraphics
@@ -27,6 +29,16 @@ open class UIBlock(colorConstraint: ColorConstraint = Color.WHITE.toConstraint()
         setColor(colorConstraint)
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        val color = getColor()
+        if (color.alpha == 0) return
+        extractor.fillMcScale(getLeft(), getTop(), getRight(), getBottom(), color)
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         beforeDrawCompat(matrixStack)
 
@@ -37,6 +49,7 @@ open class UIBlock(colorConstraint: ColorConstraint = Color.WHITE.toConstraint()
 
         drawBlock(matrixStack, x, y, x2, y2)
 
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 

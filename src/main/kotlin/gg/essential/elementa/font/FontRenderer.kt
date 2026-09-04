@@ -27,7 +27,7 @@ import kotlin.math.max
  * [MSDF](https://github.com/Chlumsky/msdfgen) Font Renderer
  */
 @Deprecated("Not well maintained. Does not currently support 1.21.5+ or ElementaVersion.V9 at all.")
-@Suppress("DEPRECATION")
+@Suppress("DEPRECATION", "OVERRIDE_DEPRECATION")
 class FontRenderer(
     private val regularFont: Font,
     private val boldFont: Font = regularFont

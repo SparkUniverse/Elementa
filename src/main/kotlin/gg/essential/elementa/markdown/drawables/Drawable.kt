@@ -5,6 +5,7 @@ import gg.essential.elementa.markdown.MarkdownComponent
 import gg.essential.elementa.markdown.MarkdownConfig
 import gg.essential.elementa.markdown.selection.Cursor
 import gg.essential.elementa.markdown.selection.TextCursor
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
@@ -68,12 +69,17 @@ abstract class Drawable(val md: MarkdownComponent) {
     protected abstract fun layoutImpl(x: Float, y: Float, width: Float): Layout
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("draw(matrixStack, state)"))
+    @Suppress("DEPRECATION")
     open fun draw(state: DrawState) = draw(UMatrixStack.Compat.get(), state)
 
     @Suppress("DEPRECATION")
     fun drawCompat(matrixStack: UMatrixStack, state: DrawState) = UMatrixStack.Compat.runLegacyMethod(matrixStack) { draw(state) }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     open fun draw(matrixStack: UMatrixStack, state: DrawState) {
+    }
+
+    open fun extract(extractor: ElementaExtractor, state: DrawState) {
     }
 
     open fun beforeDraw(state: DrawState) {

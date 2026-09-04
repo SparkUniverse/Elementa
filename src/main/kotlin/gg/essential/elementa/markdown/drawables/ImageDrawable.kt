@@ -12,6 +12,7 @@ import gg.essential.elementa.dsl.toConstraint
 import gg.essential.elementa.markdown.DrawState
 import gg.essential.elementa.markdown.MarkdownComponent
 import gg.essential.elementa.markdown.selection.ImageCursor
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UMatrixStack
 import java.awt.Color
 import java.net.URL
@@ -51,11 +52,20 @@ class ImageDrawable(md: MarkdownComponent, val url: URL, private val fallback: D
         } else fallback.layout(x, y, width)
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         if (!hasLoaded) {
             fallback.drawCompat(matrixStack, state)
         } else {
             image.drawCompat(matrixStack)
+        }
+    }
+
+    override fun extract(extractor: ElementaExtractor, state: DrawState) {
+        if (!hasLoaded) {
+            fallback.extract(extractor, state)
+        } else {
+            image.extractComponent(extractor)
         }
     }
 

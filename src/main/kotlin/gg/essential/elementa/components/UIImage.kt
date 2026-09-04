@@ -3,6 +3,7 @@ package gg.essential.elementa.components
 import gg.essential.elementa.UIComponent
 import gg.essential.elementa.components.image.*
 import gg.essential.elementa.components.inspector.Inspector
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.elementa.utils.ResourceCache
 import gg.essential.elementa.utils.drawTexture
 import gg.essential.universal.UGraphics
@@ -18,6 +19,7 @@ import java.net.URL
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentLinkedQueue
 import javax.imageio.ImageIO
+import kotlin.math.roundToInt
 
 /**
  * Component for drawing arbitrary images from [BufferedImage].
@@ -76,6 +78,39 @@ open class UIImage @JvmOverloads constructor(
     )
     constructor(imageFunction: () -> BufferedImage) : this(CompletableFuture.supplyAsync(imageFunction))
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        extract(
+            extractor,
+            (getLeft() * extractor.guiScale).roundToInt(),
+            (getTop() * extractor.guiScale).roundToInt(),
+            (getWidth() * extractor.guiScale).roundToInt(),
+            (getHeight() * extractor.guiScale).roundToInt(),
+            getColor(),
+        )
+    }
+
+    override fun extract(extractor: ElementaExtractor, x: Int, y: Int, width: Int, height: Int, color: Color) {
+        val texture = texture
+        when {
+            texture != null -> {
+                val sampler = UGpuSampler(
+                    UGpuSampler.AddressMode.CLAMP_TO_EDGE,
+                    UGpuSampler.AddressMode.CLAMP_TO_EDGE,
+                    textureMinFilter.ucMode,
+                    textureMagFilter.ucMode,
+                    textureMinFilter.useMipmaps,
+                )
+                extractor.blit(x, y, x + width, y + height, 0f, 0f, 1f, 1f, texture.gpuTextureView, sampler, true, false, color)
+            }
+            imageFuture.isCompletedExceptionally -> failureImage.extract(extractor, x, y, width, height, color)
+            else -> loadingImage.extract(extractor, x, y, width, height, color)
+        }
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractMcScale(extractor, x, y, width, height, color)")
+    )
     override fun drawImage(matrixStack: UMatrixStack, x: Double, y: Double, width: Double, height: Double, color: Color) {
         when {
             texture != null -> drawTexture(matrixStack, texture!!, color, x, y, width, height, textureMinFilter, textureMagFilter)
@@ -84,6 +119,10 @@ open class UIImage @JvmOverloads constructor(
         }
     }
 
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         beforeDrawCompat(matrixStack)
 
@@ -94,11 +133,14 @@ open class UIImage @JvmOverloads constructor(
         val color = this.getColor()
 
         if (color.alpha == 0) {
+            @Suppress("DEPRECATION")
             return super.draw(matrixStack)
         }
 
+        @Suppress("DEPRECATION")
         drawImage(matrixStack, x, y, width, height, color)
 
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 

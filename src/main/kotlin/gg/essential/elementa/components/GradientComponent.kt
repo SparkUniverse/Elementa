@@ -1,6 +1,7 @@
 package gg.essential.elementa.components
 
 import gg.essential.elementa.ElementaVersion
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.elementa.state.BasicState
 import gg.essential.elementa.state.MappedState
 import gg.essential.elementa.state.State
@@ -11,6 +12,7 @@ import gg.essential.universal.shader.BlendState
 import gg.essential.universal.vertex.UBufferBuilder
 import org.lwjgl.opengl.GL11
 import java.awt.Color
+import kotlin.math.roundToInt
 
 /**
  * Variant of [UIBlock] with two colours that fade into each other in a
@@ -56,6 +58,19 @@ open class GradientComponent constructor(
         directionState.rebind(newDirectionState)
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        extractGradientBlock(
+            extractor,
+            getLeft(),
+            getTop(),
+            getRight(),
+            getBottom(),
+            startColorState.get(),
+            endColorState.get(),
+            directionState.get()
+        )
+    }
+
     override fun drawBlock(matrixStack: UMatrixStack, x: Double, y: Double, x2: Double, y2: Double) {
         drawGradientBlock(
             matrixStack,
@@ -86,6 +101,35 @@ open class GradientComponent constructor(
     data class GradientColors(val topLeft: Color, val topRight: Color, val bottomLeft: Color, val bottomRight: Color)
 
     companion object {
+        fun extractGradientBlock(
+            extractor: ElementaExtractor,
+            left: Float,
+            top: Float,
+            right: Float,
+            bottom: Float,
+            startColor: Color,
+            endColor: Color,
+            direction: GradientDirection
+        ) {
+            val colors = direction.getGradientColors(startColor, endColor)
+            val x1 = (left * extractor.guiScale).roundToInt()
+            val y1 = (top * extractor.guiScale).roundToInt()
+            val x2 = (right * extractor.guiScale).roundToInt()
+            val y2 = (bottom * extractor.guiScale).roundToInt()
+
+            extractor.custom(
+                x1, y1, x2, y2,
+                PIPELINE2,
+                emptyList(),
+                4,
+            ) { buffer, _, _ ->
+                buffer.pos(UMatrixStack.UNIT, x2.toDouble(), y1.toDouble(), 0.0).color(colors.topRight).endVertex()
+                buffer.pos(UMatrixStack.UNIT, x1.toDouble(), y1.toDouble(), 0.0).color(colors.topLeft).endVertex()
+                buffer.pos(UMatrixStack.UNIT, x1.toDouble(), y2.toDouble(), 0.0).color(colors.bottomLeft).endVertex()
+                buffer.pos(UMatrixStack.UNIT, x2.toDouble(), y2.toDouble(), 0.0).color(colors.bottomRight).endVertex()
+            }
+        }
+
         @Deprecated(
             "This method does not allow for gradients to be rendered at sub-pixel positions. Use the Double variant instead and do not cast to Int.",
             ReplaceWith("drawGradientBlock(x1.toDouble(), y1.toDouble(), x2.toDouble(), y2.toDouble(), startColor, endColor, direction)")

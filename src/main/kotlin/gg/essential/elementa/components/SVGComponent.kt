@@ -31,6 +31,10 @@ class SVGComponent(private var svg: SVG) : UIComponent(), ImageProvider {
         needsReload = true
     }
 
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Use `extract` instead.",
+        replaceWith = ReplaceWith("extractMcScale(extractor, x, y, width, height, color)")
+    )
     override fun drawImage(matrixStack: UMatrixStack, x: Double, y: Double, width: Double, height: Double, color: Color) {
         if (UGraphics.isCoreProfile()) {
             // TODO heavily relies on legacy gl, at least need to use per-vertex color and convert lines/points to tris
@@ -85,7 +89,12 @@ class SVGComponent(private var svg: SVG) : UIComponent(), ImageProvider {
         matrixStack.pop()
     }
 
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
+        @Suppress("DEPRECATION")
         beforeDraw(matrixStack)
 
         val x = this.getLeft().toDouble()
@@ -95,11 +104,14 @@ class SVGComponent(private var svg: SVG) : UIComponent(), ImageProvider {
         val color = this.getColor()
 
         if (color.alpha == 0) {
+            @Suppress("DEPRECATION")
             return super.draw(matrixStack)
         }
 
+        @Suppress("DEPRECATION")
         drawImage(matrixStack, x, y, width, height, color)
 
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 

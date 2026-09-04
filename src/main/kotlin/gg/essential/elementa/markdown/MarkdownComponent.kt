@@ -18,10 +18,12 @@ import gg.essential.elementa.state.State
 import gg.essential.elementa.font.ElementaFonts
 import gg.essential.elementa.font.FontProvider
 import gg.essential.elementa.markdown.drawables.*
+import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.elementa.utils.elementaDebug
 import gg.essential.universal.UDesktop
 import gg.essential.universal.UKeyboard
 import gg.essential.universal.UMatrixStack
+import java.awt.Color
 
 /**
  * Component that parses a string as Markdown and renders it.
@@ -220,10 +222,36 @@ class MarkdownComponent(
         return TreeListComponent(nodes)
     }
 
+    override fun extractComponent(extractor: ElementaExtractor) {
+        if (needsInitialLayout) {
+            update()
+        }
+
+        val drawState = DrawState(getLeft() - baseX, getTop() - baseY)
+        val parentWindow = Window.of(this)
+
+        drawables.forEach { it.beforeDraw(drawState) }
+
+        drawables.forEach {
+            if (!parentWindow.isAreaVisible(
+                    it.layout.left.toDouble() + drawState.xShift, it.layout.top.toDouble() + drawState.yShift,
+                    it.layout.right.toDouble() + drawState.xShift, it.layout.bottom.toDouble() + drawState.yShift
+                )) return@forEach
+            it.extract(extractor, drawState)
+        }
+        if (!disableSelection)
+            selection?.extract(extractor, drawState) ?: cursor?.extract(extractor, drawState)
+    }
+
+    @Deprecated(
+        "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
+        replaceWith = ReplaceWith("extract(extractor)")
+    )
     override fun draw(matrixStack: UMatrixStack) {
         if (needsInitialLayout) {
             update()
         }
+        @Suppress("DEPRECATION")
         beforeDraw(matrixStack)
 
         val drawState = DrawState(getLeft() - baseX, getTop() - baseY)
@@ -249,11 +277,14 @@ class MarkdownComponent(
                 )
             }
 
+            @Suppress("DEPRECATION")
             it.draw(matrixStack, drawState)
         }
         if (!disableSelection)
+            @Suppress("DEPRECATION")
             selection?.draw(matrixStack, drawState) ?: cursor?.draw(matrixStack, drawState)
 
+        @Suppress("DEPRECATION")
         super.draw(matrixStack)
     }
 
