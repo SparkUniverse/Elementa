@@ -54,8 +54,11 @@ class Selection private constructor(val start: Cursor<*>, val end: Cursor<*>) {
     }
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("draw(matrixStack, state)"))
+    @Suppress("DEPRECATION")
     fun draw(state: DrawState) = draw(UMatrixStack(), state)
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
+    @Suppress("DEPRECATION")
     fun draw(matrixStack: UMatrixStack, state: DrawState) {
         start.draw(matrixStack, state)
         end.draw(matrixStack, state)

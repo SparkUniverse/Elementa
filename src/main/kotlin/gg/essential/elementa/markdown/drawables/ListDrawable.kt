@@ -120,6 +120,7 @@ class ListDrawable(
         )
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         listItems.forEach { it.drawCompat(matrixStack, state) }
     }
@@ -169,6 +170,7 @@ class ListDrawable(
             return Layout(x, y, width, drawable.height)
         }
 
+        @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
         override fun draw(matrixStack: UMatrixStack, state: DrawState) {
             val newX = x + symbolWidth - actualSymbolWidth
             if (drawable !is ListDrawable)

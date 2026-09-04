@@ -54,6 +54,7 @@ class HeaderDrawable(
         )
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         paragraph.drawCompat(matrixStack, state)
 

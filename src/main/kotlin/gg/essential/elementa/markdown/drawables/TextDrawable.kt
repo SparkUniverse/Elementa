@@ -187,6 +187,7 @@ class TextDrawable(
         } else false
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         extract(ImmediateElementaExtractor(matrixStack), state)
     }

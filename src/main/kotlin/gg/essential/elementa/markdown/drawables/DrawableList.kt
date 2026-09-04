@@ -100,6 +100,7 @@ class DrawableList(
 
     override fun cursorAtEnd() = drawables.last().cursorAtEnd()
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         forEach { it.drawCompat(matrixStack, state) }
     }

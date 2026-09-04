@@ -56,6 +56,7 @@ class BlockquoteDrawable(md: MarkdownComponent, val drawables: DrawableList) : D
         )
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         UIBlock.drawBlockSized(
             matrixStack,

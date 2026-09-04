@@ -278,6 +278,7 @@ class ParagraphDrawable(
         )
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         drawables.forEach { it.drawCompat(matrixStack, state) }
 

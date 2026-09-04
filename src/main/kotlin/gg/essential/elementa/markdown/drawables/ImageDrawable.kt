@@ -52,6 +52,7 @@ class ImageDrawable(md: MarkdownComponent, val url: URL, private val fallback: D
         } else fallback.layout(x, y, width)
     }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     override fun draw(matrixStack: UMatrixStack, state: DrawState) {
         if (!hasLoaded) {
             fallback.drawCompat(matrixStack, state)

@@ -277,9 +277,11 @@ class MarkdownComponent(
                 )
             }
 
+            @Suppress("DEPRECATION")
             it.draw(matrixStack, drawState)
         }
         if (!disableSelection)
+            @Suppress("DEPRECATION")
             selection?.draw(matrixStack, drawState) ?: cursor?.draw(matrixStack, drawState)
 
         @Suppress("DEPRECATION")

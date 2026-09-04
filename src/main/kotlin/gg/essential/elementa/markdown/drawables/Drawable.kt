@@ -69,11 +69,13 @@ abstract class Drawable(val md: MarkdownComponent) {
     protected abstract fun layoutImpl(x: Float, y: Float, width: Float): Layout
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("draw(matrixStack, state)"))
+    @Suppress("DEPRECATION")
     open fun draw(state: DrawState) = draw(UMatrixStack.Compat.get(), state)
 
     @Suppress("DEPRECATION")
     fun drawCompat(matrixStack: UMatrixStack, state: DrawState) = UMatrixStack.Compat.runLegacyMethod(matrixStack) { draw(state) }
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     open fun draw(matrixStack: UMatrixStack, state: DrawState) {
     }
 

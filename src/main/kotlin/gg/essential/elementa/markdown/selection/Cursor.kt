@@ -16,8 +16,10 @@ abstract class Cursor<T : Drawable>(val target: T) {
     protected val width = height / 9.0
 
     @Deprecated(UMatrixStack.Compat.DEPRECATED, ReplaceWith("draw(matrixStack, state)"))
+    @Suppress("DEPRECATION")
     fun draw(state: DrawState) = draw(UMatrixStack(), state)
 
+    @Deprecated("`draw`-style rendering is deprecated. Use `extract` instead.")
     fun draw(matrixStack: UMatrixStack, state: DrawState) {
         extract(ImmediateElementaExtractor(matrixStack), state)
     }
