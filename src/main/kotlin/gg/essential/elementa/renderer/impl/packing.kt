@@ -39,6 +39,14 @@ internal fun packMany(
         // TODO could probably substantially reduce wastage here by binary searching for smallest possible size,
         //  but probably overkill
         val packing = packWithSize(remainingTextures, maxAtlasSize, maxAtlasSize, failFast = false)
+        if (packing.entries.isEmpty()) {
+            // Remaining entries are too big for maxAtlasSize, return a dedicated trivial packing for each of them.
+            for (texture in remainingTextures) {
+                packings.add(trivialPacking(texture))
+            }
+            remainingTextures.clear()
+            break
+        }
         packings.add(packing)
         remainingTextures.removeIf { t -> packing.entries.any { it.id == t.id } }
     }
