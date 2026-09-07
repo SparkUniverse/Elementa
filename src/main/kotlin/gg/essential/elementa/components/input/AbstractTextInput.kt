@@ -20,6 +20,7 @@ import gg.essential.universal.UMatrixStack
 import java.awt.Color
 import java.util.*
 import kotlin.math.abs
+import kotlin.math.ceil
 
 abstract class AbstractTextInput(
     var placeholder: String,
@@ -400,11 +401,14 @@ abstract class AbstractTextInput(
         if (isActive) {
             cursorComponent.unhide()
             animateCursor()
+            UKeyboard.startTextInput(this)
+            updateTextInputArea()
         } else {
             cursorComponent.setColor(Color(255, 255, 255, 0).toConstraint())
             if (hasText() && (!allowInactiveSelection || !hasSelection())) {
                 setCursorPosition(LinePosition(visualLines.lastIndex, visualLines.last().length, isVisual = true))
             }
+            UKeyboard.stopTextInput(this)
         }
     }
 
@@ -818,6 +822,15 @@ abstract class AbstractTextInput(
             scrollIntoView(cursor)
             cursorNeedsRefocus = false
         }
+
+        if (isActive()) {
+            updateTextInputArea()
+        }
+    }
+
+    private fun updateTextInputArea() {
+        val (x, y) = cursor.toScreenPos()
+        UKeyboard.setTextInputArea(x.toInt(), y.toInt(), x.toInt() + 1, ceil(y + lineHeight).toInt())
     }
 
     protected inner class LinePosition(val line: Int, val column: Int, val isVisual: Boolean) :
