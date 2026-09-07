@@ -556,6 +556,7 @@ abstract class UIComponent : Observable(), ReferenceHolder {
             doExtract(extractor)
         }
     }
+
     private fun doExtract(extractor: ElementaExtractor) {
         if (!isInitialized) {
             isInitialized = true

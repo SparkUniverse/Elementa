@@ -139,10 +139,12 @@ private class FontRendererArgs(
     val shadowColor: Int?,
     val scale: Float,
 )
+
 private object FontSpecialRendererFactory : SpecialRenderer.Factory<FontRendererArgs> {
     override fun create(): SpecialRenderer<FontRendererArgs> =
         FontSpecialRenderer()
 }
+
 private class FontSpecialRenderer : SpecialRenderer<FontRendererArgs> {
     private val renderer = UFontRenderer()
 

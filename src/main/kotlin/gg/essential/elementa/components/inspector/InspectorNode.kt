@@ -35,6 +35,7 @@ class InspectorNode(private val inspector: Inspector, val targetComponent: UICom
         override fun extractComponent(extractor: ElementaExtractor) {
             update()
         }
+
         @Deprecated(
             "`draw`-style rendering is deprecated. Override `extractComponent` instead. Call `extract` to extract this component, its effects, and its children.",
             replaceWith = ReplaceWith("extract(extractor)")

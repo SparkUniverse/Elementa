@@ -50,6 +50,7 @@ interface SpecialRenderer<T> : AutoCloseable {
     interface Factory<T> {
         fun create(): SpecialRenderer<T>
     }
+
     class Instance<T>(
         val dstX: Int, val dstY: Int,
         val width: Int, val height: Int,

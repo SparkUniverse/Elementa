@@ -23,6 +23,7 @@ interface PostProcessingRenderer<T> : AutoCloseable {
     interface Factory<T> {
         fun create(): PostProcessingRenderer<T>
     }
+
     class Instance<T>(
         // Bounds in unscaled MC space (same as what [ElementaExtractor] uses)
         val x: Int, val y: Int, val width: Int, val height: Int,
