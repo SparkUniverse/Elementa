@@ -283,8 +283,10 @@ internal class ElementaRendererImpl(
     private fun shake(packing: Packing): Packing {
         if (!shake) return packing
 
-        val extraWidth = shakeRandom.nextInt(10).coerceAtMost(maxAtlasSize - packing.atlasWidth)
-        val extraHeight = shakeRandom.nextInt(10).coerceAtMost(maxAtlasSize - packing.atlasHeight)
+        val availableExtraWidth = (maxAtlasSize - packing.atlasWidth).coerceAtLeast(0)
+        val availableExtraHeight = (maxAtlasSize - packing.atlasHeight).coerceAtLeast(0)
+        val extraWidth = shakeRandom.nextInt(10).coerceAtMost(availableExtraWidth)
+        val extraHeight = shakeRandom.nextInt(10).coerceAtMost(availableExtraHeight)
         val extraX = if (extraWidth > 0) shakeRandom.nextInt(extraWidth) else 0
         val extraY = if (extraHeight > 0) shakeRandom.nextInt(extraHeight) else 0
         return Packing(
