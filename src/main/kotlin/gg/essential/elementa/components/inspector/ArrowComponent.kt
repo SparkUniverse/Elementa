@@ -9,13 +9,13 @@ import gg.essential.elementa.dsl.pixels
 import gg.essential.universal.UMatrixStack
 
 class ArrowComponent(private val empty: Boolean) : TreeArrowComponent() {
-    private val closedIcon = UIImage.ofResourceCached("/textures/inspector/square_plus.png").constrain {
+    private val closedIcon = UIImage.ofInternalResourceCached("/textures/inspector/square_plus.png").constrain {
         width = 7.pixels
         height = 7.pixels
         x = CenterConstraint()
         y = CenterConstraint()
     }
-    private val openIcon = UIImage.ofResourceCached("/textures/inspector/square_minus.png").constrain {
+    private val openIcon = UIImage.ofInternalResourceCached("/textures/inspector/square_minus.png").constrain {
         width = 7.pixels
         height = 7.pixels
         x = CenterConstraint()

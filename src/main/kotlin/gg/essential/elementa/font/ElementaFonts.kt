@@ -3,10 +3,10 @@ package gg.essential.elementa.font
 import gg.essential.elementa.font.data.Font
 
 object ElementaFonts {
-    private val MINECRAFT_FONT = Font.fromResource("/fonts/Minecraft-Regular")
-    private val MINECRAFT_BOLD_RAW = Font.fromResource("/fonts/Minecraft-Bold")
-    private val JETBRAINS_MONO_FONT = Font.fromResource("/fonts/JetBrainsMono-Regular")
-    private val MINECRAFT_FIVE_FONT = Font.fromResource("/fonts/Minecraft-Five")
+    private val MINECRAFT_FONT = Font.fromResource(javaClass, "/fonts/Minecraft-Regular")
+    private val MINECRAFT_BOLD_RAW = Font.fromResource(javaClass, "/fonts/Minecraft-Bold")
+    private val JETBRAINS_MONO_FONT = Font.fromResource(javaClass, "/fonts/JetBrainsMono-Regular")
+    private val MINECRAFT_FIVE_FONT = Font.fromResource(javaClass, "/fonts/Minecraft-Five")
 
     @JvmStatic
     val MINECRAFT = FontRenderer(MINECRAFT_FONT, boldFont = MINECRAFT_BOLD_RAW)

@@ -9,7 +9,11 @@ import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ConcurrentHashMap
 import javax.imageio.ImageIO
 
-class ResourceCache(val size: Int = 50) {
+class ResourceCache(val size: Int, private val context: Class<*>) {
+    @Deprecated("Does not work properly when used with Java 9 Modules")
+    @JvmOverloads
+    constructor(size: Int = 50) : this(size, ResourceCache::class.java)
+
     private val cacheMap = ConcurrentHashMap<String, CacheableImage>()
 
     fun getUIImage(path: String): CacheableImage {
@@ -17,7 +21,7 @@ class ResourceCache(val size: Int = 50) {
             cacheMap.clear()
         val cachedImage = cacheMap.computeIfAbsent(path) { pth ->
             UIImage(CompletableFuture.supplyAsync {
-                ImageIO.read(this::class.java.getResourceAsStream(pth))
+                ImageIO.read(context.getResourceAsStream(pth))
             })
         }
         return UIImage(CompletableFuture.completedFuture<BufferedImage>(null)).also {
@@ -38,7 +42,7 @@ class ResourceCache(val size: Int = 50) {
             cacheMap.clear()
         val cachedImage = cacheMap.computeIfAbsent(path) { pth ->
             MSDFComponent(CompletableFuture.supplyAsync {
-                ImageIO.read(this::class.java.getResourceAsStream(pth))
+                ImageIO.read(context.getResourceAsStream(pth))
             })
         }
         return MSDFComponent(CompletableFuture.completedFuture<BufferedImage>(null)).also {

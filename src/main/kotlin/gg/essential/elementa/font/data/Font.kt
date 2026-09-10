@@ -20,11 +20,17 @@ class Font(
     }
 
     companion object {
-        fun fromResource(path: String): Font {
-            val json = this::class.java.getResourceAsStream("$path.json")
+        @Deprecated("Does not work properly when used with Java 9 Modules.", ReplaceWith(
+            "fromResource(javaClass, path)",
+            "gg.essential.elementa.font.data.Font.Companion.fromResource"
+        ))
+        fun fromResource(path: String): Font = fromResource(javaClass, path)
+
+        fun fromResource(context: Class<*>, path: String): Font {
+            val json = context.getResourceAsStream("$path.json")
             val fontInfo = FontInfo.fromJson(JsonParser().parse(json.reader()).asJsonObject)
 
-            return Font(fontInfo, this::class.java.getResourceAsStream("$path.png"))
+            return Font(fontInfo, context.getResourceAsStream("$path.png"))
         }
     }
 }

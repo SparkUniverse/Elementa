@@ -132,14 +132,20 @@ open class BlurHashImage(private val hash: String) : UIComponent(), ImageProvide
             return UIImage(CompletableFuture.supplyAsync { UIImage.get(url) }, BlurHashImage(hash))
         }
 
+        @Deprecated("Does not work properly when used with Java 9 Modules.", ReplaceWith(
+            "ofResource(javaClass, hash, path)",
+            "gg.essential.elementa.components.image.BlurHashImage.Companion.ofResource"
+        ))
+        @JvmStatic
+        fun ofResource(hash: String, path: String): UIImage = ofResource(javaClass, hash, path)
+
         /**
          * Creates a [UIImage] component that will be backed by a [BlurHashImage] until it is fully
          * loaded.
          */
-        @JvmStatic
-        fun ofResource(hash: String, path: String): UIImage {
+        fun ofResource(context: Class<*>, hash: String, path: String): UIImage {
             return UIImage(CompletableFuture.supplyAsync {
-                ImageIO.read(this::class.java.getResourceAsStream(path))
+                ImageIO.read(context.getResourceAsStream(path))
             }, BlurHashImage(hash))
         }
     }
