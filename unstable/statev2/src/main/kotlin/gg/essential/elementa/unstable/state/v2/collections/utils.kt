@@ -61,6 +61,26 @@ fun <T> ListState<T>.effectOnChange(
     }
 }
 
+fun <T> ListState<T>.effectForEach(
+    referenceHolder: ReferenceHolder,
+    effect: (T) -> AutoCloseable,
+) {
+    val effects = mutableListOf<AutoCloseable>()
+    effectOnChange(
+        referenceHolder,
+        add = { (i, value) ->
+            effects.add(i, effect(value))
+        },
+        remove = { (i, _) ->
+            effects.removeAt(i).close()
+        },
+        clear = {
+            effects.forEach { it.close() }
+            effects.clear()
+        },
+    )
+}
+
 fun <T> trackedListOf(vararg elements: T) : TrackedList<T> = MutableTrackedList(elements.toMutableList())
 
 fun <T> mutableTrackedListOf(vararg elements: T): MutableTrackedList<T> = MutableTrackedList(elements.toMutableList())
