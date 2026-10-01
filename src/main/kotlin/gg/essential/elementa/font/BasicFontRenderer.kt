@@ -11,7 +11,6 @@ import gg.essential.elementa.font.data.shrinkGlyphsByHalfAPixel
 import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
-import gg.essential.universal.UMinecraft
 import gg.essential.universal.render.UGpuSampler
 import gg.essential.universal.render.URenderPipeline
 import gg.essential.universal.shader.BlendState
