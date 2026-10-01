@@ -11,6 +11,7 @@ import gg.essential.elementa.font.data.shrinkGlyphsByHalfAPixel
 import gg.essential.elementa.renderer.ElementaExtractor
 import gg.essential.universal.UGraphics
 import gg.essential.universal.UMatrixStack
+import gg.essential.universal.UMinecraft
 import gg.essential.universal.render.UGpuSampler
 import gg.essential.universal.render.URenderPipeline
 import gg.essential.universal.shader.BlendState
@@ -169,7 +170,7 @@ class BasicFontRenderer(
         shadowColor: Color?
     ) {
         if (shadow) {
-            val shadowHeight = getShadowHeight()
+            val shadowOffset = min(getShadowHeight(), UMinecraft.guiScale.toFloat()).coerceAtLeast(1f)
             drawStringNow(
                 vertexConsumer,
                 matrixStack,
@@ -177,8 +178,8 @@ class BasicFontRenderer(
                 shadowColor ?: Color(
                     ((color.rgb and 16579836).shr(2)).or((color.rgb).and(-16777216))
                 ),
-                x + shadowHeight,
-                y + shadowHeight,
+                x + shadowOffset,
+                y + shadowOffset,
                 scale,
             )
         }
