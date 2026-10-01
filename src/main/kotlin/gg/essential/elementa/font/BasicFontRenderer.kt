@@ -170,7 +170,7 @@ class BasicFontRenderer(
         shadowColor: Color?
     ) {
         if (shadow) {
-            val shadowOffset = min(getShadowHeight(), UMinecraft.guiScale.toFloat()).coerceAtLeast(1f)
+            val shadowOffset = getShadowHeight() * scale
             drawStringNow(
                 vertexConsumer,
                 matrixStack,
