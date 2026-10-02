@@ -169,6 +169,7 @@ class BasicFontRenderer(
         shadowColor: Color?
     ) {
         if (shadow) {
+            val shadowOffset = getShadowHeight() * scale
             drawStringNow(
                 vertexConsumer,
                 matrixStack,
@@ -176,8 +177,8 @@ class BasicFontRenderer(
                 shadowColor ?: Color(
                     ((color.rgb and 16579836).shr(2)).or((color.rgb).and(-16777216))
                 ),
-                x + 1,
-                y + 1,
+                x + shadowOffset,
+                y + shadowOffset,
                 scale,
             )
         }
