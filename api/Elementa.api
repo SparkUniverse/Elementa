@@ -624,6 +624,7 @@ public class gg/essential/elementa/components/UIImage : gg/essential/elementa/UI
 	public final fun getTextureMinFilter ()Lgg/essential/elementa/components/UIImage$TextureScalingMode;
 	public final fun isLoaded ()Z
 	public static final fun ofFile (Ljava/io/File;)Lgg/essential/elementa/components/UIImage;
+	public static final fun ofResource (Ljava/lang/Class;Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public static final fun ofResource (Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public static final fun ofResourceCached (Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public static final fun ofResourceCached (Ljava/lang/String;Lgg/essential/elementa/utils/ResourceCache;)Lgg/essential/elementa/components/UIImage;
@@ -641,6 +642,7 @@ public final class gg/essential/elementa/components/UIImage$Companion {
 	public final fun get (Ljava/net/URL;)Ljava/awt/image/BufferedImage;
 	public final fun getDefaultResourceCache ()Lgg/essential/elementa/utils/ResourceCache;
 	public final fun ofFile (Ljava/io/File;)Lgg/essential/elementa/components/UIImage;
+	public final fun ofResource (Ljava/lang/Class;Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public final fun ofResource (Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public final fun ofResourceCached (Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public final fun ofResourceCached (Ljava/lang/String;Lgg/essential/elementa/utils/ResourceCache;)Lgg/essential/elementa/components/UIImage;
@@ -830,6 +832,7 @@ public class gg/essential/elementa/components/image/BlurHashImage : gg/essential
 
 public final class gg/essential/elementa/components/image/BlurHashImage$Companion {
 	public final fun ofFile (Ljava/lang/String;Ljava/io/File;)Lgg/essential/elementa/components/UIImage;
+	public final fun ofResource (Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public final fun ofResource (Ljava/lang/String;Ljava/lang/String;)Lgg/essential/elementa/components/UIImage;
 	public final fun ofURL (Ljava/lang/String;Ljava/net/URL;)Lgg/essential/elementa/components/UIImage;
 }
@@ -2967,6 +2970,7 @@ public final class gg/essential/elementa/font/data/Font {
 }
 
 public final class gg/essential/elementa/font/data/Font$Companion {
+	public final fun fromResource (Ljava/lang/Class;Ljava/lang/String;)Lgg/essential/elementa/font/data/Font;
 	public final fun fromResource (Ljava/lang/String;)Lgg/essential/elementa/font/data/Font;
 }
 
@@ -4680,6 +4684,7 @@ public final class gg/essential/elementa/utils/ResourceCache {
 	public fun <init> ()V
 	public fun <init> (I)V
 	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILjava/lang/Class;)V
 	public final fun getMSDFComponent (Ljava/lang/String;)Lgg/essential/elementa/components/image/MSDFComponent;
 	public final fun getSize ()I
 	public final fun getUIImage (Ljava/lang/String;)Lgg/essential/elementa/components/image/CacheableImage;

@@ -169,7 +169,9 @@ open class UIImage @JvmOverloads constructor(
 
     companion object {
 
-        val defaultResourceCache = ResourceCache(50)
+        @Deprecated("Does not work properly when used with Java 9 Modules. " +
+                "This default cache is also quite small. Create your own dedicated cache for your uses.")
+        val defaultResourceCache = ResourceCache(50, javaClass)
 
         init {
             Inspector.registerComponentFactory(Companion::class.java)
@@ -194,16 +196,25 @@ open class UIImage @JvmOverloads constructor(
             })
         }
 
+        @Deprecated("Does not work properly when used with Java 9 Modules.", ReplaceWith(
+            "ofResource(javaClass, path)",
+            "gg.essential.elementa.components.UIImage.Companion.ofResource"
+        ))
         @JvmStatic
-        fun ofResource(path: String): UIImage {
+        fun ofResource(path: String): UIImage = ofResource(javaClass, path)
+
+        @JvmStatic
+        fun ofResource(context: Class<*>, path: String): UIImage {
             return UIImage(CompletableFuture.supplyAsync {
-                ImageIO.read(this::class.java.getResourceAsStream(path))
+                ImageIO.read(context.getResourceAsStream(path))
             })
         }
 
+        @Deprecated("Does not work properly when used with Java 9 Modules. " +
+                "This default cache is also quite small. Create your own dedicated cache for your uses.")
         @JvmStatic
         fun ofResourceCached(path: String): UIImage {
-            return ofResourceCached(path, defaultResourceCache)
+            return ofResourceCached(path, @Suppress("DEPRECATION") defaultResourceCache)
         }
 
         @JvmStatic
@@ -222,5 +233,9 @@ open class UIImage @JvmOverloads constructor(
 
             return ImageIO.read(connection.inputStream)
         }
+
+        private val internalResourceCache = ResourceCache(Int.MAX_VALUE, javaClass)
+        internal fun ofInternalResourceCached(path: String) =
+            ofResourceCached(path, internalResourceCache)
     }
 }

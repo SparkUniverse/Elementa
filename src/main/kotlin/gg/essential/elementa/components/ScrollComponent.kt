@@ -886,7 +886,7 @@ class ScrollComponent constructor(
     companion object {
 
         fun getScrollImage(): UIImage {
-            return UIImage.ofResourceCached("/vertical-scroll.png")
+            return UIImage.ofInternalResourceCached("/vertical-scroll.png")
         }
     }
 }
