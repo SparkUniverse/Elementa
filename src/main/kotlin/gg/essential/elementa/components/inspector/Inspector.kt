@@ -95,7 +95,7 @@ class Inspector @JvmOverloads constructor(
             height = 14.pixels()
         } childOf titleBlock
 
-        UIImage.ofResourceCached("/textures/inspector/click.png").constrain {
+        UIImage.ofInternalResourceCached("/textures/inspector/click.png").constrain {
             x = SiblingConstraint(10f)
             y = CenterConstraint()
             width = AspectConstraint(1f)
