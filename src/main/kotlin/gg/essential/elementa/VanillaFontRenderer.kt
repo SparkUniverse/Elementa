@@ -55,8 +55,9 @@ class VanillaFontRenderer : FontProvider {
             return
         }
 
-        val width = getStringWidth(string, 0f) * scale
-        val height = getStringHeight(string, 0f) * scale
+        val shadowOffset = if (shadow) SHADOW_HEIGHT else 0f
+        val width = (getStringWidth(string, 0f) + shadowOffset) * scale
+        val height = (getStringHeight(string, 0f) + shadowOffset) * scale
         extractor.special(
             x,
             y,
